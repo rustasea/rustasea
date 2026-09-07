@@ -10,3 +10,4 @@ rustavel-config = { path = "../rustavel-config" }
 rustavel-router = { path = "../rustavel-router" }
 rustavel-http = { path = "../rustavel-http" }
 rustavel-macros = { path = "../rustavel-macros" }
+rustavel-orm = { path = "../rustavel-orm" }
