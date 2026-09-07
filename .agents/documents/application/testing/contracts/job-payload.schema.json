@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Job<T> payload — serde_json round-trip",
+  "description": "Validates TC-CTR-03 / FS-M4-01. Opaque T serialized under data with queue metadata.",
+  "type": "object",
+  "required": ["id","job","data","attempts"],
+  "properties": {
+    "id": { "type": "string" },
+    "job": { "type": "string" },
+    "data": { "type": "object" },
+    "attempts": { "type": "integer", "minimum": 0 },
+    "queue": { "type": ["string","null"] },
+    "connection": { "type": ["string","null"] }
+  }
+}

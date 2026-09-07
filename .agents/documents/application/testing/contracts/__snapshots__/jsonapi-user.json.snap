@@ -1,0 +1,35 @@
+---
+source: stubs/m6-advanced.stub.rs
+expression: "UserResource::new(user).include(\"posts\").fields([\"name\"]).to_document()"
+---
+{
+  "data": {
+    "attributes": {
+      "name": "Ada"
+    },
+    "id": "1",
+    "links": {
+      "self": "/users/1"
+    },
+    "relationships": {
+      "posts": {
+        "data": [
+          {
+            "id": "10",
+            "type": "posts"
+          }
+        ]
+      }
+    },
+    "type": "users"
+  },
+  "included": [
+    {
+      "attributes": {
+        "title": "Hello"
+      },
+      "id": "10",
+      "type": "posts"
+    }
+  ]
+}

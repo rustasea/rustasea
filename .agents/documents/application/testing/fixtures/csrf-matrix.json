@@ -1,0 +1,11 @@
+{
+  "title": "CSRF origin-aware decision table — Sec-01 / TC-M3-04 (FR-302 #11)",
+  "rows": [
+    { "sec_fetch_site": "same-origin", "origin": null, "token": "valid", "method": "POST", "expected": "200" },
+    { "sec_fetch_site": "cross-site",  "origin": "https://evil.com",             "token": "valid", "method": "POST", "expected": "403 UntrustedOrigin" },
+    { "sec_fetch_site": "cross-site",  "origin": "https://app.example.com",      "token": "valid", "method": "POST", "expected": "200" },
+    { "sec_fetch_site": null,          "origin": null,                           "token": "valid", "method": "POST", "expected": "200" },
+    { "sec_fetch_site": "none",        "origin": null,                           "token": "valid", "method": "POST", "expected": "200" },
+    { "sec_fetch_site": "cross-site",  "origin": "https://evil.com",             "token": "valid", "method": "GET",  "expected": "200" }
+  ]
+}

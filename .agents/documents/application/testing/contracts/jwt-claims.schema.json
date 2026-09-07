@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JWT Claims { sub, exp }",
+  "description": "Validates auth contract TC-M3-01 / FR-300. HS256 jsonwebtoken claims.",
+  "type": "object",
+  "required": ["sub","exp"],
+  "properties": {
+    "sub": { "type": "string", "description": "user id" },
+    "exp": { "type": "integer", "description": "unix seconds" },
+    "iat": { "type": "integer" },
+    "iss": { "type": ["string","null"] }
+  }
+}

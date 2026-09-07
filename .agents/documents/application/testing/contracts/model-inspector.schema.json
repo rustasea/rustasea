@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ModelInspector metadata — `cargo rustavel show:model`",
+  "description": "Validates NFR-Mai-01 / FR-109 / FS-M1-03. Attributes, relations, casts, soft-delete flag.",
+  "type": "object",
+  "required": ["model","table","attributes","relations"],
+  "properties": {
+    "model": { "type": "string" },
+    "table": { "type": "string" },
+    "attributes": { "type": "array", "items": { "type": "object", "required": ["name","type"], "properties": { "name": {"type":"string"}, "type": {"type":"string"}, "nullable": {"type":"boolean"} } } },
+    "relations": { "type": "array", "items": { "type": "object", "required": ["name","kind"], "properties": { "name": {"type":"string"}, "kind": {"type":"string", "enum": ["HasMany","BelongsTo","HasOne","BelongsToMany"] } } } },
+    "casts": { "type": "object" },
+    "soft_delete": { "type": "boolean" }
+  }
+}

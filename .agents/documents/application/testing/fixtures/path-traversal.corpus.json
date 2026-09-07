@@ -1,0 +1,17 @@
+{
+  "title": "Path traversal corpus — Storage::path() confinement (TC-M6-05, Sec-03)",
+  "description": "Every entry MUST be rejected with StorageError::PathTraversal without filesystem access. Includes encoded, Windows, and long-chain variants.",
+  "entries": [
+    "../../etc/passwd",
+    "..%2f..%2fetc/passwd",
+    "..%2F..%2Fetc/passwd",
+    "..\\..\\etc\\passwd",
+    "a/b/../../etc/passwd",
+    "a/b/../../../../../../../../etc/passwd",
+    "../a/../../etc/passwd",
+    "./../../etc/passwd",
+    "a%2f..%2f..%2fetc/passwd",
+    "a/b/%2e%2e/%2e%2e/etc/passwd",
+    "/etc/passwd"
+  ]
+}

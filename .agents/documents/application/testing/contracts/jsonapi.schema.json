@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JSON:API 1.1 ResourceDocument",
+  "description": "Validates TC-CTR-02 / TC-M6-08. Minimal JSON:API 1.1 shape; full spec via jsonapi.org.",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["type","id","attributes"],
+      "properties": {
+        "type": { "type": "string" },
+        "id": { "type": "string" },
+        "attributes": { "type": "object" },
+        "relationships": { "type": "object" },
+        "links": { "type": "object" }
+      }
+    },
+    "included": { "type": "array" },
+    "links": { "type": "object" },
+    "meta": { "type": "object" }
+  }
+}

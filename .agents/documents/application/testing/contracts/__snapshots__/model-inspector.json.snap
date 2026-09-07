@@ -1,0 +1,43 @@
+---
+source: stubs/m2-orm.stub.rs
+expression: "ModelInspector::for::<User>()"
+---
+{
+  "attributes": [
+    {
+      "name": "id",
+      "nullable": false,
+      "type": "Uuid"
+    },
+    {
+      "name": "name",
+      "nullable": false,
+      "type": "String"
+    },
+    {
+      "name": "created_at",
+      "nullable": false,
+      "type": "DateTime"
+    },
+    {
+      "name": "updated_at",
+      "nullable": false,
+      "type": "DateTime"
+    },
+    {
+      "name": "deleted_at",
+      "nullable": true,
+      "type": "Option<DateTime>"
+    }
+  ],
+  "casts": {},
+  "model": "User",
+  "relations": [
+    {
+      "kind": "HasMany",
+      "name": "posts"
+    }
+  ],
+  "soft_delete": true,
+  "table": "users"
+}

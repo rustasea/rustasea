@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RouteEntry[] — `cargo rustavel route:list --json`",
+  "description": "Validates TC-CTR-01 / TC-M1-06/07. Mirrors FSD FS-M1-03 and prd.md FR-103 binding_fields.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["method", "path", "name", "middleware", "binding_fields"],
+    "properties": {
+      "method": { "type": "string", "enum": ["GET","POST","PUT","DELETE","PATCH","OPTIONS","ANY"] },
+      "path": { "type": "string", "pattern": "^/.+" },
+      "name": { "type": ["string","null"] },
+      "middleware": { "type": "array", "items": { "type": "string" } },
+      "binding_fields": { "type": "array", "items": { "type": "string" } }
+    }
+  }
+}

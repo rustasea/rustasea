@@ -1,0 +1,17 @@
+---
+source: stubs/m0-foundation.stub.rs
+expression: "json!([{ method: \"GET\", path: \"/users/{user:slug}\", name: \"users.show\", middleware: [\"auth:jwt\"], binding_fields: [\"slug\"] }])"
+---
+[
+  {
+    "binding_fields": [
+      "slug"
+    ],
+    "method": "GET",
+    "middleware": [
+      "auth:jwt"
+    ],
+    "name": "users.show",
+    "path": "/users/{user:slug}"
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "title": "Deserialization allow-list corpus — Sec-02 / TC-M3-06 (FR-304 #12)",
+  "allow_list": ["App::UserDto"],
+  "denied": ["AdminDto", "App::AdminDto", "std::process::Command", "serde_json::Value"],
+  "expect": "SerializationError::NotAllowed { type_name } before deserialize, never instantiating the denied type"
+}

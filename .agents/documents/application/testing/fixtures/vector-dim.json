@@ -1,0 +1,7 @@
+{
+  "title": "Vector dimension corpus — pgvector mismatch (TC-M2-21, TC-M6-24)",
+  "column_dims": [1536, 768],
+  "query_dims": [768, 1536, 0, 1, 2048],
+  "expected_error": "VectorDimensionMismatch { expected, actual }",
+  "valid": [{ "column": 1536, "query": 1536 }, { "column": 768, "query": 768 }]
+}
