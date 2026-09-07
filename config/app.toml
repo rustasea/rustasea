@@ -1,0 +1,4 @@
+app_name = "Rustavel"
+app_env = "local"
+app_debug = true
+app_url = "http://localhost:8000"

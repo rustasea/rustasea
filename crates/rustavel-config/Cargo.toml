@@ -1,0 +1,10 @@
+[package]
+name = "rustavel-config"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+config = { version = "0.14", features = ["toml"] }
+serde = { version = "1", features = ["derive"] }
+dotenvy = "0.15"

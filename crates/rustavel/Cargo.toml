@@ -1,0 +1,9 @@
+[package]
+name = "rustavel"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rustavel-foundation = { path = "../rustavel-foundation" }
+rustavel-config = { path = "../rustavel-config" }
