@@ -7,3 +7,6 @@ license.workspace = true
 [dependencies]
 rustavel-foundation = { path = "../rustavel-foundation" }
 rustavel-config = { path = "../rustavel-config" }
+rustavel-router = { path = "../rustavel-router" }
+rustavel-http = { path = "../rustavel-http" }
+rustavel-macros = { path = "../rustavel-macros" }

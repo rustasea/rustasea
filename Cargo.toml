@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/*"]
+members = ["crates/rustavel", "crates/rustavel-foundation", "crates/rustavel-config", "crates/rustavel-macros", "crates/rustavel-router", "crates/rustavel-http"]
 resolver = "2"
 
 [workspace.package]

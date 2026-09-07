@@ -1,0 +1,14 @@
+[package]
+name = "rustavel-router"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Expressive routing layer for Rustavel — Axum-backed"
+
+[dependencies]
+axum = { version = "0.7" }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt", "macros"] }
+rustavel-foundation = { path = "../rustavel-foundation" }
