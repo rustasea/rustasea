@@ -1,0 +1,12 @@
+[package]
+name = "rustavel-storage"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Rustavel storage — read-through disk Storage, path confinement, local disk"
+
+[dependencies]
+async-trait = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }

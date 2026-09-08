@@ -1,0 +1,26 @@
+[package]
+name = "rustavel-ai"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Rustavel AI SDK — provider-agnostic AiProvider trait, Agent/Tool, MCP, deferred loaders"
+
+[dependencies]
+async-trait = { workspace = true }
+futures-core = "0.3"
+rustavel-search = { path = "../rustavel-search", optional = true }
+rustavel-storage = { path = "../rustavel-storage", optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+
+[features]
+default = []
+search = ["dep:rustavel-search"]
+storage = ["dep:rustavel-storage"]
+mcp = []
+
+[dev-dependencies]
+rustavel-search = { path = "../rustavel-search" }
+tokio = { workspace = true }

@@ -67,3 +67,29 @@ pub use testing::{
     bootstrap_3, factory_registry, paginator_view, reset_factory_sequences, str_factory, TestCase,
     TestConfig, TestError,
 };
+
+/// M6 broadcast/storage/search/jsonapi re-exports (Sprint 07).
+pub use rustavel_broadcast as broadcast;
+pub use rustavel_jsonapi as jsonapi;
+pub use rustavel_search as search;
+pub use rustavel_storage as storage;
+
+/// M6 AI SDK re-export — only with the `ai` feature (NFR-Sca-02).
+#[cfg(feature = "ai")]
+pub use rustavel_ai as ai;
+
+/// Broadcast re-exports for channel/SSE ergonomics (M6).
+pub use broadcast::{Authorize, BroadcastError, Channel, ShouldBroadcast};
+
+/// Storage re-exports for read-through disk ergonomics (M6).
+pub use storage::{LocalDisk, ReadThrough, Storage, StorageError};
+
+/// Search re-exports for vector ergonomics (M6).
+pub use search::{
+    Similarity as VectorSimilarity, Str, VectorDocument, VectorSearch, VectorSearchError,
+};
+
+/// JSON:API re-exports for resource ergonomics (M6).
+pub use jsonapi::{
+    content_type as jsonapi_content_type, JsonApiError, JsonApiResource, SparseFields,
+};

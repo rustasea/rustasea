@@ -1,0 +1,21 @@
+[package]
+name = "rustavel-broadcast"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Rustavel broadcast — ShouldBroadcast channels, WebSocket auth, SSE eventStream"
+
+[dependencies]
+async-trait = { workspace = true }
+axum = { workspace = true }
+futures-core = "0.3"
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tokio-stream = { version = "0.1", features = ["sync"] }
+
+[features]
+default = ["ws"]
+# `ws` pulls axum's WebSocket feature (FS-M6-01: axum::extract::ws).
+ws = ["axum/ws"]

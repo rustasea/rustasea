@@ -19,6 +19,22 @@ rustavel-events = { path = "../rustavel-events" }
 rustavel-schedule = { path = "../rustavel-schedule" }
 rustavel-cli = { path = "../rustavel-cli" }
 rustavel-testing = { path = "../rustavel-testing" }
+# M6 advanced crates (Sprint 07). rustavel-ai is opt-in (NFR-Sca-02):
+# core builds never pull AI/provider SDKs without the `ai` feature.
+rustavel-broadcast = { path = "../rustavel-broadcast" }
+rustavel-storage = { path = "../rustavel-storage" }
+rustavel-search = { path = "../rustavel-search" }
+rustavel-jsonapi = { path = "../rustavel-jsonapi" }
+rustavel-ai = { path = "../rustavel-ai", optional = true }
+
+[features]
+default = []
+# M6 AI SDK is additive; `ai-search`/`ai-storage`/`ai-mcp` forward the
+# deferred-loader features of rustavel-ai itself.
+ai = ["dep:rustavel-ai"]
+ai-search = ["dep:rustavel-ai", "rustavel-ai/search"]
+ai-storage = ["dep:rustavel-ai", "rustavel-ai/storage"]
+ai-mcp = ["dep:rustavel-ai", "rustavel-ai/mcp"]
 
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }

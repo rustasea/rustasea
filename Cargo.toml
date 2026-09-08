@@ -15,6 +15,11 @@ members = [
     "crates/rustavel-schedule",
     "crates/rustavel-cli",
     "crates/rustavel-testing",
+    "crates/rustavel-broadcast",
+    "crates/rustavel-storage",
+    "crates/rustavel-search",
+    "crates/rustavel-jsonapi",
+    "crates/rustavel-ai",
     "xtask",
 ]
 resolver = "2"
@@ -61,3 +66,7 @@ comfy-table = "7"
 testcontainers = "0.23"
 dotenvy = "0.15"
 rand = "0.8"
+# Async streams (M6)
+futures-core = "0.3"
+futures-util = { version = "0.3", default-features = false }
+tokio-stream = { version = "0.1", features = ["sync"] }
