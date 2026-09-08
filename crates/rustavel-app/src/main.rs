@@ -1,10 +1,11 @@
-//! Rustavel runnable app scaffold — served by `cargo run` / `cargo dev`.
+//! Rustavel runnable app scaffold — served by `cargo run -p rustavel-app`.
 //!
 //! Mirrors the canonical Laravel-style layout described in `README.md`:
-//! `bootstrap/app.rs` configures the [`Application`], `config/*.toml` +
-//! `.env` provide typed settings, and `routes/web.rs` owns the route table.
-//! This binary boots the framework, serves real dispatch handlers over HTTP,
-//! and shuts down gracefully on SIGINT/SIGTERM.
+//! `crates/rustavel-app/src/bootstrap/app.rs` configures the [`Application`],
+//! the workspace-root `config/*.toml` + `.env` provide typed settings, and
+//! `routes/web.rs` owns the route table. This binary boots the framework,
+//! serves real dispatch handlers over HTTP, and shuts down gracefully on
+//! SIGINT/SIGTERM.
 
 use std::net::SocketAddr;
 use std::sync::Arc;

@@ -18,7 +18,7 @@ use rustavel::cli::{{Command, Io}};
 use rustavel::cli::error::CliResult;
 use async_trait::async_trait;
 
-/// Signature shown in `cargo rustavel list`.
+/// Signature shown in `cargo artisan list`.
 pub const SIGNATURE: &str = "{signature}";
 
 /// Runs the `{signature}` command.

@@ -1,4 +1,4 @@
-//! CLI command registry — `cargo rustavel` console commands.
+//! CLI command registry — `cargo artisan` console commands.
 //!
 //! Canonical home per README "Proposed Directory Structure"
 //! (`bootstrap/commands.rs`, M5 deliverable). Console commands generated into

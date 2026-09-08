@@ -1,4 +1,4 @@
-//! `cargo rustavel` binary shim.
+//! `cargo artisan` binary shim.
 //!
 //! Loads the built-in command registry and forwards clap-parsed arguments to
 //! the selected command — or runs `list` natively when that subcommand is
@@ -12,7 +12,17 @@ use rustavel_cli::{cli, load_default_commands, CliCommand, Command};
 
 /// Program entry point.
 fn main() {
-    let cli = cli::Cli::parse();
+    // Cargo injects the subcommand name (`artisan`) as argv[1] when the
+    // binary is invoked via `cargo artisan …`; drop it before clap parses so
+    // `bin_name` help rendering stays correct. Direct binary runs are
+    // unaffected: they carry no such token.
+    let args: Vec<String> = std::env::args().collect();
+    let args = if args.get(1).is_some_and(|a| a == "artisan") {
+        &args[1..]
+    } else {
+        &args
+    };
+    let cli = cli::Cli::parse_from(args);
     load_default_commands();
     std::process::exit(entrypoint(cli));
 }
@@ -25,7 +35,7 @@ fn entrypoint(cli: cli::Cli) -> i32 {
     {
         Ok(rt) => rt,
         Err(err) => {
-            eprintln!("rustavel: failed to start runtime: {err}");
+            eprintln!("artisan: failed to start runtime: {err}");
             return 1;
         }
     };
@@ -49,7 +59,7 @@ fn entrypoint(cli: cli::Cli) -> i32 {
             CliCommand::Run(args) => {
                 // External subcommand: first arg is the signature, rest are raw args.
                 let Some((signature, forwarded)) = args.split_first() else {
-                    eprintln!("rustavel: missing command name");
+                    eprintln!("artisan: missing command name");
                     return 2;
                 };
                 let forwarded = forwarded.to_vec();
@@ -67,7 +77,7 @@ fn entrypoint(cli: cli::Cli) -> i32 {
             }
             Err(err) => {
                 let code = rustavel_cli::exit_code(&err);
-                eprintln!("rustavel: {err}");
+                eprintln!("artisan: {err}");
                 code
             }
         }

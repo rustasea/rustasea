@@ -1,6 +1,6 @@
 //! Rustavel CLI — Artisan-like command surface (FS-M5-01..03, FR-500..505).
 //!
-//! `cargo rustavel <command>` is backed by a process-wide command registry
+//! `cargo artisan <command>` is backed by a process-wide command registry
 //! that both the clap shim ([`crate::cli`]) and the programmatic
 //! [`Artisan::call`] facade read, so `list`, dispatch and in-process
 //! invocation never diverge. Long-running workers cooperate with graceful

@@ -1,27 +1,5 @@
 [workspace]
-members = [
-    "crates/rustavel",
-    "crates/rustavel-foundation",
-    "crates/rustavel-config",
-    "crates/rustavel-macros",
-    "crates/rustavel-router",
-    "crates/rustavel-http",
-    "crates/rustavel-orm",
-    "crates/rustavel-auth",
-    "crates/rustavel-validation",
-    "crates/rustavel-queue",
-    "crates/rustavel-cache",
-    "crates/rustavel-events",
-    "crates/rustavel-schedule",
-    "crates/rustavel-cli",
-    "crates/rustavel-testing",
-    "crates/rustavel-broadcast",
-    "crates/rustavel-storage",
-    "crates/rustavel-search",
-    "crates/rustavel-jsonapi",
-    "crates/rustavel-ai",
-    "xtask",
-]
+members = ["crates/*", "xtask"]
 resolver = "2"
 
 [workspace.package]
@@ -29,29 +7,6 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 authors = ["Rustavel Team"]
-
-# Runnable app package (root `src/main.rs` binary). The root package is an
-# implicit member of its own workspace; README members stay crates/* + xtask.
-# The crate `crates/rustavel` is the umbrella; this is the example app binary
-# that `cargo dev` / `cargo run -p rustavel-app` serves.
-[package]
-name = "rustavel-app"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-publish = false
-description = "Rustavel runnable app scaffold — `cargo dev` serves the example HTTP application."
-
-[[bin]]
-name = "rustavel-app"
-path = "src/main.rs"
-
-[dependencies]
-rustavel = { path = "crates/rustavel" }
-tokio = { workspace = true }
-axum = { workspace = true }
-anyhow = "1"
-serde = { workspace = true, features = ["derive"] }
 
 # Single source of truth for shared dependencies; crates opt in with `workspace = true`.
 [workspace.dependencies]

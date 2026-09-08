@@ -2,7 +2,7 @@
 //!
 //! Canonical home per README "Proposed Directory Structure"
 //! (`bootstrap/providers.rs`). `bootstrap/app.rs::configure` consumes this
-//! registry; generated `app/providers/*` from `cargo rustavel
+//! registry; generated `app/providers/*` from `cargo artisan
 //! make:provider` are appended here.
 
 /// Return the providers registered for the application boot DAG.

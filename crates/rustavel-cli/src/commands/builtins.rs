@@ -2,7 +2,7 @@
 //!
 //! All built-ins dispatch through the same [`Command`] trait the generators
 //! emit, so `Artisan::call("migrate", vec![]).await` runs the identical code
-//! path as `cargo rustavel migrate` (FR-502, FR-505).
+//! path as `cargo artisan migrate` (FR-502, FR-505).
 
 use async_trait::async_trait;
 

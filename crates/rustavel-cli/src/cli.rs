@@ -1,4 +1,4 @@
-//! Clap derive surface: `cargo rustavel <command> [args] [--json]`.
+//! Clap derive surface: `cargo artisan <command> [args] [--json]`.
 //!
 //! The command name is positional; all remaining arguments are forwarded
 //! verbatim to the registered command's `run(args)`, which keeps the clap
@@ -10,8 +10,9 @@ use clap::{Parser, Subcommand};
 /// Rustavel command-line interface (Artisan-parity DX).
 #[derive(Debug, Parser)]
 #[command(
-    name = "rustavel",
-    about = "Rustavel framework console",
+    name = "cargo-artisan",
+    bin_name = "cargo artisan",
+    about = "Rustavel framework console (Artisan-parity CLI)",
     version,
     disable_help_subcommand = true
 )]

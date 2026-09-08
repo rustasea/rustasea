@@ -3,7 +3,7 @@
 //! Mirrors Laravel's `bootstrap/app.php` (README "Proposed Directory
 //! Structure"): configures the foundation container, registers service
 //! providers, and boots the register→boot DAG before the HTTP kernel takes
-//! over. `src/main.rs` calls [`configure`]; providers/routes/schedule/events
+//! over. `main.rs` calls [`configure`]; providers/routes/schedule/events
 //! registries land in `bootstrap/providers.rs` + `bootstrap/commands.rs`.
 
 use rustavel::Application;

@@ -89,6 +89,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.104"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
+
+[[package]]
 name = "argon2"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1471,6 +1477,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustavel-app"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "rustavel",
+ "serde",
+ "tokio",
+]
+
+[[package]]
 name = "rustavel-auth"
 version = "0.1.0"
 dependencies = [
@@ -1495,6 +1512,7 @@ dependencies = [
  "async-trait",
  "axum",
  "futures-core",
+ "futures-util",
  "serde",
  "serde_json",
  "thiserror",
@@ -1653,6 +1671,7 @@ dependencies = [
  "async-trait",
  "serde",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]

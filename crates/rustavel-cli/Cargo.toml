@@ -5,8 +5,11 @@ edition.workspace = true
 license.workspace = true
 description = "Rustavel Artisan-like CLI — clap + xtask, list, make:* generators, prompts, Artisan::call, Shutdownable."
 
+# Cargo convention: a binary named `cargo-artisan` makes the crate's CLI
+# invocable as `cargo artisan <command>` (mirroring `php artisan`). The
+# package stays `rustavel-cli` so `cargo run -p rustavel-cli` keeps working.
 [[bin]]
-name = "rustavel"
+name = "cargo-artisan"
 path = "src/main.rs"
 required-features = ["cli"]
 

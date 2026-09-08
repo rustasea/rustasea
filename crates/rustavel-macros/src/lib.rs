@@ -203,7 +203,7 @@ pub fn repair_tool_calls(_attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Attribute: console usage signature.
 ///
 /// Grammar: `#[usage("app:send {user}")]` — the Laravel-style signature
-/// `cargo rustavel list` renders in its table and JSON output.
+/// `cargo artisan list` renders in its table and JSON output.
 #[proc_macro_attribute]
 pub fn usage(attr: TokenStream, item: TokenStream) -> TokenStream {
     attrs::string_attr(attr, item, "usage", "USAGE")
@@ -212,7 +212,7 @@ pub fn usage(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Attribute: console help/description text.
 ///
 /// Grammar: `#[help("Run pending migrations")]` — shown under the command
-/// name in `cargo rustavel list`.
+/// name in `cargo artisan list`.
 #[proc_macro_attribute]
 pub fn help(attr: TokenStream, item: TokenStream) -> TokenStream {
     attrs::string_attr(attr, item, "help", "HELP")
