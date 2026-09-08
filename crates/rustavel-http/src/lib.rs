@@ -114,6 +114,15 @@ impl CorsConfig {
 
     /// Build the tower-http CORS layer.
     ///
+    /// The layer composes onto any tower/axum stack, so routers apply it
+    /// directly:
+    ///
+    /// ```rust,ignore
+    /// use rustavel_http::CorsConfig;
+    /// let layer = CorsConfig::default().layer();
+    /// // router.layer(layer); — rustavel::router::Router::layer()
+    /// ```
+    ///
     /// Allowed origins map to an explicit AllowOrigin::list; when none are
     /// configured the layer stays restrictive (no origins allowed) instead of
     /// silently becoming permissive — opt into permissive explicitly.
@@ -182,55 +191,189 @@ impl ThrottleConfig {
     }
 }
 
+/// Timeout classification for the HTTP client (#18).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TimeoutKind {
+    /// Connection establishment exceeded the timeout.
+    Connect,
+    /// Total request time exceeded the timeout.
+    Total,
+    /// No bytes received within the idle timeout.
+    Idle,
+}
+
+/// Typed error returned by [`HttpClient::send`].
+#[derive(Debug, thiserror::Error)]
+pub enum HttpError {
+    /// The `throw` predicate matched the response status.
+    #[error("upstream {code} matched throw predicate")]
+    Status { code: u16 },
+    /// A request timeout fired; kind distinguishes connect/total/idle.
+    #[error("http client timed out ({kind:?})")]
+    Timeout { kind: TimeoutKind },
+    /// The `throw` predicate itself failed.
+    #[error("throw callback failed: {source}")]
+    ThrowCallback {
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
+    /// Transport-level failure surfaced by reqwest.
+    #[error("http transport error: {source}")]
+    Transport { source: reqwest::Error },
+}
+
+/// Result of evaluating a `throw` predicate; an `Err` aborts the send as
+/// [`HttpError::ThrowCallback`].
+type ThrowOutcome = Result<bool, Box<dyn std::error::Error + Send + Sync>>;
+
+/// Shared `throw` callback boxed signature.
+type ThrowCallback = dyn Fn(&reqwest::Response) -> ThrowOutcome + Send + Sync;
+
 /// Thin wrapper around reqwest for outgoing HTTP calls.
+///
+/// Laravel-style builder: `.timeout(Duration)` configures the total request
+/// budget, `.throw(predicate)` maps a matching status to
+/// [`HttpError::Status`], and `.send().await` returns
+/// `Result<reqwest::Response, HttpError>`.
 pub struct HttpClient {
-    /// Request timeout in milliseconds.
-    pub timeout_ms: u64,
-    /// Idle timeout in milliseconds.
-    pub idle_timeout_ms: Option<u64>,
-    /// Retry attempts.
-    pub retries: u32,
+    /// Per-request timeout budget.
+    pub timeout: std::time::Duration,
+    /// Optional idle timeout (inter-byte silence).
+    pub idle_timeout: Option<std::time::Duration>,
+    /// Optional `throw` predicate evaluated against the response.
+    throw: Option<Box<ThrowCallback>>,
 }
 
 impl HttpClient {
-    /// Create a new HTTP client with defaults.
+    /// Create a new HTTP client with a 30s default timeout.
     pub fn new() -> Self {
         Self {
-            timeout_ms: 30_000,
-            idle_timeout_ms: None,
-            retries: 0,
+            timeout: std::time::Duration::from_secs(30),
+            idle_timeout: None,
+            throw: None,
         }
     }
 
-    /// Set request timeout.
-    pub fn timeout(mut self, ms: u64) -> Self {
-        self.timeout_ms = ms;
+    /// Set the total request timeout.
+    ///
+    /// ```rust
+    /// # use std::time::Duration;
+    /// use rustavel_http::HttpClient;
+    /// let client = HttpClient::new().timeout(Duration::from_secs(30));
+    /// # let _ = client;
+    /// ```
+    pub fn timeout(mut self, timeout: std::time::Duration) -> Self {
+        self.timeout = timeout;
         self
     }
 
-    /// Set idle timeout.
-    pub fn idle_timeout(mut self, ms: u64) -> Self {
-        self.idle_timeout_ms = Some(ms);
+    /// Set the idle (inter-byte) timeout.
+    pub fn idle_timeout(mut self, timeout: std::time::Duration) -> Self {
+        self.idle_timeout = Some(timeout);
         self
     }
 
-    /// Set retry count.
-    pub fn retry(mut self, retries: u32) -> Self {
-        self.retries = retries;
-        self
-    }
-
-    /// Throw callback stub — validates response status.
-    pub fn throw<F>(&self, _predicate: F) -> &Self
+    /// Install a `throw` predicate: when it returns `true` for the response
+    /// status, [`send`](Self::send) yields [`HttpError::Status`].
+    ///
+    /// ```rust
+    /// # use std::time::Duration;
+    /// use rustavel_http::HttpClient;
+    /// let client = HttpClient::new()
+    ///     .timeout(Duration::from_secs(30))
+    ///     .throw(|resp| resp.status().is_success());
+    /// # let _ = client;
+    /// ```
+    pub fn throw<F>(mut self, predicate: F) -> Self
     where
-        F: Fn(u16) -> bool,
+        F: Fn(&reqwest::Response) -> bool + Send + Sync + 'static,
     {
+        self.throw = Some(Box::new(move |resp| Ok(predicate(resp))));
         self
+    }
+
+    /// Install a fallible `throw` callback returning `Result<bool, E>`.
+    ///
+    /// An `Err` from the callback surfaces as [`HttpError::ThrowCallback`];
+    /// an `Ok(true)` match surfaces as [`HttpError::Status`].
+    pub fn try_throw<F, E>(mut self, callback: F) -> Self
+    where
+        F: Fn(&reqwest::Response) -> Result<bool, E> + Send + Sync + 'static,
+        E: std::error::Error + Send + Sync + 'static,
+    {
+        self.throw = Some(Box::new(move |resp| {
+            callback(resp).map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+        }));
+        self
+    }
+
+    /// Send a prepared reqwest request through this client's policy.
+    ///
+    /// Applies the configured total timeout, then evaluates the `throw`
+    /// predicate — a `true` match becomes [`HttpError::Status`].
+    pub async fn send(
+        &self,
+        request: reqwest::RequestBuilder,
+    ) -> Result<reqwest::Response, HttpError> {
+        self.send_with(request, reqwest::Client::new()).await
+    }
+
+    /// Send a prepared request through an explicit reqwest client.
+    pub async fn send_with(
+        &self,
+        request: reqwest::RequestBuilder,
+        client: reqwest::Client,
+    ) -> Result<reqwest::Response, HttpError> {
+        // reqwest needs a tokio runtime; building per-send keeps the wrapper
+        // clone-free. Map request-build errors straight to Transport.
+        let request = request
+            .timeout(self.timeout)
+            .build()
+            .map_err(|e| HttpError::Transport { source: e })?;
+        let response = client.execute(request).await.map_err(map_timeout)?;
+        if let Some(throw) = &self.throw {
+            let matched = throw(&response).map_err(|source| HttpError::ThrowCallback { source })?;
+            if matched {
+                return Err(HttpError::Status {
+                    code: response.status().as_u16(),
+                });
+            }
+        }
+        Ok(response)
+    }
+
+    /// Convenience: perform a GET request with this client's policy.
+    pub async fn get(&self, url: &str) -> Result<reqwest::Response, HttpError> {
+        self.send(reqwest::Client::new().get(url)).await
+    }
+
+    /// Convenience: perform a POST request with this client's policy.
+    pub async fn post(&self, url: &str) -> Result<reqwest::Response, HttpError> {
+        self.send(reqwest::Client::new().post(url)).await
     }
 }
 
 impl Default for HttpClient {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Classify a reqwest transport error into a typed error.
+///
+/// Connection-phase failures map to [`TimeoutKind::Connect`] and total-budget
+/// expiry to [`TimeoutKind::Total`]. Idle (inter-byte) timeout enforcement
+/// requires a body-stream watcher and lands with the M3 pass; the builder
+/// already carries the idle budget so call sites are stable.
+fn map_timeout(error: reqwest::Error) -> HttpError {
+    if error.is_connect() {
+        HttpError::Timeout {
+            kind: TimeoutKind::Connect,
+        }
+    } else if error.is_timeout() {
+        HttpError::Timeout {
+            kind: TimeoutKind::Total,
+        }
+    } else {
+        HttpError::Transport { source: error }
     }
 }

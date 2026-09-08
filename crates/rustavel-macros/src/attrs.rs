@@ -10,6 +10,7 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::parse::Parser;
 use syn::{parse_macro_input, Item};
 
 /// Extract the ident from an annotated struct/enum/union.
@@ -31,6 +32,86 @@ pub(crate) fn item_ident(input: &Item) -> Option<syn::Ident> {
 /// worst case is a misleading helper const name — never a code change.
 pub(crate) fn fallback_ident() -> syn::Ident {
     syn::Ident::new("Type", proc_macro2::Span::call_site())
+}
+
+/// Parse `#[route]` metadata: method + path name-value pairs.
+///
+/// Grammar: `#[route(method = "GET", path = "/users")]` — `method` defaults
+/// to `"GET"` when omitted so `#[route(path = "/users")]` still compiles.
+/// Both values must be string literals; anything else is a compile error
+/// pointing at the offending argument.
+pub(crate) fn parse_route(
+    tokens: proc_macro2::TokenStream,
+) -> Result<(String, String), syn::Error> {
+    if tokens.is_empty() {
+        return Err(syn::Error::new(
+            proc_macro2::Span::call_site(),
+            "#[route] requires method and path, e.g. #[route(method = \"GET\", path = \"/users\")]",
+        ));
+    }
+    let pairs = syn::punctuated::Punctuated::<syn::MetaNameValue, syn::Token![,]>::parse_terminated
+        .parse2(tokens)
+        .map_err(|e| {
+            syn::Error::new(
+                e.span(),
+                format!(
+                    "#[route] expects `method = \"...\", path = \"...\"` name-value pairs; {e}"
+                ),
+            )
+        })?;
+    let mut method: Option<String> = None;
+    let mut path: Option<String> = None;
+    for pair in pairs {
+        let ident = pair
+            .path
+            .segments
+            .last()
+            .map(|s| s.ident.to_string())
+            .unwrap_or_default();
+        let lit = match &pair.value {
+            syn::Expr::Lit(syn::ExprLit {
+                lit: syn::Lit::Str(s),
+                ..
+            }) => s.value(),
+            _ => {
+                return Err(syn::Error::new_spanned(
+                    &pair.value,
+                    "#[route] values must be string literals, e.g. method = \"GET\"",
+                ));
+            }
+        };
+        match ident.as_str() {
+            "method" => {
+                if method.replace(lit.clone()).is_some() {
+                    return Err(syn::Error::new_spanned(
+                        &pair,
+                        "#[route] declares `method` more than once",
+                    ));
+                }
+            }
+            "path" => {
+                if path.replace(lit.clone()).is_some() {
+                    return Err(syn::Error::new_spanned(
+                        &pair,
+                        "#[route] declares `path` more than once",
+                    ));
+                }
+            }
+            other => {
+                return Err(syn::Error::new_spanned(
+                    &pair,
+                    format!("#[route] does not support `{other}`; expected `method` and `path`"),
+                ));
+            }
+        }
+    }
+    let path = path.ok_or_else(|| {
+        syn::Error::new(
+            proc_macro2::Span::call_site(),
+            "#[route] requires a `path`, e.g. #[route(method = \"GET\", path = \"/users\")]",
+        )
+    })?;
+    Ok((method.unwrap_or_else(|| "GET".to_string()), path))
 }
 
 /// Parse a positive integer literal from the attribute token stream.

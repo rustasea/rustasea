@@ -39,3 +39,4 @@ ai-mcp = ["dep:rustavel-ai", "rustavel-ai/mcp"]
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros"] }

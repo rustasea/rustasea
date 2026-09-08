@@ -24,15 +24,36 @@ use syn::{parse_macro_input, DeriveInput, ItemFn};
 
 /// Attribute macro for route handlers.
 ///
-/// Re-emits the annotated function unchanged with a marker comment.
+/// Grammar: `#[route(method = "GET", path = "/users")]` on an `async fn`.
+/// The function is re-emitted unchanged and a doc-hidden const
+/// `__RUSTAVEL_ROUTE_<Fn>` records the method + path metadata the router
+/// reads when building the route table:
+///
+/// ```rust,ignore
+/// #[route(method = "GET", path = "/users")]
+/// async fn index() -> &'static str { "users" }
+/// ```
 #[proc_macro_attribute]
 pub fn route(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
-    let _attr = attr;
-    let expanded = quote! {
-        #input
-    };
-    expanded.into()
+    let ident = input.sig.ident.clone();
+    match attrs::parse_route(attr.into()) {
+        Ok((method, path)) => {
+            let const_name = syn::Ident::new(
+                &format!("__RUSTAVEL_ROUTE_{ident}"),
+                proc_macro2::Span::call_site(),
+            );
+            let expanded = quote! {
+                #input
+
+                #[doc(hidden)]
+                #[allow(non_upper_case_globals)]
+                const #const_name: (&str, &str) = (#method, #path);
+            };
+            expanded.into()
+        }
+        Err(err) => err.to_compile_error().into(),
+    }
 }
 
 /// Attribute macro for middleware handlers.
