@@ -12,5 +12,4 @@ serde_json = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 thiserror = { workspace = true }
 async-trait = { workspace = true }
-rustavel-cache = { path = "../rustavel-cache" }
 rustavel-events = { path = "../rustavel-events" }
