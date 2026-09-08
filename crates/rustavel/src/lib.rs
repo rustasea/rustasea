@@ -1,7 +1,11 @@
-//! Rustavel umbrella crate — re-exports foundation, config, and M0–M3 crates.
+//! Rustavel umbrella crate — re-exports foundation, config, and M0–M4 crates.
 
+pub use rustavel_cache as cache;
 pub use rustavel_config as config;
+pub use rustavel_events as events;
 pub use rustavel_foundation as foundation;
+pub use rustavel_queue as queue;
+pub use rustavel_schedule as schedule;
 
 pub use config::ConfigLoader;
 pub use foundation::{Application, Container, ServiceProvider};
@@ -11,6 +15,24 @@ pub use rustavel_macros as macros;
 pub use rustavel_orm as orm;
 pub use rustavel_router as router;
 pub use rustavel_validation as validation;
+
+/// Queue re-exports for typed job dispatch ergonomics (M4).
+pub use queue::{
+    ConcreteJob, DispatchHandle, ErasedJob, FailedJob, Job, JobError, JobId, JobOutcome, Queue,
+    QueueDriver, QueueError, QueueRegistry, ShouldRetry, ShouldRetryUntil,
+};
+
+/// Cache re-exports for store/repository ergonomics (M4).
+pub use cache::{CacheError, CacheManager, Lock, LockError, LockGuard, Store};
+
+/// Events re-exports for dispatch ergonomics (M4).
+pub use events::{Dispatcher, Event, EventError, JobAttempted, Listener, QueueBusy};
+
+/// Schedule re-exports for scheduler ergonomics (M4).
+pub use schedule::{
+    Schedule, ScheduleBuilder, ScheduleCommand, ScheduleError, SchedulePaused, ScheduleResumed,
+    ScheduleState, Scheduler, SchedulerStatus,
+};
 
 pub use orm::{
     Migration, Migrator, Model, OrmError, Paginator, QueryBuilder, Relation, Result as OrmResult,

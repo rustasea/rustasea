@@ -13,6 +13,10 @@ rustavel-macros = { path = "../rustavel-macros" }
 rustavel-orm = { path = "../rustavel-orm" }
 rustavel-auth = { path = "../rustavel-auth" }
 rustavel-validation = { path = "../rustavel-validation" }
+rustavel-queue = { path = "../rustavel-queue" }
+rustavel-cache = { path = "../rustavel-cache" }
+rustavel-events = { path = "../rustavel-events" }
+rustavel-schedule = { path = "../rustavel-schedule" }
 
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }

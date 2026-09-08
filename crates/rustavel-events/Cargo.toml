@@ -1,0 +1,13 @@
+[package]
+name = "rustavel-events"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Event/Listener traits, immediate + after-response dispatch, and async listeners via Queue{enable:true}."
+
+[dependencies]
+tokio = { workspace = true, features = ["time", "sync"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }

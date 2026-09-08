@@ -9,6 +9,10 @@ members = [
     "crates/rustavel-orm",
     "crates/rustavel-auth",
     "crates/rustavel-validation",
+    "crates/rustavel-queue",
+    "crates/rustavel-cache",
+    "crates/rustavel-events",
+    "crates/rustavel-schedule",
 ]
 resolver = "2"
 
@@ -21,7 +25,7 @@ authors = ["Rustavel Team"]
 # Single source of truth for shared dependencies; crates opt in with `workspace = true`.
 [workspace.dependencies]
 # Async + HTTP (M0/M1)
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["fs", "io-util", "io-std", "macros", "net", "process", "rt", "rt-multi-thread", "signal", "sync", "time"] }
 axum = "0.7"
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
@@ -41,3 +45,5 @@ validator = { version = "0.19", features = ["derive"] }
 syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
+# Async workloads (M4)
+async-trait = "0.1"
