@@ -1,1 +1,11 @@
 /target
+
+# Runtime storage (README scaffold): storage/app + storage/logs are runtime
+# artifacts; keep the dirs via .gitkeep.
+/storage/app/*
+/storage/logs/*
+!/storage/app/.gitkeep
+!/storage/logs/.gitkeep
+
+# Local environment overrides — commit only .env.example.
+/.env
