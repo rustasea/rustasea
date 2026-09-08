@@ -126,6 +126,7 @@ fn fnv1a(bytes: &[u8]) -> u32 {
 }
 
 /// Fractal pseudo-random in (0, 1) from `x`.
+#[allow(clippy::excessive_precision, clippy::inconsistent_digit_grouping)]
 fn fract_sin(x: f32) -> f32 {
     (x.sin() * 43_758.5453).fract().abs()
 }

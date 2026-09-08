@@ -19,3 +19,6 @@ tokio-stream = { version = "0.1", features = ["sync"] }
 default = ["ws"]
 # `ws` pulls axum's WebSocket feature (FS-M6-01: axum::extract::ws).
 ws = ["axum/ws"]
+
+[dev-dependencies]
+futures-util = { workspace = true }

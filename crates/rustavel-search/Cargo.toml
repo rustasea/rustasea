@@ -9,3 +9,6 @@ description = "Rustavel search — vector search trait, whereVectorSimilarTo, to
 async-trait = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

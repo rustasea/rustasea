@@ -98,6 +98,7 @@ impl Stream for EventStream {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use futures_util::StreamExt;
 
     #[tokio::test]
     async fn sse_frame_wire_format() {
