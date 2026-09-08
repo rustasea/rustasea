@@ -126,7 +126,7 @@ impl Queue {
             .routes
             .get(type_key)
             .cloned()
-            .ok_or_else(|| QueueError::Unrouted(type_key))
+            .ok_or(QueueError::Unrouted(type_key))
     }
 
     /// Resolve the driver registered under `connection`.

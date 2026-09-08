@@ -17,6 +17,8 @@ rustavel-queue = { path = "../rustavel-queue" }
 rustavel-cache = { path = "../rustavel-cache" }
 rustavel-events = { path = "../rustavel-events" }
 rustavel-schedule = { path = "../rustavel-schedule" }
+rustavel-cli = { path = "../rustavel-cli" }
+rustavel-testing = { path = "../rustavel-testing" }
 
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }

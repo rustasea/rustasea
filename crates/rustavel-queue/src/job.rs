@@ -23,6 +23,13 @@ impl JobId {
     pub fn as_uuid(&self) -> &Uuid {
         &self.0
     }
+
+    /// Rebuild a job id from its UUID representation.
+    ///
+    /// Used by `queue:retry {id}` where the CLI parses the id string first.
+    pub fn from_uuid(uuid: Uuid) -> Self {
+        Self(uuid)
+    }
 }
 
 impl Default for JobId {

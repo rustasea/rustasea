@@ -14,13 +14,13 @@ use crate::listener::Listener;
 /// Entries are erased over the concrete listener type (never over the event —
 /// the map key is the event `TypeId`), so the non-object-safe `QUEUE` const on
 /// `Listener` never has to live behind a vtable.
-static LISTENERS: OnceLock<Mutex<HashMap<TypeId, Vec<Arc<dyn ErasedListener>>>>> = OnceLock::new();
+static LISTENERS: OnceLock<Mutex<ListenerMap>> = OnceLock::new();
 
 /// Global after-response buffer shared by `EventSink`.
 static SINK: OnceLock<Mutex<Vec<Box<dyn Any + Send>>>> = OnceLock::new();
 
 /// Access the global listener map.
-fn listeners() -> &'static Mutex<HashMap<TypeId, Vec<Arc<dyn ErasedListener>>>> {
+fn listeners() -> &'static Mutex<ListenerMap> {
     LISTENERS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -30,6 +30,9 @@ trait ErasedListener: Send + Sync {
     /// Handle `event`, downcast by the concrete implementation.
     async fn invoke_erased(&self, event: &(dyn Any + Sync)) -> Result<()>;
 }
+
+/// Erased listener map keyed by event `TypeId` (see [`LISTENERS`]).
+type ListenerMap = HashMap<TypeId, Vec<Arc<dyn ErasedListener>>>;
 
 /// Concrete listener stored behind `ErasedListener`.
 struct TypedListener<E: Event, L: Listener<E>> {

@@ -1,5 +1,5 @@
 //! Rustavel procedural macros — route, middleware, authorize and validate
-//! attributes.
+//! attributes plus the M5 declarative attribute bundle.
 //!
 //! Middleware/authorize wiring to `tower::Layer` chains happens at router
 //! build time from the collected attributes (FS-M3-06), so those expansions
@@ -7,6 +7,16 @@
 //! exception: it collects per-field rule declarations and emits a
 //! `Validatable::validate` body that runs them against the JSON form of the
 //! struct, returning an `ErrorBag` on any failure (FS-M3-05, FR-308).
+//!
+//! The M5 (DX) attribute surface — `#[tries]`, `#[backoff]`, `#[timeout]`,
+//! `#[failOnTimeout]`, `#[withoutBroadcasting]`, `#[repairToolCalls]`,
+//! `#[usage]`, `#[help]`, `#[hidden]`, `#[queue]`, `#[connection]` — is
+//! defined here at the crate root (required for proc-macro attributes) and
+//! delegates parsing/emission to the private [`attrs`] helpers. Every M5
+//! attribute is source-preserving and emits doc-hidden helper consts the
+//! runtime reads (FS-M5-03, FR-506).
+
+mod attrs;
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -133,6 +143,105 @@ pub fn validate(_attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
     expanded.into()
+}
+
+/// Attribute: job retry budget.
+///
+/// Grammar: `#[tries(3)]` on a job type. The value is a usize; the helper
+/// const `__RUSTAVEL_TRIES_<Type>` records the declarative budget that queue
+/// workers honour (an explicit `#[tries]` shadows `ShouldRetry`).
+#[proc_macro_attribute]
+pub fn tries(attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::usize_attr(attr, item, "tries", "TRIES")
+}
+
+/// Attribute: base retry backoff.
+///
+/// Grammar: `#[backoff(10)]` — base delay in **seconds** before the first
+/// retry (later attempts double). Emits `__RUSTAVEL_BACKOFF_SECS_<Type>`.
+#[proc_macro_attribute]
+pub fn backoff(attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::usize_attr(attr, item, "backoff", "BACKOFF_SECS")
+}
+
+/// Attribute: per-attempt timeout.
+///
+/// Grammar: `#[timeout(30)]` — per-attempt timeout in **seconds**; `0`
+/// disables the timeout. Emits `__RUSTAVEL_TIMEOUT_SECS_<Type>`.
+#[proc_macro_attribute]
+pub fn timeout(attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::usize_attr(attr, item, "timeout", "TIMEOUT_SECS")
+}
+
+/// Attribute: fail (do not release) when a timed-out attempt is observed.
+///
+/// Grammar: `#[failOnTimeout]` — a bare marker const that the worker reads.
+#[proc_macro_attribute]
+pub fn fail_on_timeout(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::marker_attr(item, "FAIL_ON_TIMEOUT")
+}
+
+/// Attribute: suppress event broadcasting for this type.
+///
+/// Grammar: `#[withoutBroadcasting]` — marker; the dispatcher skips the
+/// broadcast fan-out when the type carries this attribute.
+#[proc_macro_attribute]
+pub fn without_broadcasting(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::marker_attr(item, "WITHOUT_BROADCASTING")
+}
+
+/// Attribute: enable AI tool-call repair on this agent/tool type.
+///
+/// Grammar: `#[repairToolCalls]` — marker consumed by the M6 AI SDK; the
+/// attribute surface ships in M5 so `make:agent`/`make:tool` generators can
+/// emit it early.
+#[proc_macro_attribute]
+pub fn repair_tool_calls(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::marker_attr(item, "REPAIR_TOOL_CALLS")
+}
+
+/// Attribute: console usage signature.
+///
+/// Grammar: `#[usage("app:send {user}")]` — the Laravel-style signature
+/// `cargo rustavel list` renders in its table and JSON output.
+#[proc_macro_attribute]
+pub fn usage(attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::string_attr(attr, item, "usage", "USAGE")
+}
+
+/// Attribute: console help/description text.
+///
+/// Grammar: `#[help("Run pending migrations")]` — shown under the command
+/// name in `cargo rustavel list`.
+#[proc_macro_attribute]
+pub fn help(attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::string_attr(attr, item, "help", "HELP")
+}
+
+/// Attribute: hide the command from `list` unless `--all` is passed.
+///
+/// Grammar: `#[hidden]` — bare marker const on a command type.
+#[proc_macro_attribute]
+pub fn hidden(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::marker_attr(item, "HIDDEN")
+}
+
+/// Attribute: default queue for a job.
+///
+/// Grammar: `#[queue("emails")]` — overrides the routed queue for the type.
+/// Emits `__RUSTAVEL_QUEUE_<Type>`.
+#[proc_macro_attribute]
+pub fn queue(attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::string_attr(attr, item, "queue", "QUEUE")
+}
+
+/// Attribute: default connection for a job.
+///
+/// Grammar: `#[connection("redis")]` — overrides the routed connection.
+/// Emits `__RUSTAVEL_CONNECTION_<Type>`.
+#[proc_macro_attribute]
+pub fn connection(attr: TokenStream, item: TokenStream) -> TokenStream {
+    attrs::string_attr(attr, item, "connection", "CONNECTION")
 }
 
 /// Collect per-field rule declarations and return a field-clean copy.

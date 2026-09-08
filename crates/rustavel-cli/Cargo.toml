@@ -1,0 +1,34 @@
+[package]
+name = "rustavel-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Rustavel Artisan-like CLI — clap + xtask, list, make:* generators, prompts, Artisan::call, Shutdownable."
+
+[[bin]]
+name = "rustavel"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[features]
+default = ["cli"]
+cli = ["dep:clap", "dep:dialoguer", "dep:indicatif", "dep:console", "dep:comfy-table"]
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+uuid = { workspace = true, features = ["v4"] }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+strsim = { workspace = true }
+rustavel-foundation = { path = "../rustavel-foundation" }
+rustavel-queue = { path = "../rustavel-queue" }
+rustavel-schedule = { path = "../rustavel-schedule" }
+rustavel-macros = { path = "../rustavel-macros" }
+clap = { workspace = true, optional = true }
+dialoguer = { workspace = true, optional = true }
+indicatif = { workspace = true, optional = true }
+console = { workspace = true, optional = true }
+comfy-table = { workspace = true, optional = true }

@@ -13,6 +13,9 @@ members = [
     "crates/rustavel-cache",
     "crates/rustavel-events",
     "crates/rustavel-schedule",
+    "crates/rustavel-cli",
+    "crates/rustavel-testing",
+    "xtask",
 ]
 resolver = "2"
 
@@ -47,3 +50,14 @@ quote = "1"
 proc-macro2 = "1"
 # Async workloads (M4)
 async-trait = "0.1"
+# DX / CLI / testing (M5)
+clap = { version = "4", features = ["derive", "env", "wrap_help"] }
+dialoguer = "0.11"
+indicatif = "0.17"
+console = "0.15"
+strsim = "0.11"
+comfy-table = "7"
+# Test infrastructure (M5)
+testcontainers = "0.23"
+dotenvy = "0.15"
+rand = "0.8"

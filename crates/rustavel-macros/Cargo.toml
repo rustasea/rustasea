@@ -3,7 +3,7 @@ name = "rustavel-macros"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Procedural macros for Rustavel — #[route], #[middleware], #[authorize], #[validate]"
+description = "Procedural macros for Rustavel — route, middleware, authorize, tries, backoff, timeout, usage, help, hidden"
 
 [lib]
 proc-macro = true

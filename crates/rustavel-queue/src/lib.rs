@@ -15,6 +15,7 @@ pub mod metrics;
 pub mod registry;
 pub mod retry;
 
+pub use async_trait::async_trait;
 pub use batch::{dispatch_batch, BatchHandle, BatchId};
 pub use driver::{
     failed_jobs, retry_failed, QueueDriver, SyncDriver, DATABASE_CONNECTION, DATABASE_DRIVER,

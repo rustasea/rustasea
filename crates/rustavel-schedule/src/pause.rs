@@ -73,8 +73,23 @@ impl Default for ScheduleState {
 
 /// Shared state accessor used by the pause/resume CLI surfaces.
 pub(crate) fn state() -> &'static ScheduleState {
-    static STATE: std::sync::OnceLock<ScheduleState> = std::sync::OnceLock::new();
-    STATE.get_or_init(ScheduleState::new)
+    state_cell().as_ref()
+}
+
+/// Fetch the shared state as an `Arc` (for `withScheduling` wiring).
+///
+/// Returns a clone of the process-wide singleton so callers observe the
+/// same paused flag the pause/resume facade mutates.
+pub fn shared_state() -> Arc<ScheduleState> {
+    Arc::clone(state_cell())
+}
+
+/// The process-wide singleton — one cell shared by `state()` and
+/// `shared_state()`, so pause/resume and `withScheduling` wiring never
+/// observe divergent instances.
+fn state_cell() -> &'static Arc<ScheduleState> {
+    static CELL: std::sync::OnceLock<Arc<ScheduleState>> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| Arc::new(ScheduleState::new()))
 }
 
 /// Pause the scheduler (`schedule:pause`).
@@ -145,11 +160,6 @@ fn modifier_names(cmd: &crate::command::ScheduleCommand) -> Vec<&'static str> {
 
 /// Alias keeping the pause/resume doc surface discoverable.
 pub type SchedulePauseFacade = Arc<ScheduleState>;
-
-/// Fetch the shared state as an `Arc` (for `withScheduling` wiring).
-pub fn shared_state() -> Arc<ScheduleState> {
-    Arc::new(ScheduleState::new())
-}
 
 /// Pause-state error shape used by the CLI when idempotence is asserted.
 pub fn already_paused() -> ScheduleError {

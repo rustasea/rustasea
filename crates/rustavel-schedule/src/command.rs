@@ -151,7 +151,7 @@ fn next_cron_match(
     let dom_unrestricted = is_dom_unrestricted(&days);
     for _ in 0..(366 * 24 * 60) {
         let n = cursor.naive_utc();
-        let weekday = n.weekday().num_days_from_sunday() as u32;
+        let weekday = n.weekday().num_days_from_sunday();
         let dom_ok = days.contains(&n.day()) || (dom_unrestricted && weekdays.contains(&weekday));
         let month_ok = months.contains(&n.month());
         let hour_ok = hours.contains(&n.hour());

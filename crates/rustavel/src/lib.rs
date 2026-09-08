@@ -10,23 +10,29 @@ pub use rustavel_schedule as schedule;
 pub use config::ConfigLoader;
 pub use foundation::{Application, Container, ServiceProvider};
 pub use rustavel_auth as auth;
+pub use rustavel_cli as cli;
 pub use rustavel_http as http;
 pub use rustavel_macros as macros;
 pub use rustavel_orm as orm;
 pub use rustavel_router as router;
+pub use rustavel_testing as testing;
 pub use rustavel_validation as validation;
 
 /// Queue re-exports for typed job dispatch ergonomics (M4).
 pub use queue::{
-    ConcreteJob, DispatchHandle, ErasedJob, FailedJob, Job, JobError, JobId, JobOutcome, Queue,
-    QueueDriver, QueueError, QueueRegistry, ShouldRetry, ShouldRetryUntil,
+    async_trait as queue_async_trait, ConcreteJob, DispatchHandle, ErasedJob, FailedJob, Job,
+    JobError, JobId, JobOutcome, Queue, QueueDriver, QueueError, QueueRegistry, ShouldRetry,
+    ShouldRetryUntil,
 };
 
 /// Cache re-exports for store/repository ergonomics (M4).
 pub use cache::{CacheError, CacheManager, Lock, LockError, LockGuard, Store};
 
 /// Events re-exports for dispatch ergonomics (M4).
-pub use events::{Dispatcher, Event, EventError, JobAttempted, Listener, QueueBusy};
+pub use events::{
+    async_trait as events_async_trait, Dispatcher, Event, EventError, JobAttempted, Listener,
+    QueueBusy,
+};
 
 /// Schedule re-exports for scheduler ergonomics (M4).
 pub use schedule::{
@@ -49,3 +55,15 @@ pub use auth::{
 
 /// Validation re-exports (`#[validate]` wiring surface).
 pub use validation::{ErrorBag, FormRequest, Rules, Validatable, ValidationError};
+
+/// CLI re-exports (`Artisan::call`, `Command` trait, generators).
+pub use cli::{
+    Artisan, Command, CommandMeta, CommandOutput, CommandRegistry, Generator, GeneratorError, Io,
+    Registered, Shutdownable,
+};
+
+/// Testing re-exports (`TestCase`, factories, paginator views).
+pub use testing::{
+    bootstrap_3, factory_registry, paginator_view, reset_factory_sequences, str_factory, TestCase,
+    TestConfig, TestError,
+};

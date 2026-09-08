@@ -27,7 +27,9 @@ impl ConfigLoader {
             builder = builder.add_source(File::with_name(f).required(false));
         }
         builder = builder.add_source(config::Environment::default().separator("__"));
-        Ok(Self { inner: builder.build()? })
+        Ok(Self {
+            inner: builder.build()?,
+        })
     }
 
     /// Deserialize entire config into T.

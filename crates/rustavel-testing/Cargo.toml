@@ -1,0 +1,23 @@
+[package]
+name = "rustavel-testing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Rustavel testing harness — TestCase, testcontainers isolation, factory sequence resets, paginator views."
+
+[features]
+default = ["containers"]
+containers = ["dep:dotenvy"]
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+uuid = { workspace = true, features = ["v4", "serde"] }
+thiserror = { workspace = true }
+rustavel-foundation = { path = "../rustavel-foundation" }
+rustavel-config = { path = "../rustavel-config" }
+rustavel-orm = { path = "../rustavel-orm" }
+rustavel-cache = { path = "../rustavel-cache" }
+dotenvy = { workspace = true, optional = true }

@@ -22,6 +22,13 @@ impl BatchId {
     }
 }
 
+impl Default for BatchId {
+    /// A fresh random batch id (matches [`BatchId::new`]).
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl std::fmt::Display for BatchId {
     /// Render the batch id as its hyphenated UUID string.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

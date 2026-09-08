@@ -28,10 +28,13 @@ pub enum BindingKind {
     Instance,
 }
 
+/// A container factory producing a boxed, thread-safe value from the container.
+type Factory = Box<dyn Fn(&Container) -> Box<dyn Any + Send + Sync> + Send + Sync>;
+
 /// DI container with Bind/Singleton/Instance semantics.
 pub struct Container {
-    factories: HashMap<String, Box<dyn Fn(&Container) -> Box<dyn Any + Send + Sync> + Send + Sync>>,
-    singleton_factories: HashMap<String, Box<dyn Fn(&Container) -> Box<dyn Any + Send + Sync> + Send + Sync>>,
+    factories: HashMap<String, Factory>,
+    singleton_factories: HashMap<String, Factory>,
     instances: HashMap<String, Box<dyn Any + Send + Sync>>,
     singleton_cache: HashMap<String, Box<dyn Any + Send + Sync>>,
     type_registry: HashMap<String, String>,
@@ -62,7 +65,8 @@ impl Container {
         F: Fn(&Container) -> Box<dyn Any + Send + Sync> + Send + Sync + 'static,
     {
         let k = key.into();
-        self.type_registry.insert(k.clone(), stringify!(BindingKind::Bind).to_string());
+        self.type_registry
+            .insert(k.clone(), stringify!(BindingKind::Bind).to_string());
         self.factories.insert(k, Box::new(factory));
     }
 
@@ -72,7 +76,8 @@ impl Container {
         F: Fn(&Container) -> Box<dyn Any + Send + Sync> + Send + Sync + 'static,
     {
         let k = key.into();
-        self.type_registry.insert(k.clone(), stringify!(BindingKind::Singleton).to_string());
+        self.type_registry
+            .insert(k.clone(), stringify!(BindingKind::Singleton).to_string());
         self.singleton_factories.insert(k, Box::new(factory));
     }
 
@@ -82,7 +87,8 @@ impl Container {
         T: Any + Send + Sync + 'static,
     {
         let k = key.into();
-        self.type_registry.insert(k.clone(), stringify!(BindingKind::Instance).to_string());
+        self.type_registry
+            .insert(k.clone(), stringify!(BindingKind::Instance).to_string());
         self.instances.insert(k, Box::new(value));
     }
 
@@ -98,22 +104,23 @@ impl Container {
     }
 
     /// Resolve or create a singleton value by key.
-    pub fn make_singleton<T: Any + Send + Sync + Clone + 'static>(&mut self, key: &str) -> Option<T> {
+    pub fn make_singleton<T: Any + Send + Sync + Clone + 'static>(
+        &mut self,
+        key: &str,
+    ) -> Option<T> {
         if let Some(v) = self.singleton_cache.get(key) {
             return v.downcast_ref::<T>().cloned();
         }
         let factory = self.singleton_factories.get(key)?;
         let boxed = factory(self);
         let typed = boxed.downcast_ref::<T>()?.clone();
-        self.singleton_cache.insert(key.to_string(), Box::new(typed.clone()));
+        self.singleton_cache
+            .insert(key.to_string(), Box::new(typed.clone()));
         Some(typed)
     }
 
     /// Resolve a transient binding by key.
-    pub fn make_transient<T: Any + Send + Sync + 'static>(&self, key: &str) -> Option<T>
-    where
-        T: Clone,
-    {
+    pub fn make_transient<T: Any + Send + Sync + Clone + 'static>(&self, key: &str) -> Option<T> {
         let factory = self.factories.get(key)?;
         let boxed = factory(self);
         boxed.downcast_ref::<T>().cloned()
@@ -214,8 +221,10 @@ pub mod shutdown {
     pub async fn graceful(_timeout: Duration) {
         #[cfg(unix)]
         {
-            let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).ok();
-            let mut int = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::interrupt()).ok();
+            let mut term =
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).ok();
+            let mut int =
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::interrupt()).ok();
             tokio::select! {
                 _ = async { if let Some(s) = term.as_mut() { s.recv().await; } } => {},
                 _ = async { if let Some(s) = int.as_mut() { s.recv().await; } } => {},

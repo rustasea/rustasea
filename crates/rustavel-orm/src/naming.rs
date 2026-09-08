@@ -39,7 +39,7 @@ pub fn to_snake_case(input: &str) -> String {
     let mut out = String::with_capacity(input.len() + 4);
     for (i, ch) in input.chars().enumerate() {
         if ch.is_uppercase() {
-            if i > 0 {
+            if i > 0 && !out.ends_with('_') {
                 out.push('_');
             }
             out.extend(ch.to_lowercase());

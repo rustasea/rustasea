@@ -144,11 +144,15 @@ impl Router {
     /// Return all registered routes, domain-constrained first.
     pub fn get_routes(&self) -> Vec<RouteEntry> {
         let mut routes = self.routes.clone();
-        routes.sort_by(|a, b| b.domain.is_some().cmp(&a.domain.is_some()));
+        routes.sort_by_key(|r| !r.domain.is_some());
         routes
     }
 
     /// Alias for get_routes for Laravel naming parity.
+    ///
+    /// Non-snake-case by design: mirrors the Laravel `getRoutes` collector name
+    /// so framework docs map 1:1 onto the Rust surface.
+    #[allow(non_snake_case)]
     pub fn getRoutes(&self) -> Vec<RouteEntry> {
         self.get_routes()
     }

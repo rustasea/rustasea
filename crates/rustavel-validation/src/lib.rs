@@ -12,6 +12,4 @@ pub mod strict;
 pub use error_bag::{ErrorBag, ValidationError};
 pub use form_request::FormRequest;
 pub use rules::{Rules, Validatable};
-pub use strict::{
-    contains_strict, doesnt_contain, in_array_strict, matches_strict, StrictValue,
-};
+pub use strict::{contains_strict, doesnt_contain, in_array_strict, matches_strict, StrictValue};
