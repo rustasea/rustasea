@@ -1,6 +1,11 @@
 //! Model trait, timestamps, soft deletes, and relations.
 
+use crate::builder::{QueryBuilder, Raw, SqlFragment};
+use crate::error::{OrmError, Result};
+use crate::execution::count_sql;
+use crate::m2::{InsertBuilder, ModelScopes, UpsertBuilder};
 use crate::naming::snake_plural;
+use crate::types::Value;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -141,6 +146,176 @@ pub trait Model: Send + Sync {
         Self: Sized,
     {
         true
+    }
+
+    /// The set of columns the ORM writes on insert (timestamps first).
+    ///
+    /// Derived models expose their tracked columns through the macro; this
+    /// default covers the canonical `created_at`/`updated_at` pair.
+    fn insert_columns() -> Vec<&'static str>
+    where
+        Self: Sized,
+    {
+        if Self::uses_timestamps() {
+            vec!["created_at", "updated_at"]
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// The column bumped on update (`updated_at` when tracked).
+    fn updated_column() -> Option<&'static str>
+    where
+        Self: Sized,
+    {
+        Self::uses_timestamps().then_some("updated_at")
+    }
+
+    /// The soft-delete marker column, when the model soft deletes.
+    fn deleted_column() -> Option<&'static str>
+    where
+        Self: Sized,
+    {
+        Self::uses_soft_deletes().then_some("deleted_at")
+    }
+
+    /// Update tracked timestamps in memory (derive macro also emits `touch`).
+    fn touch(&mut self) {}
+
+    /// Insert SQL: caller columns, dialect-aware conflict guard.
+    fn insert_sql(_table: &str, builder: &InsertBuilder) -> Result<String>
+    where
+        Self: Sized,
+    {
+        ModelScopes::insert_sql(builder, crate::builder::dialect())
+    }
+
+    /// Upsert SQL with a strict `uniqueBy` (empty → typed error).
+    fn upsert_sql(builder: &UpsertBuilder) -> Result<String>
+    where
+        Self: Sized,
+    {
+        builder.to_sql()
+    }
+
+    /// Update SQL: `UPDATE t SET <cols> WHERE id = ?`.
+    ///
+    /// `assignments` are caller-owned `col = ?`-shaped fragments; the primary
+    /// key filter and optional `updated_at = now()` bump are appended.
+    fn update_sql(table: &str, assignments: &[String]) -> String
+    where
+        Self: Sized,
+    {
+        let mut parts = assignments.to_vec();
+        if let Some(col) = Self::updated_column() {
+            parts.push(format!("{col} = now()"));
+        }
+        let cols = parts.join(", ");
+        format!("UPDATE {table} SET {cols} WHERE id = $1")
+    }
+
+    /// Delete SQL: hard delete by primary key.
+    fn delete_sql(table: &str) -> String {
+        format!("DELETE FROM {table} WHERE id = $1")
+    }
+
+    /// Soft-delete SQL: `UPDATE t SET deleted_at = now() WHERE id = ?`.
+    fn soft_delete_sql(table: &str) -> String {
+        format!("UPDATE {table} SET deleted_at = now() WHERE id = $1")
+    }
+
+    /// Restore SQL: `UPDATE t SET deleted_at = NULL WHERE id = ?`.
+    fn restore_sql(table: &str) -> String {
+        format!("UPDATE {table} SET deleted_at = NULL WHERE id = $1")
+    }
+
+    /// Start a filtered query on the model table with the soft-delete guard.
+    fn query() -> QueryBuilder
+    where
+        Self: Sized,
+    {
+        QueryBuilder::table(Self::table_name()).with_soft_deletes(Self::uses_soft_deletes())
+    }
+
+    /// Query that includes soft-deleted rows.
+    fn query_with_trashed() -> QueryBuilder
+    where
+        Self: Sized,
+    {
+        QueryBuilder::table(Self::table_name()).with_trashed()
+    }
+
+    /// Query restricted to soft-deleted rows.
+    fn query_only_trashed() -> QueryBuilder
+    where
+        Self: Sized,
+    {
+        QueryBuilder::table(Self::table_name()).only_trashed()
+    }
+
+    /// Raw SELECT fragment over the model table (`Model::raw_sql`).
+    fn raw_select(sql: &str) -> Result<Raw>
+    where
+        Self: Sized,
+    {
+        let fragment: SqlFragment = sql.into();
+        let clause = fragment.sql;
+        let full = format!(
+            "SELECT * FROM {} WHERE {}",
+            Self::table_name(),
+            clause.trim()
+        );
+        Ok(Raw {
+            sql: full,
+            bindings: Vec::new(),
+        })
+    }
+
+    /// Build a SELECT that refreshes the row for update.
+    fn refresh_for_update(id: Uuid) -> Result<QueryBuilder>
+    where
+        Self: Sized,
+    {
+        let base = QueryBuilder::table(Self::table_name());
+        base.where_eq("id", Value::Uuid(id)).for_update()
+    }
+
+    /// COUNT projection honoring the current filters.
+    fn count_query(builder: &QueryBuilder) -> Result<String>
+    where
+        Self: Sized,
+    {
+        count_sql(builder)
+    }
+
+    /// Chunk the model table by primary-key windows.
+    fn chunk_by(size: u64, total: u64) -> Result<Vec<String>>
+    where
+        Self: Sized,
+    {
+        crate::execution::chunk_by(&Self::query(), "id", size, total)
+    }
+
+    /// `INSERT OR IGNORE` returning the inserted ids (dialect-aware).
+    fn insert_or_ignore_returning(table: &str, builder: &InsertBuilder) -> Result<String>
+    where
+        Self: Sized,
+    {
+        Self::insert_sql(table, builder)
+    }
+
+    /// Resolve the row for update and surface typed errors on missing rows.
+    fn first_for_update(id: Uuid) -> Result<QueryBuilder>
+    where
+        Self: Sized,
+    {
+        let qb = Self::refresh_for_update(id)?;
+        if qb.has_limit() {
+            return Err(OrmError::InvalidState(
+                "first_for_update cannot carry a LIMIT".into(),
+            ));
+        }
+        Ok(qb)
     }
 }
 

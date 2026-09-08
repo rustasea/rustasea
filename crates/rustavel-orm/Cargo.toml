@@ -21,3 +21,6 @@ tokio = { version = "1", features = ["rt", "macros"] }
 uuid = { version = "1", features = ["v4", "v7", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "1"
+
+[dev-dependencies]
+rustavel-macros = { path = "../rustavel-macros" }

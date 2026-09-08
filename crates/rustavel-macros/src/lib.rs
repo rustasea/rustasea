@@ -17,6 +17,8 @@
 //! runtime reads (FS-M5-03, FR-506).
 
 mod attrs;
+mod model;
+pub(crate) mod model_helpers;
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -102,6 +104,29 @@ pub fn validate_payload(input: TokenStream) -> TokenStream {
         }
     };
     expanded.into()
+}
+
+/// Derive macro implementing the ORM `Model` contract (M2).
+///
+/// Derives `table_name` from the type (`snake_plural` convention) and infers
+/// soft deletes / timestamps / the `id` primary key from the struct fields:
+///
+/// ```rust,ignore
+/// #[derive(Model)]
+/// #[model(table = "people", soft_deletes = "none")]
+/// struct User { id: Uuid, created_at: DateTime<Utc>, ... }
+/// ```
+///
+/// Optional `#[model(...)]` container attributes: `table = "..."` overrides
+/// the derived name; `soft_deletes = "none"` / `timestamps = "none"` opt out
+/// of inferred columns. Structs must carry a `uuid::Uuid` field named `id`.
+#[proc_macro_derive(Model, attributes(model))]
+pub fn derive_model(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match model::expand(&input) {
+        Ok(tokens) => tokens.into(),
+        Err(err) => err.to_compile_error().into(),
+    }
 }
 
 /// Attribute macro for validated payloads.

@@ -23,6 +23,7 @@ pub fn register_all_into(reg: &mut CommandRegistry) {
     reg.register(builtins::MakeObserver);
     reg.register(builtins::MakeTest);
     reg.register(builtins::MakeSeeder);
+    reg.register(builtins::MakeMigration);
     reg.register(builtins::MakeAgent);
     reg.register(builtins::MakeTool);
     reg.register(inspect::RouteList);

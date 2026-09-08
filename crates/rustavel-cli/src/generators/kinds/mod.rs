@@ -16,6 +16,7 @@ pub mod controller;
 pub mod event;
 pub mod job;
 pub mod listener;
+pub mod migration;
 pub mod model;
 pub mod observer;
 pub mod provider;
@@ -24,6 +25,7 @@ pub mod test;
 pub mod tool;
 
 pub use controller::scaffold as scaffold_controller;
+pub use migration::scaffold as scaffold_migration;
 pub use model::scaffold as scaffold_model;
 pub use model::scaffold_migration as scaffold_model_migration;
 

@@ -2,8 +2,8 @@
 //! pause/resume, migrate.
 //!
 //! Queue and schedule surfaces read the M4 registries (in-memory dead-letter
-//! sink, scheduler singleton); `migrate` reports compiled up-SQL until the
-//! database driver wiring lands.
+//! sink, scheduler singleton); `migrate` delegates SQL reporting to the ORM
+//! `Migrator` until pool execution wiring lands.
 
 use async_trait::async_trait;
 
@@ -249,7 +249,11 @@ impl Command for ScheduleRun {
     }
 }
 
-/// `migrate` — run pending migrations (in-process; pool wiring stubbed).
+/// `migrate` — report pending migrations through the ORM [`Migrator`].
+///
+/// Pool execution is not wired in this binary; the command builds a
+/// [`rustavel_orm::Migrator`], reports each registered migration's `up` SQL
+/// (or reversed `down` SQL under `--fresh`) and notes seeder availability.
 pub struct Migrate;
 
 #[async_trait]
@@ -266,15 +270,37 @@ impl Command for Migrate {
     fn help(&self) -> Option<&'static str> {
         Some("Run pending migrations")
     }
-    /// Execute: report the compiled up SQL; pool execution lands with the
-    /// database driver wiring (M2 follow-up).
+    /// Execute: delegate SQL reporting to the ORM Migrator.
     async fn run(&self, args: Vec<String>, io: &mut Io) -> CliResult<()> {
         let fresh = args.iter().any(|a| a == "--fresh");
         let seed = args.iter().any(|a| a == "--seed");
+        let migrator = rustavel_orm::Migrator::new();
+        let names = migrator.names();
+
+        if names.is_empty() {
+            io.line("No migrations registered in this binary — add them to `database/migrations/` and register each in the Migrator.");
+            if seed {
+                io.line("Seeding database… (no seeders registered)");
+            }
+            return Ok(());
+        }
+
         if fresh {
             io.line("migrate:fresh — rolling back all migrations…");
+            for sql in migrator.down_sql().unwrap_or_default() {
+                for statement in sql.lines().filter(|l| !l.trim().is_empty()) {
+                    io.line(format!("rollback: {statement}"));
+                }
+            }
         }
-        io.line("Migration runner: no migrations registered in this binary.");
+
+        io.line(format!("Running {} migration(s)…", names.len()));
+        for sql in migrator.up_sql().unwrap_or_default() {
+            for statement in sql.lines().filter(|l| !l.trim().is_empty()) {
+                io.line(format!("migrate: {statement}"));
+            }
+        }
+
         if seed {
             io.line("Seeding database…");
         }

@@ -1594,6 +1594,7 @@ dependencies = [
  "indicatif",
  "rustavel-foundation",
  "rustavel-macros",
+ "rustavel-orm",
  "rustavel-queue",
  "rustavel-schedule",
  "serde",
@@ -1669,6 +1670,7 @@ name = "rustavel-orm"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "rustavel-macros",
  "serde",
  "serde_json",
  "thiserror",

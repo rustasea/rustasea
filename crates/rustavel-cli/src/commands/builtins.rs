@@ -72,9 +72,14 @@ async fn run_make(kind: Kind, args: Vec<String>, io: &mut Io) -> CliResult<()> {
     let with_migration = args.iter().any(|a| a == "-m" || a == "--migration");
 
     if name.is_empty() {
+        let detail = if kind == Kind::Migration {
+            "expected a snake_case name, e.g. make:migration create_users_table"
+        } else {
+            "expected a PascalCase name, e.g. make:controller UserController"
+        };
         return Err(crate::error::CliError::InvalidArguments {
             command: kind.command().to_string(),
-            detail: "expected a PascalCase name, e.g. make:controller UserController".into(),
+            detail: detail.into(),
         });
     }
 
@@ -201,6 +206,13 @@ make_command!(
     "make:seeder",
     "Make a new database seeder",
     "make:seeder {name} [--force]"
+);
+make_command!(
+    MakeMigration,
+    Migration,
+    "make:migration",
+    "Make a new database migration",
+    "make:migration {name} [--force]"
 );
 make_command!(
     MakeAgent,

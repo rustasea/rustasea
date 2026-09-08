@@ -30,6 +30,7 @@ rustavel-foundation = { path = "../rustavel-foundation" }
 rustavel-queue = { path = "../rustavel-queue" }
 rustavel-schedule = { path = "../rustavel-schedule" }
 rustavel-macros = { path = "../rustavel-macros" }
+rustavel-orm = { path = "../rustavel-orm" }
 clap = { workspace = true, optional = true }
 dialoguer = { workspace = true, optional = true }
 indicatif = { workspace = true, optional = true }

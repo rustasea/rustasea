@@ -37,6 +37,8 @@ pub enum Kind {
     Test,
     /// `make:seeder` — database seeder.
     Seeder,
+    /// `make:migration` — database migration.
+    Migration,
     /// `make:agent` — AI agent scaffold (M6 adjacency).
     Agent,
     /// `make:tool` — AI tool scaffold (M6 adjacency).
@@ -57,6 +59,7 @@ impl Kind {
             "observer" => Kind::Observer,
             "test" => Kind::Test,
             "seeder" => Kind::Seeder,
+            "migration" => Kind::Migration,
             "agent" => Kind::Agent,
             "tool" => Kind::Tool,
             _ => return None,
@@ -76,6 +79,7 @@ impl Kind {
             Kind::Observer => "make:observer",
             Kind::Test => "make:test",
             Kind::Seeder => "make:seeder",
+            Kind::Migration => "make:migration",
             Kind::Agent => "make:agent",
             Kind::Tool => "make:tool",
         }
@@ -85,7 +89,7 @@ impl Kind {
 /// Options shared by every generator invocation.
 #[derive(Debug, Clone)]
 pub struct MakeOptions {
-    /// Scaffold name (PascalCase), e.g. `UserController`.
+    /// Scaffold name — PascalCase for class kinds, snake_case for `make:migration`.
     pub name: String,
     /// Overwrite existing files.
     pub force: bool,
@@ -111,11 +115,22 @@ pub fn generate(kind: Kind, root: &Path, opts: &MakeOptions) -> CliResult<Vec<Ge
         Kind::Observer => "observer",
         Kind::Test => "test",
         Kind::Seeder => "seeder",
+        Kind::Migration => "migration",
         Kind::Agent => "agent",
         Kind::Tool => "tool",
     };
-    if let Err(err) = Generator::validate_name(kind_label, &opts.name) {
-        return Err(err.into());
+    // `make:migration` names are snake_case (`create_users_table`), so they
+    // skip the PascalCase check shared by the class-based kinds.
+    if kind != Kind::Migration {
+        if let Err(err) = Generator::validate_name(kind_label, &opts.name) {
+            return Err(err.into());
+        }
+    } else if !kinds::migration::validate_name(&opts.name) {
+        return Err(GeneratorError::InvalidName {
+            kind: kind_label.to_string(),
+            name: opts.name.clone(),
+        }
+        .into());
     }
 
     let mut written = Vec::new();
@@ -128,6 +143,9 @@ pub fn generate(kind: Kind, root: &Path, opts: &MakeOptions) -> CliResult<Vec<Ge
             if opts.with_migration {
                 written.push(kinds::model::scaffold_migration(root, opts)?);
             }
+        }
+        Kind::Migration => {
+            written.push(kinds::migration::scaffold(root, opts)?);
         }
         Kind::Provider => {
             written.push(kinds::provider::scaffold(root, opts)?);
@@ -176,6 +194,7 @@ pub fn kind_help(kind: Kind) -> &'static str {
         Kind::Observer => "Make a new model observer",
         Kind::Test => "Make a new feature test",
         Kind::Seeder => "Make a new database seeder",
+        Kind::Migration => "Make a new database migration",
         Kind::Agent => "Make a new AI agent (M6)",
         Kind::Tool => "Make a new AI tool (M6)",
     }
@@ -186,6 +205,7 @@ pub fn kind_usage(kind: Kind) -> &'static str {
     match kind {
         Kind::Controller => "make:controller {name} [--resource]",
         Kind::Model => "make:model {name} [-m] [--force]",
+        Kind::Migration => "make:migration {name} [--force]",
         Kind::Provider
         | Kind::Command
         | Kind::Job

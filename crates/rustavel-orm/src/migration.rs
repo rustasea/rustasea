@@ -101,6 +101,14 @@ pub trait Factory<T>: Send + Sync {
 
     /// Number of instances produced so far (sequence counter).
     fn count(&self) -> usize;
+
+    /// Produce the next instance (alias of [`Factory::definition`]).
+    ///
+    /// Matches the `Factory::create` call shape used by seed/test code; a
+    /// single instance is returned, `create_many(n)` batches them.
+    fn create(&mut self) -> T {
+        self.definition()
+    }
 }
 
 /// Marker type for the `migrations` table row recorded per batch.

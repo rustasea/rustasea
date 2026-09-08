@@ -1,11 +1,11 @@
 //! Fluent SQL query builder (in-memory SQL emission; sqlx execution wired in S03-T01).
 
-use crate::error::{OrmError, Result, UpsertError};
-use crate::scopes::ScopeRegistry;
+use crate::error::{OrmError, Result};
 use crate::types::{JsonFilter, Value};
 
-#[cfg(feature = "vector")]
-use crate::vector::VectorSimilarity;
+pub use crate::clause::{Lock, OrderDirection, Raw, SqlFragment, TransactionStub};
+
+mod ext;
 
 /// Driver dialect selected via cargo features (Postgres default).
 pub fn dialect() -> &'static str {
@@ -27,87 +27,10 @@ pub fn dialect() -> &'static str {
     }
 }
 
-/// Pessimistic lock clause.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Lock {
-    /// `FOR UPDATE` — blocks concurrent writers.
-    ForUpdate,
-    /// `FOR SHARE` — blocks writers, allows readers.
-    Shared,
-}
-
-impl Lock {
-    /// Emit the lock clause for the active dialect.
-    pub fn to_sql(&self, dialect: &str) -> Result<String> {
-        match dialect {
-            "postgres" => match self {
-                Lock::ForUpdate => Ok("FOR UPDATE".into()),
-                Lock::Shared => Ok("FOR SHARE".into()),
-            },
-            "mysql" => match self {
-                Lock::ForUpdate => Ok("FOR UPDATE".into()),
-                Lock::Shared => Ok("LOCK IN SHARE MODE".into()),
-            },
-            "sqlite" => Err(OrmError::UnsupportedDriver(
-                "sqlite has no row locks".into(),
-            )),
-            other => Err(OrmError::UnsupportedDriver(other.to_string())),
-        }
-    }
-}
-
-/// Sort direction.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum OrderDirection {
-    /// Ascending.
-    Asc,
-    /// Descending.
-    Desc,
-}
-
-impl OrderDirection {
-    /// SQL keyword.
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            OrderDirection::Asc => "ASC",
-            OrderDirection::Desc => "DESC",
-        }
-    }
-}
-
-/// A raw SQL fragment with bound values.
+/// A `JOIN` clause carried by the builder (`straight_join` hint).
 #[derive(Debug, Clone)]
-pub struct Raw {
-    /// SQL text with `$1`-style placeholders.
-    pub sql: String,
-    /// Bind values.
-    pub bindings: Vec<Value>,
-}
-
-/// Transaction handle stub — real `BEGIN/COMMIT/ROLLBACK` wired in S03-T01.
-#[derive(Debug)]
-pub struct TransactionStub {
-    /// Whether the transaction is still open.
-    pub open: bool,
-}
-
-impl TransactionStub {
-    /// Begin a transaction (stub).
-    pub fn begin() -> Self {
-        Self { open: true }
-    }
-
-    /// Commit the transaction (stub).
-    pub fn commit(mut self) -> Result<()> {
-        self.open = false;
-        Ok(())
-    }
-
-    /// Roll back the transaction (stub).
-    pub fn rollback(mut self) -> Result<()> {
-        self.open = false;
-        Ok(())
-    }
+struct JoinClause {
+    sql: String,
 }
 
 /// A single WHERE condition.
@@ -133,12 +56,16 @@ pub struct QueryBuilder {
     table: String,
     columns: Vec<String>,
     conditions: Vec<Condition>,
+    joins: Vec<JoinClause>,
     orders: Vec<OrderBy>,
     limit: Option<u64>,
     offset: Option<u64>,
     lock: Option<Lock>,
     scope_active: Vec<String>,
     bindings: Vec<Value>,
+    /// Soft-delete guard state: `None` = not applied, `true` = include trashed,
+    /// `false` = active rows only (`deleted_at IS NULL`).
+    soft_delete_guard: Option<bool>,
 }
 
 impl QueryBuilder {
@@ -182,6 +109,59 @@ impl QueryBuilder {
         self.conditions.push(Condition {
             glue: "OR",
             sql: format!("{column} = ${idx}"),
+            bindings: Vec::new(),
+        });
+        self
+    }
+
+    /// Add an OR equality clause on the primary key (`orWhereKey`).
+    pub fn or_where_key(self, column: &str, value: impl Into<Value>) -> Self {
+        self.or_where_eq(column, value)
+    }
+
+    /// Add a `WHERE column = ?` on a raw byte string (`whereBinary`).
+    pub fn where_binary(mut self, column: &str, value: &[u8]) -> Self {
+        self.bindings.push(Value::Text(
+            value.iter().map(|b| format!("{b:02x}")).collect::<String>(),
+        ));
+        let idx = self.bindings.len();
+        self.conditions.push(Condition {
+            glue: "AND",
+            sql: format!("encode({column}, 'hex') = ${idx}"),
+            bindings: Vec::new(),
+        });
+        self
+    }
+
+    /// Add an arbitrary operator clause: `where("age", ">", 18)`.
+    pub fn where_op(
+        mut self,
+        column: &str,
+        operator: &str,
+        value: impl Into<Value>,
+    ) -> Result<Self> {
+        let allowed = ["=", "!=", "<>", ">", ">=", "<", "<=", "LIKE", "NOT LIKE"];
+        if !allowed.contains(&operator) {
+            return Err(OrmError::InvalidState(format!(
+                "unsupported operator `{operator}`"
+            )));
+        }
+        let value = value.into();
+        self.bindings.push(value);
+        let idx = self.bindings.len();
+        self.conditions.push(Condition {
+            glue: "AND",
+            sql: format!("{column} {operator} ${idx}"),
+            bindings: Vec::new(),
+        });
+        Ok(self)
+    }
+
+    /// Splice a raw SQL fragment into the WHERE clause (unparameterized).
+    pub fn where_raw(mut self, fragment: impl Into<SqlFragment>) -> Self {
+        self.conditions.push(Condition {
+            glue: "AND",
+            sql: fragment.into().sql,
             bindings: Vec::new(),
         });
         self
@@ -270,107 +250,56 @@ impl QueryBuilder {
         self
     }
 
-    /// Apply a pessimistic lock clause.
-    pub fn lock(mut self, lock: Lock) -> Result<Self> {
-        lock.to_sql(dialect())?; // validate early for sqlite
-        self.lock = Some(lock);
-        Ok(self)
+    /// Bind values in positional order.
+    pub fn bindings(&self) -> &[Value] {
+        &self.bindings
     }
 
-    /// Convenience: `FOR UPDATE`.
-    pub fn for_update(self) -> Result<Self> {
-        self.lock(Lock::ForUpdate)
+    /// Whether any rows would match (used by `first` semantics).
+    pub fn has_limit(&self) -> bool {
+        self.limit.is_some()
     }
 
-    /// Convenience: `FOR SHARE`.
-    pub fn shared_lock(self) -> Result<Self> {
-        self.lock(Lock::Shared)
+    /// Whether the query currently filters on the primary key column.
+    pub fn has_where_key(&self) -> bool {
+        self.conditions
+            .iter()
+            .any(|c| c.sql.starts_with("id = $") || c.sql.starts_with("id IN ("))
     }
 
-    /// Apply a named scope via a registry (composable scopes, S03-T03).
-    pub fn with_scope(mut self, registry: &ScopeRegistry, name: &str) -> Self {
-        let table = self.table.clone();
-        registry.apply(&mut self, &table, name);
-        self.scope_active.push(name.to_string());
-        self
+    /// Whether the builder has conditions applied.
+    pub fn has_conditions(&self) -> bool {
+        !self.conditions.is_empty()
     }
 
-    /// Apply the soft-delete guard when the model uses `deleted_at`.
-    pub fn with_soft_deletes(self, uses: bool) -> Self {
-        if uses {
-            self.where_null("deleted_at")
-        } else {
-            self
+    /// The active ORDER BY clause (used by `delete_sql` for MySQL JOIN deletes).
+    pub fn order_clause(&self) -> Option<String> {
+        if self.orders.is_empty() {
+            return None;
         }
-    }
-
-    /// Include soft-deleted rows (no `deleted_at IS NULL` guard).
-    pub fn with_trashed(self) -> Self {
-        self
-    }
-
-    /// Compute OFFSET pagination window (`page` is 1-based).
-    pub fn for_page(self, page: u64, per_page: u64) -> Self {
-        let offset = page.saturating_sub(1).saturating_mul(per_page);
-        self.limit(per_page).offset(offset)
-    }
-
-    /// Cursor pagination window: rows strictly after `cursor` on the order column.
-    pub fn cursor(mut self, column: &str, cursor: Value) -> Self {
-        self.bindings.push(cursor);
-        let idx = self.bindings.len();
-        let dir = self
+        let parts: Vec<String> = self
             .orders
             .iter()
-            .find(|o| o.column == column)
-            .map(|o| o.direction)
-            .unwrap_or(OrderDirection::Asc);
-        let op = match dir {
-            OrderDirection::Asc => ">",
-            OrderDirection::Desc => "<",
-        };
-        self.conditions.push(Condition {
-            glue: "AND",
-            sql: format!("{column} {op} ${idx}"),
-            bindings: Vec::new(),
-        });
-        self
+            .map(|o| format!("{} {}", o.column, o.direction.as_str()))
+            .collect();
+        Some(parts.join(", "))
     }
 
-    /// Validate an `upsert` call — strict `uniqueBy` enforcement (FS-M2-04).
-    pub fn assert_upsert(unique_by: &[&str], rows: usize) -> Result<()> {
-        if unique_by.is_empty() {
-            return Err(UpsertError::EmptyUniqueBy.into());
+    /// Render the WHERE clause, or `None` when no conditions exist.
+    pub fn where_clause(&self) -> Option<String> {
+        if self.conditions.is_empty() {
+            return None;
         }
-        if rows > 1000 {
-            return Err(UpsertError::BatchTooLarge(rows).into());
+        let mut out = String::new();
+        for (i, cond) in self.conditions.iter().enumerate() {
+            if i > 0 {
+                out.push(' ');
+                out.push_str(cond.glue);
+                out.push(' ');
+            }
+            out.push_str(&cond.sql);
         }
-        Ok(())
-    }
-
-    /// Add a vector similarity clause (`ORDER BY col <=> $n LIMIT k`) — requires `vector` feature.
-    #[cfg(feature = "vector")]
-    pub fn where_vector_similar_to(
-        mut self,
-        column: &str,
-        embedding: &[f32],
-        limit: u32,
-    ) -> Result<Self> {
-        let sim = VectorSimilarity::new(embedding.to_vec())?;
-        self.bindings.push(Value::Vector(sim.embedding.clone()));
-        let idx = self.bindings.len();
-        self.orders = Vec::new(); // similarity ordering replaces explicit orders
-        self.conditions.push(Condition {
-            glue: "AND",
-            sql: format!("{column} IS NOT NULL AND {column} <=> ${idx}"),
-            bindings: Vec::new(),
-        });
-        self.orders.push(OrderBy {
-            column: format!("{column} <=> ${idx}"),
-            direction: OrderDirection::Asc,
-        });
-        self.limit = Some(limit as u64);
-        Ok(self)
+        Some(out)
     }
 
     /// Render the SELECT statement with `$n` placeholders (never interpolates values).
@@ -381,6 +310,10 @@ impl QueryBuilder {
             self.columns.join(", ")
         };
         let mut sql = format!("SELECT {columns} FROM {}", self.table);
+        for join in &self.joins {
+            sql.push(' ');
+            sql.push_str(&join.sql);
+        }
         if let Some(clause) = self.where_clause() {
             sql.push_str(" WHERE ");
             sql.push_str(&clause);
@@ -407,6 +340,24 @@ impl QueryBuilder {
         Ok(sql)
     }
 
+    /// Render the raw-SQL form: the table fragment with filters applied.
+    ///
+    /// Display-only diagnostic for `raw_sql` helpers; the SELECT projection
+    /// never matters for count/delete/update emission.
+    pub fn to_raw_sql_clause(&self) -> Result<String> {
+        let mut sql = String::from("FROM ");
+        sql.push_str(&self.table);
+        for join in &self.joins {
+            sql.push(' ');
+            sql.push_str(&join.sql);
+        }
+        if let Some(clause) = self.where_clause() {
+            sql.push_str(" WHERE ");
+            sql.push_str(&clause);
+        }
+        Ok(sql)
+    }
+
     /// Render the statement with inlined literals — **display only, never executed**.
     pub fn to_raw_sql(&self) -> Result<String> {
         let sql = self.to_sql()?;
@@ -415,33 +366,6 @@ impl QueryBuilder {
             out = out.replace(&format!("${}", i + 1), &value.to_literal());
         }
         Ok(out)
-    }
-
-    /// Bind values in positional order.
-    pub fn bindings(&self) -> &[Value] {
-        &self.bindings
-    }
-
-    /// Whether any rows would match (used by `first` semantics).
-    pub fn has_limit(&self) -> bool {
-        self.limit.is_some()
-    }
-
-    /// Render the WHERE clause, or `None` when no conditions exist.
-    pub fn where_clause(&self) -> Option<String> {
-        if self.conditions.is_empty() {
-            return None;
-        }
-        let mut out = String::new();
-        for (i, cond) in self.conditions.iter().enumerate() {
-            if i > 0 {
-                out.push(' ');
-                out.push_str(cond.glue);
-                out.push(' ');
-            }
-            out.push_str(&cond.sql);
-        }
-        Some(out)
     }
 }
 
@@ -475,7 +399,10 @@ mod tests {
     #[test]
     fn upsert_rejects_empty_unique_by() {
         let err = QueryBuilder::assert_upsert(&[], 1).unwrap_err();
-        assert!(matches!(err, OrmError::Upsert(UpsertError::EmptyUniqueBy)));
+        assert!(matches!(
+            err,
+            OrmError::Upsert(crate::error::UpsertError::EmptyUniqueBy)
+        ));
     }
 
     /// Verifies pagination window math.
