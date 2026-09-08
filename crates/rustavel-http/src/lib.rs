@@ -6,6 +6,35 @@ use axum::Json as AxumJson;
 use serde::Serialize;
 use serde_json::Value;
 
+/// Security posture consumed by HTTP middleware.
+///
+/// Plain data only — the enforcing types (PreventRequestForgery, Throttle)
+/// live in `rustavel-auth`, which depends on this crate; keeping the config
+/// data here preserves the DAG (AUTH -> HTTP) without cycles.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct SecurityConfig {
+    /// Origin allow-list for CSRF (`config.app.csrf_origins`).
+    pub csrf_origins: Vec<String>,
+    /// Trusted proxy CIDRs; `X-Forwarded-For` is ignored until non-empty.
+    pub trusted_proxies: Vec<String>,
+}
+
+impl SecurityConfig {
+    /// Create a security config from a CSRF origin allow-list.
+    pub fn with_csrf_origins(origins: Vec<String>) -> Self {
+        Self {
+            csrf_origins: origins,
+            trusted_proxies: Vec::new(),
+        }
+    }
+
+    /// Mark proxies as trusted so forwarded identities are honored.
+    pub fn behind_proxies(mut self, proxies: Vec<String>) -> Self {
+        self.trusted_proxies = proxies;
+        self
+    }
+}
+
 /// Shared application state passed to handlers.
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -13,6 +42,8 @@ pub struct AppState {
     pub env: String,
     /// Debug flag.
     pub debug: bool,
+    /// Security posture (CSRF origins, trusted proxies).
+    pub security: SecurityConfig,
 }
 
 impl AppState {
@@ -21,7 +52,19 @@ impl AppState {
         Self {
             env: env.into(),
             debug,
+            security: SecurityConfig::default(),
         }
+    }
+
+    /// Attach the security posture.
+    pub fn with_security(mut self, security: SecurityConfig) -> Self {
+        self.security = security;
+        self
+    }
+
+    /// Convenience accessor for the CSRF origin allow-list.
+    pub fn csrf_origins(&self) -> &[String] {
+        &self.security.csrf_origins
     }
 }
 
@@ -101,7 +144,11 @@ impl Default for CorsConfig {
     }
 }
 
-/// Throttle / rate-limit middleware stub.
+/// Throttle / rate-limit middleware configuration.
+///
+/// The enforcing `MemoryRateLimiter` + tower middleware live in
+/// `rustavel-auth` (M3). This config type is the HTTP-layer representation
+/// parsed from `#[middleware("throttle:60,1")]` specs before delegation.
 #[derive(Debug, Clone)]
 pub struct ThrottleConfig {
     /// Max requests per window.

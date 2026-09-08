@@ -11,3 +11,9 @@ rustavel-router = { path = "../rustavel-router" }
 rustavel-http = { path = "../rustavel-http" }
 rustavel-macros = { path = "../rustavel-macros" }
 rustavel-orm = { path = "../rustavel-orm" }
+rustavel-auth = { path = "../rustavel-auth" }
+rustavel-validation = { path = "../rustavel-validation" }
+
+[dev-dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }

@@ -3,12 +3,12 @@ name = "rustavel-macros"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Procedural macros for Rustavel — #[route] and #[middleware]"
+description = "Procedural macros for Rustavel — #[route], #[middleware], #[authorize], #[validate]"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-syn = { version = "2", features = ["full"] }
-quote = "1"
-proc-macro2 = "1"
+syn = { workspace = true }
+quote = { workspace = true }
+proc-macro2 = { workspace = true }
