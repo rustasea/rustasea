@@ -8,6 +8,8 @@
 
 pub mod channel;
 pub mod error;
+#[cfg(feature = "ws")]
+pub mod hub;
 pub mod sse;
 #[cfg(feature = "ws")]
 pub mod ws;
@@ -18,10 +20,12 @@ pub use channel::{
     Subscriber, WS_CLOSE_UNAUTHENTICATED, WS_CLOSE_UNAUTHORIZED,
 };
 pub use error::{BroadcastError, Result};
+#[cfg(feature = "ws")]
+pub use hub::{BroadcastHub, WsMessage};
 pub use sse::{event_stream, event_stream_response, EventSender, EventStream, SseEvent};
 #[cfg(feature = "ws")]
 pub use ws::{
-    ws_frame, ws_handler, ws_route, BroadcastHub, SubscribeFrame, WebSocketConfig, WsMessage,
+    ws_frame, ws_handler, ws_route, SubscribeFrame, WebSocketConfig, WsAck, WsConnection,
 };
 
 /// Trait for broadcastable events that know their destination channel.
