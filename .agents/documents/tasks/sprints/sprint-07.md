@@ -1,6 +1,6 @@
 # Sprint 07 — M6 Advanced (Broadcast, Search, Filesystem, AI SDK, Real-time)
 
-> **Milestone:** M6 · **Window:** 2027-07-01 → 2027-12-31 · **Status:** Planned
+> **Milestone:** M6 · **Window:** 2027-07-01 → 2027-12-31 · **Status:** In Progress — core surfaces landed (M5 generators, M6 broadcast/search/storage/ai), drivers/SDKs pending · Delivered ahead of 2027 window per 2026-09 automation (core at bdcb18c/63c9e66)
 > **Parents:** `../roadmap.md` · `prd.md` FR-600–FR-612 · `fsd.md` FS-M6-01–FS-M6-07 · `design/architecture.md`
 > **Depends On:** M1–M5 (Sprints 01–06)
 > **Crates:** `rustavel-broadcast`, `rustavel-storage`, `rustavel-search`, `rustavel-ai` (`optional` feature, provider adapters feature-flagged)

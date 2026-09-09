@@ -35,7 +35,7 @@ pub enum QueueError {
 
     /// The routed queue registry is not yet booted (no route registered).
     #[error("no route registered for job type {0}; register with Queue::route before dispatch")]
-    Unrouted(&'static str),
+    Unrouted(String),
 
     /// The registry lock was poisoned by a panicking dispatcher.
     #[error("queue registry lock poisoned")]

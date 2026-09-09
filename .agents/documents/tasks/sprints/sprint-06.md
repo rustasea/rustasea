@@ -1,6 +1,6 @@
 # Sprint 06 — M5 DX, CLI & Testing
 
-> **Milestone:** M5 · **Window:** 2027-05-15 → 2027-08-31 · **Status:** Planned
+> **Milestone:** M5 · **Window:** 2027-05-15 → 2027-08-31 · **Status:** In Progress — core surfaces landed (M5 generators, M6 broadcast/search/storage/ai), drivers/SDKs pending · Delivered ahead of 2027 window per 2026-09 automation (core at bdcb18c/63c9e66)
 > **Parents:** `../roadmap.md` · `prd.md` FR-500–FR-509 · `fsd.md` FS-M5-01–FS-M5-07 · `design/architecture.md`
 > **Depends On:** M0–M4 (Sprints 01–05)
 > **Crates:** `rustavel-cli`, `rustavel-macros` (generators + attrs), `rustavel-testing`

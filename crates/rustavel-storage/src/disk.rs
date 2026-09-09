@@ -250,6 +250,52 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn put_through_symlink_escaping_root_is_rejected() {
+        // S5 regression: a link inside the root pointing at /etc must not let
+        // `put` write outside the root (audit S5 S5).
+        let root = tmp("symlink");
+        std::fs::create_dir_all(&root).unwrap();
+        let link = root.join("escape");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink("/etc", &link).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_dir("C:\\Windows", &link).unwrap();
+
+        let disk = LocalDisk::new(&root);
+        let err = disk
+            .put("escape/rustavel-escape", b"pwned")
+            .await
+            .unwrap_err();
+        assert!(
+            matches!(err, StorageError::PathTraversal(_)),
+            "expected PathTraversal, got {err:?}"
+        );
+        // Nothing was written through the link.
+        assert!(!link.join("rustavel-escape").exists());
+    }
+
+    #[tokio::test]
+    async fn put_under_safe_internal_symlink_succeeds() {
+        // A symlink that stays within the root must keep working for writes.
+        let root = tmp("symlink-in");
+        std::fs::create_dir_all(root.join("real")).unwrap();
+        let link = root.join("alias");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(root.join("real"), &link).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_dir(root.join("real"), &link).unwrap();
+
+        let disk = LocalDisk::new(&root);
+        disk.put("alias/note.txt", b"ok").await.unwrap();
+        assert_eq!(disk.get("alias/note.txt").await.unwrap(), b"ok");
+        assert_eq!(
+            std::fs::read(root.join("real/note.txt")).unwrap(),
+            b"ok",
+            "file written through the internal symlink"
+        );
+    }
+
+    #[tokio::test]
     async fn read_through_falls_back_and_copies_back() {
         let root_p = tmp("rt-primary");
         let root_f = tmp("rt-fallback");

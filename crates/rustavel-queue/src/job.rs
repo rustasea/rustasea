@@ -228,6 +228,10 @@ pub struct ConcreteJob<J: Job> {
 
 impl<J: Job> ConcreteJob<J> {
     /// Capture a concrete job plus its retry/timing policy.
+    ///
+    /// The registry key is the job's `std::any` type name, which is the same
+    /// `'static` identity `Queue::route::<J>` registers under — it is resolved
+    /// once here, not leaked from a formatted string.
     pub fn new(job: J) -> Self {
         let key = job.queue_name();
         let tries = job.tries();

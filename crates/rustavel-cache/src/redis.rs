@@ -33,14 +33,16 @@ impl RedisStore {
 
 #[async_trait]
 impl Store for RedisStore {
-    /// Stub: always a miss until the real RESP client lands.
     async fn get(&self, _key: &str) -> Result<Option<Vec<u8>>> {
-        Ok(None)
+        Err(crate::error::CacheError::StoreUnavailable(
+            "redis not wired: deadpool-redis not configured (tracked S05-T03) — use memory store".to_string(),
+        ))
     }
 
-    /// Stub: no-op until the real RESP client lands.
     async fn put(&self, _key: &str, _value: Vec<u8>, _ttl: Duration) -> Result<()> {
-        Ok(())
+        Err(crate::error::CacheError::StoreUnavailable(
+            "redis not wired: deadpool-redis not configured (tracked S05-T03) — use memory store".to_string(),
+        ))
     }
 
     /// Stub: maps to Redis `SET key value NX EX ttl`.

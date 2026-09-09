@@ -150,6 +150,8 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 | **Success Criteria** | Dispatch a typed job to a routed queue and assert it executes; `Cache::touch` extends TTL without re-reading; `schedule:pause` halts the scheduler and emits `SchedulePaused`; event listener runs async when `Queue { enable: true }`. |
 | **Laravel 13 features** | #4 queue routing, #5 `Cache::touch`, #8 Cloud queue metrics, #10 schedule pause/resume, #16 event/queue contracts. |
 
+> **Status:** in-memory + sync drivers live; Redis/database drivers are in-process stubs until `deadpool-redis` + migrations land (tracked in S05-T03). `RedisStore::get`/`put` now return `Err(StoreUnavailable("redis not wired"))` instead of silent miss/no-op; `SyncDriver` + `MemoryStore` are the live paths.
+
 ### M5 — DX, CLI & Testing
 
 | Field | Detail |
@@ -170,6 +172,8 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 | **Success Criteria** | Define an `Agent` with a `Tool`, stream its response over WebSocket, and assert the stream includes structured output; `Storage` read falls through to fallback disk and `path()` never escapes root; `JsonApiResource` renders correct `Content-Type: application/vnd.api+json` with sparse fieldsets. |
 | **Laravel 13 features** | #1 AI SDK, #2 AI Agents, #3 JSON:API Resources, #6 semantic/vector search (full), #9 read-through filesystem, #17 mail/notification defaults, #18 SSE `eventStream`. |
 
+> **Status:** M6 surfaces landed as in-process stubs ahead of schedule (see Sprint 07). AI providers are deterministic in-process stubs; real SDK adapters (`async-openai` + per-provider crates) land in M6-full. Vector search is `MemoryVectorStore` stub; real `pgvector` via `sqlx` lands with DB. `Storage` read-through is in-process; `object_store` wiring is pending. Tracked for M6-full.
+
 ---
 
 ## Tech Stack
@@ -187,14 +191,14 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 | Config | `config` + `dotenvy` | Layered `config/*.toml` + env overlay + `.env` via `dotenvy`. Typed via `serde`. |
 | CLI | `clap` (derive) + `cargo xtask` | `clap` for `cargo artisan` subcommands; `xtask` pattern avoids extra binary install. `dialoguer` / `indicatif` for prompts/progress. |
 | Proc-macros | `syn` + `quote` + `proc-macro2` | Powers `#[route]`, `#[middleware]`, `#[validate]`, `#[derive(Model)]`, `#[tries]`, etc. |
-| Queue | `tokio` + `deadpool-redis` + `serde_json` | Redis-backed queue with typed payloads; `tokio::spawn` for workers; `backoff` crate for retry. |
-| Cache | `moka` (in-memory) + `deadpool-redis` | `moka` for local store (concurrent, TTL-aware); Redis for distributed. Both behind `Store` trait. |
+| Queue | `tokio` + `deadpool-redis` (stub) + `serde_json` | Redis/database drivers are in-process stubs until `deadpool-redis` + migrations land; `sync` driver is live. `tokio::spawn` for workers; `backoff` crate for retry. |
+| Cache | `moka` (in-memory) + `deadpool-redis` (stub) | `moka` for local store (concurrent, TTL-aware); Redis is an in-process stub — `RedisStore::get`/`put` return `StoreUnavailable` until `deadpool-redis` wiring lands. Both behind `Store` trait. |
 | Scheduling | `tokio-cron-scheduler` / `cron` | Cron parsing + `tokio` interval for schedule runner; `schedule:run` loop. |
 | Templating | `askama` or `minijinja` | `askama` for compile-time checked templates (preferred); `minijinja` if runtime templates needed. |
 | WebSocket / SSE | `tokio-tungstenite` + `axum::extract::ws` | Real-time broadcasting; `axum` native WS extractor + `tokio-tungstenite` for standalone. |
 | HTTP client | `reqwest` | Async HTTP client with middleware; wraps Laravel HTTP client semantics. |
-| Filesystem | `object_store` + `tokio::fs` | `object_store` for S3/GCS/Azure abstraction; `tokio::fs` for local; read-through composes both. |
-| Vector / AI | `pgvector` + `async-openai` / provider SDKs | `pgvector` for Postgres vector ops; `async-openai` + per-provider crates behind `rustavel-ai` trait. |
+| Filesystem | `object_store` + `tokio::fs` (stub) | `object_store` for S3/GCS/Azure abstraction; `tokio::fs` for local; read-through is an in-process stub until `object_store` wiring lands in M6-full. |
+| Vector / AI | `pgvector` stub (`MemoryVectorStore`) + `async-openai` stubs | In-process stubs; real `pgvector` via `sqlx` and real SDK adapters (`async-openai` + per-provider crates) land in M6-full. |
 | Testing | `testcontainers` + `sqlx::test` + `cargo test` | Isolated DB/cache per test run; `sqlx::test` for fixture management. |
 | Lint / Format | `rustfmt` + `clippy` | Enforced in CI; generated code is `rustfmt`-clean. |
 

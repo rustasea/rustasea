@@ -8,7 +8,16 @@
 //! retried**, and a `NotificationSkipped { reason: MissingModel }` diagnostic
 //! is recorded (US-M6-04, FS-M6-04, TC-M6-11/12).
 
+use std::collections::VecDeque;
+use std::sync::Mutex;
+
 use serde::{Deserialize, Serialize};
+
+/// Max diagnostics retained by the in-memory skipped-notification sink.
+///
+/// The sink is bounded so a long-running worker cannot grow it without limit
+/// (audit S5 S4): the newest 1024 entries are kept, oldest evicted on push.
+const SKIPPED_CAPACITY: usize = 1024;
 
 /// Reason a queued notification was not delivered.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -62,19 +71,24 @@ impl NotificationSkipped {
 /// In-memory sink for `NotificationSkipped` diagnostics.
 ///
 /// The real surface forwards to structured logs / a dead-letter queue; this
-/// sink keeps the suppression contract assertable in-process (TC-M6-11).
-static SKIPPED: std::sync::OnceLock<std::sync::Mutex<Vec<NotificationSkipped>>> =
+/// sink keeps the suppression contract assertable in-process (TC-M6-11). The
+/// buffer is a bounded ring: once [`SKIPPED_CAPACITY`] is reached the oldest
+/// entry is evicted so the sink never grows without limit.
+static SKIPPED: std::sync::OnceLock<Mutex<VecDeque<NotificationSkipped>>> =
     std::sync::OnceLock::new();
 
-/// Record a skipped-notification diagnostic.
+/// Record a skipped-notification diagnostic, evicting the oldest on overflow.
 pub(crate) fn record_skipped(record: NotificationSkipped) {
-    let list = SKIPPED.get_or_init(|| std::sync::Mutex::new(Vec::new()));
+    let list = SKIPPED.get_or_init(|| Mutex::new(VecDeque::with_capacity(SKIPPED_CAPACITY)));
     if let Ok(mut guard) = list.lock() {
-        guard.push(record);
+        if guard.len() == SKIPPED_CAPACITY {
+            guard.pop_front();
+        }
+        guard.push_back(record);
     }
 }
 
-/// Snapshot the recorded skip diagnostics.
+/// Snapshot the recorded skip diagnostics (newest last, at most 1024).
 pub fn skipped_notifications() -> Vec<NotificationSkipped> {
     let Some(list) = SKIPPED.get() else {
         return Vec::new();
@@ -82,7 +96,7 @@ pub fn skipped_notifications() -> Vec<NotificationSkipped> {
     let Ok(guard) = list.lock() else {
         return Vec::new();
     };
-    guard.clone()
+    guard.iter().cloned().collect()
 }
 
 /// Guard applied by the worker before dispatching a queued notification.
@@ -115,8 +129,8 @@ pub fn should_suppress(
         return Ok(false);
     };
     let Some(model_id) = guard.model_id(payload) else {
-        return Err(crate::QueueError::Unrouted(Box::leak(
-            format!("{notification_type}:no-model-reference").into_boxed_str(),
+        return Err(crate::QueueError::Unrouted(format!(
+            "{notification_type}:no-model-reference"
         )));
     };
     Ok(!guard.model_exists(&model_id))
@@ -169,5 +183,46 @@ mod tests {
         };
         let payload = json!({ "user": { "id": "9" } });
         assert!(!should_suppress("welcome", &payload, Some(&guard)).unwrap());
+    }
+
+    #[test]
+    fn unrouted_error_owns_its_message() {
+        // S3 regression: the error owns the message — no `Box::leak` heap
+        // string forced into `'static`.
+        let guard = UserGuard { live: vec![] };
+        let err = should_suppress("welcome", &json!({ "user": {} }), Some(&guard)).unwrap_err();
+        let message = err.to_string();
+        assert!(message.contains("welcome:no-model-reference"));
+    }
+
+    #[test]
+    fn skipped_sink_evicts_oldest_beyond_capacity() {
+        // S4 regression: the sink is bounded; pushing past capacity evicts the
+        // oldest diagnostic instead of growing without limit.
+        record_skipped(NotificationSkipped::missing_model("first", "user:1"));
+        let mut over = VecDeque::with_capacity(SKIPPED_CAPACITY);
+        over.push_back(NotificationSkipped::missing_model("seed", "user:0"));
+        for _ in 1..SKIPPED_CAPACITY {
+            over.push_back(NotificationSkipped::missing_model("seed", "user:0"));
+        }
+        let mut guard = SKIPPED
+            .get()
+            .unwrap()
+            .lock()
+            .unwrap_or_else(|p| p.into_inner());
+        *guard = over;
+        drop(guard);
+        record_skipped(NotificationSkipped::missing_model("last", "user:9"));
+
+        let snapshot = skipped_notifications();
+        assert_eq!(snapshot.len(), SKIPPED_CAPACITY);
+        assert!(
+            !snapshot.iter().any(|d| d.model_id == "user:1"),
+            "oldest pre-seed diagnostic evicted"
+        );
+        assert!(
+            snapshot.iter().any(|d| d.model_id == "user:9"),
+            "newest diagnostic retained"
+        );
     }
 }

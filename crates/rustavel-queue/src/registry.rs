@@ -119,14 +119,14 @@ impl Queue {
     }
 
     /// Resolve the registered route for a job type name, or `Unrouted`.
-    pub fn resolve(type_key: &'static str) -> Result<Route> {
+    pub fn resolve(type_key: &str) -> Result<Route> {
         let reg = registry();
         let guard = reg.read().map_err(QueueError::from)?;
         guard
             .routes
             .get(type_key)
             .cloned()
-            .ok_or(QueueError::Unrouted(type_key))
+            .ok_or_else(|| QueueError::Unrouted(type_key.to_string()))
     }
 
     /// Resolve the driver registered under `connection`.
@@ -165,12 +165,12 @@ impl Queue {
         let connection = match (&handle.connection, &routed) {
             (Some(c), _) => c.clone(),
             (None, Some(r)) => r.connection.to_string(),
-            (None, None) => return Err(QueueError::Unrouted(handle.exec.type_key())),
+            (None, None) => return Err(QueueError::Unrouted(handle.exec.type_key().to_string())),
         };
         let queue = match (&handle.queue, &routed) {
             (Some(q), _) => q.clone(),
             (None, Some(r)) => r.queue.to_string(),
-            (None, None) => return Err(QueueError::Unrouted(handle.exec.type_key())),
+            (None, None) => return Err(QueueError::Unrouted(handle.exec.type_key().to_string())),
         };
         if connection == SYNC_CONNECTION {
             // Inline sync dispatch: do NOT buffer the payload — the queue must
