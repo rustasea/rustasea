@@ -142,3 +142,9 @@ enum AuthError { GuardMismatch{ expected:String, actual:String }, BadCredentials
 | Security | `security-audit` — `argon2` invariant, GuardMismatch leak check |
 | Contract | `test-generation` — `jwt-claims.schema.json` |
 | Chaos | `non-functional-testing` — Redis down during `parse` → typed error |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

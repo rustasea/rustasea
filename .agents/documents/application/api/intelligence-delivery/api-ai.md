@@ -2,7 +2,7 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §5` · `requirements/prd FR-606..612` · `requirements/fsd FS-M6-05..07` · `requirements/tdd BC-6 AiProvider/Agent/Tool` · `design/domain BC-6` · BDD `@ai-sdk`, `@ai-agents`, `@vector-search`
-> **Crates:** `rustavel-ai` (`optional`) · `rustavel-search` · `rustavel-storage` (deferred loaders) · `rustavel-broadcast` (WS streaming)
+> **Crates:** `rustasea-ai` (`optional`) · `rustasea-search` · `rustasea-storage` (deferred loaders) · `rustasea-broadcast` (WS streaming)
 
 ## 1. Standar Global
 
@@ -79,14 +79,14 @@ let r: AiResponse = Ai::provider("anthropic").text("hello").send().await?; // sa
 
 ### 2.2 Agent streaming — `Agent::prompt(input)->Stream<Item=AiChunk>` over WS (+ HTTP SSE fallback)
 
-- **URL:** WS `ws://localhost:3000/ai/stream` (or app-level `POST /ai/agent/prompt` returning WS URL) + SSE `GET /ai/stream` with `text/event-stream` frames `event: token` in order. Tool queue `WS chunk in order with token events`; broadcasts via `rustavel-broadcast` WS `event: token` (see `api-broadcast` adjacency).
+- **URL:** WS `ws://localhost:3000/ai/stream` (or app-level `POST /ai/agent/prompt` returning WS URL) + SSE `GET /ai/stream` with `text/event-stream` frames `event: token` in order. Tool queue `WS chunk in order with token events`; broadcasts via `rustasea-broadcast` WS `event: token` (see `api-broadcast` adjacency).
 - **Kontrol Akses:** `Bearer JWT` over WS handshake.
 
 #### Sub-agents + middleware + deferred loaders
 
 - **Sub-agents:** `ParentAgent{ sub_agents:[KnowledgeAgent] }` invoked as Tools (see `ai-agents.md`).
 - **Middleware:** `Logging` observes `prompt→next→output` for both parent+sub-agent (log spy in tests).
-- **Deferred loaders:** `SimilaritySearch`/`FileStorage`/`ToolSearch` inject before `Tool::call` (`whereVectorSimilarTo` via `rustavel-search`).
+- **Deferred loaders:** `SimilaritySearch`/`FileStorage`/`ToolSearch` inject before `Tool::call` (`whereVectorSimilarTo` via `rustasea-search`).
 - **Anonymous:** `Ai::agent(|a| a.tool(MyTool)).prompt("hi").stream().await?`.
 - **MCP:** `feature="mcp"` else `AgentError::McpUnavailable` with hint (wire `501`).
 - **Generators:** `make:agent`/`make:tool` (see `developer-platform/generators.md` — M6 adjacency).
@@ -129,7 +129,7 @@ npx wscat -c ws://localhost:3000/ai/stream -H "Authorization: Bearer $JWT"
     "status": "501",
     "code": "AgentError::McpUnavailable",
     "title": "MCP unavailable",
-    "detail": "Enable feature flag mcp to discover MCP tools. Hint: add features=[\"mcp\"] to rustavel-ai.",
+    "detail": "Enable feature flag mcp to discover MCP tools. Hint: add features=[\"mcp\"] to rustasea-ai.",
     "meta": { "hint": "feature: mcp" }
   }]
 }
@@ -149,7 +149,7 @@ npx wscat -c ws://localhost:3000/ai/stream -H "Authorization: Bearer $JWT"
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel AI — SDK + Agents + Streaming + MCP
+  title: RustaSea AI — SDK + Agents + Streaming + MCP
   version: 0.1.0
   description: Provider-agnostic AiProvider (12) + Agent/Tool streaming/broadcast/queue/sub-agents + MCP + deferred loaders
 servers:
@@ -305,3 +305,9 @@ security:
 
 AI streaming 1000 tokens → WS chunk order is a bounded `mpsc` success gate (broadcast adjacency). Truncated mid-`event: token` → close frame not silent `AiResponse` is the `ai-agents.md` chaos trace; `dropVectorIndex` mid-search seq-scan fallback (TC-M6-25) is nightly chaos.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

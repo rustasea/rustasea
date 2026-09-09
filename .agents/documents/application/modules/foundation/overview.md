@@ -2,7 +2,7 @@
 
 > **Status:** P8 Final — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `requirements/{brd,prd,fsd,tdd}.md` · `design/{architecture,domain,database,api-contracts}.md` · `decisions/ADR-003,ADR-004,ADR-005` · `application/modules/manifest.md` · `tasks/sprints/sprint-01.md`
-> **Crates:** `rustavel` (umbrella re-exports) · `rustavel-foundation` · `rustavel-config` · `rustavel-container` (inside foundation)
+> **Crates:** `rustasea` (umbrella re-exports) · `rustasea-foundation` · `rustasea-config` · `rustasea-container` (inside foundation)
 > **Milestone:** M0 | **BR:** BR-01 | **FR:** FR-000..008 | **FSD:** FS-M0-01..04 | **BC:** BC-0 | **Stories:** US-M0-01..02
 
 ## Header & Navigation
@@ -57,7 +57,7 @@ flowchart TB
 
 - **Database:** none (M0). Migration table `migrations` scaffolded but not executed until M2.
 - **Services:** `tokio` 1.x (single runtime per ADR-003), `config` + `dotenvy`, `serde`, `thiserror`, `axum::extract::State`, `cargo xtask` scaffold.
-- **Internal crate DAG:** `rustavel-config` ← `rustavel-foundation`; umbrella `rustavel` re-exports both. Verified acyclic via `cargo metadata | xtask check-cycles`.
+- **Internal crate DAG:** `rustasea-config` ← `rustasea-foundation`; umbrella `rustasea` re-exports both. Verified acyclic via `cargo metadata | xtask check-cycles`.
 
 ## 5. Skill Reference
 
@@ -75,5 +75,11 @@ flowchart TB
 
 - Cold boot <2s p50 (criterion `bench_boot`; NFR-Per-01).
 - Graceful drain: running request completes or `ShutdownTimeout` diagnostic (NFR-Rel-01).
-- Workspace check `cargo check -p rustavel-foundation` pulls no ORM/queue/AI (NFR-Sca-02) — tested in `cargo tree --depth 1` CI.
+- Workspace check `cargo check -p rustasea-foundation` pulls no ORM/queue/AI (NFR-Sca-02) — tested in `cargo tree --depth 1` CI.
 - All 3 feature docs below cross-link to this overview, to their API spec, and to their testing doc.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

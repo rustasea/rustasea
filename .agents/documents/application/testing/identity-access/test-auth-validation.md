@@ -57,3 +57,9 @@
 | IDENT-SEC-005 | Auditor | Hyphen prefix collision | attempt `_cache_` prefix spoof | default `-cache-` invariant holds; `CACHE_PREFIX` override documented |
 | IDENT-SEC-006 | Auditor | Strict `in_array` type confusion | `contains_strict` `"admin"` vs `"Admin"` vs `1` | value+type failure, not loose |
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -2,7 +2,7 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §1` · `requirements/prd FR-200..210` · `requirements/fsd FS-M2-01..06` · `requirements/tdd BC-2` · `design/database §1..5`
-> **Crates:** `rustavel-orm` · `rustavel-macros`
+> **Crates:** `rustasea-orm` · `rustasea-macros`
 > **Module:** [modules/data-orm/overview.md](../../modules/data-orm/overview.md) · **Testing:** [testing/data-orm/overview.md](../../testing/data-orm/overview.md)
 
 > **Note:** Builder contracts are handler-return shapes (via `Json<T>`) plus wire pagination envelope and vector query. No standalone `/api/v1/models` CRUD endpoint exists until app defines routes — this spec documents the builder + envelope contracts used by every collection endpoint.
@@ -149,7 +149,7 @@ Documented for `api-contract-test` coverage — handler authors call them; no se
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel DataOrm — Query Builder + Vector
+  title: RustaSea DataOrm — Query Builder + Vector
   version: 0.1.0
   description: Paginated envelope + vector nearest-neighbor — inferred from api-contracts.md §1 + tdd.md BC-2 + database.md §2
 servers:
@@ -291,3 +291,9 @@ components:
 
 Concurrent `select_for_update` + `dropVectorIndex` mid-search seq-scan fallback (TC-M6-25) are in [testing/data-orm/overview.md](../../testing/data-orm/overview.md) § Chaos.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

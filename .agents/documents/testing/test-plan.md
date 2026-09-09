@@ -1,6 +1,6 @@
-# Rustavel — Test Plan (P5 Test Planning & Quality Strategy)
+# RustaSea — Test Plan (P5 Test Planning & Quality Strategy)
 
-> **Owner:** vheins/rustavel | **Phase:** Implementation P5 | **Task:** TASK-010 | **Date:** 2026-09-07
+> **Owner:** vheins/rustasea | **Phase:** Implementation P5 | **Task:** TASK-010 | **Date:** 2026-09-07
 > **Parents:** `brd.md` (BR-01..09) · `prd.md` (FR-000..612, NFR-*) · `fsd.md` (FS-M0-01..M6-07) · `bdd-scenarios.md` (33 features)
 > **Stack:** Rust 1.80+, edition 2021, `tokio`, `axum`+`tower`, `sqlx`/`sea-orm`, `deadpool`, `validator`, `jsonwebtoken`+`argon2`, `serde`, `config`+`dotenvy`, `clap`+`xtask`, `syn`/`quote`, `moka`+`deadpool-redis`, `askama`, `reqwest`, `object_store`, `pgvector`+`async-openai`, `testcontainers`, `cargo test`
 > **Reference:** `docs/laravel-13-research.md` (20 Laravel 13 features) · `README.md` §Milestones · `test-architecture.md` (4-concern rule)
@@ -21,18 +21,18 @@ Non-objectives reaffirmed (from `brd.md` §4 Out-of-Scope): Filament/Nova admin,
 
 Every feature is **incomplete** until these four layers are accounted for. Concerns are exclusive — a rule asserted in one concern MUST NOT be re-asserted in another (priority DB > Service > State > UI).
 
-| Layer | MUST Test | MUST NOT Test | Rustavel Mapping |
+| Layer | MUST Test | MUST NOT Test | RustaSea Mapping |
 |-------|-----------|---------------|------------------|
 | **1. Database** | Integrity, FKs, unique indexes, cascades, defaults, `pgvector` column type, migration idempotence | Business rules, UI validation | `sqlx` migrations, `sqlx::migrate!`, `pgvector` `vector(1536)`, soft-delete `deleted_at`, snake_plural table convention |
-| **2. Service** | Domain calculations, business rules, action outcomes, `Job<T>`/`Event<T>` typed payloads | DB constraints, UI validation | `rustavel-orm` query builder, `rustavel-queue`/`cache`/`events`/`schedule`, `rustavel-auth` guards, `rustavel-validation` strict rules, `rustavel-ai` provider trait |
+| **2. Service** | Domain calculations, business rules, action outcomes, `Job<T>`/`Event<T>` typed payloads | DB constraints, UI validation | `rustasea-orm` query builder, `rustasea-queue`/`cache`/`events`/`schedule`, `rustasea-auth` guards, `rustasea-validation` strict rules, `rustasea-ai` provider trait |
 | **3. State** | Status transitions, guards, workflow rules (`register→boot→running→draining`, `pending→reserved→processing→succeeded/failed→retrying`, `running↔paused` scheduler, auth token lifecycle) | DB integrity, UI rendering | Provider DAG, queue retry state machine, schedule pause/resume, JWT `login→parse→refresh→logout` lifecycle, dispatch-after-response deferral |
-| **4. UI** | Form/validation feedback, middleware visibility, auth gates, route introspection output, CLI prompts/generators, JSON:API/Broadcast/SSE rendering | Business calcs, DB logic | `rustavel-router`/`http` middleware + extractors + `ErrorBag`, `route:list`/`show:model`, `cargo rustavel make:*` generators, `JsonApiResource`, WebSocket/SSE, CLI `list`/`ask`/`confirm` |
+| **4. UI** | Form/validation feedback, middleware visibility, auth gates, route introspection output, CLI prompts/generators, JSON:API/Broadcast/SSE rendering | Business calcs, DB logic | `rustasea-router`/`http` middleware + extractors + `ErrorBag`, `route:list`/`show:model`, `cargo rustasea make:*` generators, `JsonApiResource`, WebSocket/SSE, CLI `list`/`ask`/`confirm` |
 
 Execution order: Database → Service → State → UI. Success in a later layer depends on the earlier layer. Duplication across concerns is a defect.
 
 ### 2.2 Test Pyramid (per Architecture)
 
-Rustavel is a **workspace of crates** (monolith-shaped app + microservice-shape libraries). Base ratios follow two templates; per-milestone blend is in §4.
+RustaSea is a **workspace of crates** (monolith-shaped app + microservice-shape libraries). Base ratios follow two templates; per-milestone blend is in §4.
 
 | Architecture | Unit | Integration | Contract | E2E |
 |--------------|------|-------------|----------|-----|
@@ -76,13 +76,13 @@ Each crate MUST pass `cargo check` and its own crate test suite **standalone** (
 
 | Milestone | Crates Primary | U | I | C | E | Rationale |
 |-----------|---------------|---|---|---|---|-----------|
-| **M0 Bootstrap & Core** | `rustavel-foundation`, `rustavel-config`, `rustavel` umbrella | 65% | 25% | 5% | 5% | Provider DAG and config layering are service-heavy; DB is minimal (migration table only); UI is `cargo rustavel new` scaffold output |
-| **M1 Routing & HTTP** | `rustavel-router`, `rustavel-http`, `rustavel-macros` (`#[route]`) | 60% | 25% | 10% | 5% | `axum` wiring needs `oneshot` integration; JSON extractors/middleware are contract-shaped; domain routing is branching logic |
-| **M2 ORM & Database** | `rustavel-orm`, `rustavel-macros` (`Model`), `pgvector` | 55% | 30% | 5% | 10% | Heaviest integration: `sqlx` Postgres/MySQL/SQLite + `pgvector` + migrations + `serde` round-trip; E2E elevada for builder Gherkin |
-| **M3 Auth, Middleware & Validation** | `rustavel-auth`, `rustavel-validation`, `rustavel-macros` (`#[middleware]`/`#[authorize]`/`#[validate]`) | 60% | 20% | 10% | 10% | JWT/session/CSRF are security E2E; strict `ErrorBag` and allow-list are contract-heavy |
-| **M4 Queue, Cache, Scheduling & Events** | `rustavel-queue`, `rustavel-cache`, `rustavel-events`, `rustavel-schedule` | 50% | 30% | 10% | 10% | Cross-store matrix (memory+redis, sync+database+redis) drives integration; Cloud metrics and schedule pause are contract/E2E |
-| **M5 DX, CLI & Testing** | `rustavel-cli`, `rustavel-macros` (generators+attrs), `rustavel-testing` | 55% | 20% | 15% | 10% | `make:*` output is snapshot-contract; CLI `list --json` + `Artisan::call` are contract; `TestCase` isolation is integration-heavy |
-| **M6 Advanced** | `rustavel-broadcast`, `rustavel-storage`, `rustavel-search`, `rustavel-ai` (12 providers) | 50% | 25% | 15% | 10% | JSON:API and provider-trait shape are contract-heavy; AI streaming/broadcast/queue are E2E; storage read-through is integration |
+| **M0 Bootstrap & Core** | `rustasea-foundation`, `rustasea-config`, `rustasea` umbrella | 65% | 25% | 5% | 5% | Provider DAG and config layering are service-heavy; DB is minimal (migration table only); UI is `cargo rustasea new` scaffold output |
+| **M1 Routing & HTTP** | `rustasea-router`, `rustasea-http`, `rustasea-macros` (`#[route]`) | 60% | 25% | 10% | 5% | `axum` wiring needs `oneshot` integration; JSON extractors/middleware are contract-shaped; domain routing is branching logic |
+| **M2 ORM & Database** | `rustasea-orm`, `rustasea-macros` (`Model`), `pgvector` | 55% | 30% | 5% | 10% | Heaviest integration: `sqlx` Postgres/MySQL/SQLite + `pgvector` + migrations + `serde` round-trip; E2E elevada for builder Gherkin |
+| **M3 Auth, Middleware & Validation** | `rustasea-auth`, `rustasea-validation`, `rustasea-macros` (`#[middleware]`/`#[authorize]`/`#[validate]`) | 60% | 20% | 10% | 10% | JWT/session/CSRF are security E2E; strict `ErrorBag` and allow-list are contract-heavy |
+| **M4 Queue, Cache, Scheduling & Events** | `rustasea-queue`, `rustasea-cache`, `rustasea-events`, `rustasea-schedule` | 50% | 30% | 10% | 10% | Cross-store matrix (memory+redis, sync+database+redis) drives integration; Cloud metrics and schedule pause are contract/E2E |
+| **M5 DX, CLI & Testing** | `rustasea-cli`, `rustasea-macros` (generators+attrs), `rustasea-testing` | 55% | 20% | 15% | 10% | `make:*` output is snapshot-contract; CLI `list --json` + `Artisan::call` are contract; `TestCase` isolation is integration-heavy |
+| **M6 Advanced** | `rustasea-broadcast`, `rustasea-storage`, `rustasea-search`, `rustasea-ai` (12 providers) | 50% | 25% | 15% | 10% | JSON:API and provider-trait shape are contract-heavy; AI streaming/broadcast/queue are E2E; storage read-through is integration |
 
 Per-milestone **minimum test counts** (directional — actual count governed by 4-concern coverage in §6, not raw count):
 
@@ -104,12 +104,12 @@ Each cell MUST have at least one suite; `†` marks feature-flag gating.
 
 | Milestone | Database | Service | State | UI |
 |-----------|----------|---------|-------|-----|
-| **M0** | `migrations` table idempotence; `config/*.toml` parse diagnostics | Container `Bind`/`Singleton`/`Instance` + `Manager::extend` closure binding | Provider `register→boot` DAG; cycle detection; `Idle→Registering→Booting→Running→Draining→Stopped`; graceful shutdown drain | `cargo rustavel new <app>` scaffold + `bootstrap/app.rs` existence + `cargo check` clean; `.env.example` |
+| **M0** | `migrations` table idempotence; `config/*.toml` parse diagnostics | Container `Bind`/`Singleton`/`Instance` + `Manager::extend` closure binding | Provider `register→boot` DAG; cycle detection; `Idle→Registering→Booting→Running→Draining→Stopped`; graceful shutdown drain | `cargo rustasea new <app>` scaffold + `bootstrap/app.rs` existence + `cargo check` clean; `.env.example` |
 | **M1** | — (no persistence) | Route registration, group prefix, `resource` expansion, `Http` client `throw`/timeout classification | Domain-route precedence state (domain before non-domain), throttle bucket window | `route:list --json` binding fields + middleware list; typed extractor `422 ErrorBag`; `Json`/`View` Content-Type; CORS headers |
 | **M2** | `#[derive(Model)]` table/columns/indexes/FK, `deleted_at` soft delete, `vector` column type, `dropVectorIndex`, migration up→down→up, seeder idempotence | Query builder (`where`/`orWhere`/`whereJson*`, `find`/`firstOrFail`, `create`/`save`/`update`/`delete`/`forceDelete`, `paginate`/`cursor`, `chunkBy`/`orWhereKey`/`whereBinary`/`StraightJoin`/`insertOrIgnoreReturning`, `upsert` strict `uniqueBy`, MySQL `DELETE JOIN`, `toSql`/`toRawSql`, locks, scopes, raw queries) | Transaction isolation (`forUpdate` inside `transaction`), `Factory` sequence isolation between tests, `pgvector` extension-missing fast-fail | Collection `serde` round-trip preserving eager relations; factory output + scaffolded model/migration files lint-clean |
 | **M3** | Session/allow-list storage keys (hyphenated `-session-`/`-cache-`), password hash storage | `validator` strict `in_array`/`contains`/`doesnt_contain`, `ErrorBag` aggregation, `#[validate]` wiring, `Auth::extend` custom guard, `argon2` verify | JWT `login→parse→refresh→logout` token lifecycle + `GuardMismatch`/`BadCredentials`/`ExpiredToken`/`InvalidToken`; CSRF `Sec-Fetch-Site` origin state (`cross-site→403` vs `missing→token-only`) | `#[middleware("auth:jwt")]` gate (401), `#[authorize]` gate (403), CORS preflight headers, session cookie JSON + prefix, rate-limit `429 Retry-After`, `X-Forwarded-For` behind proxy policy |
 | **M4** | `jobs` table + `failed_jobs` table, `schedule_paused` flag store | `Job<T>` handle + `ShouldRetry`/`#[tries]`/`#[backoff]`/`#[timeout]`, `touch()` TTL semantics, `Store`/`Repository` + `withContext`, `Lock` `get`/`block`/`release`, `Dispatcher::dispatch`/`dispatchAfterResponse` | Queue `Pending→Reserved→Processing→Succeeded|Failed→Retrying→DeadLetter`; `Queue::route` registry `OnceLock` + `DuplicateRoute`; chain stop-on-failure; `Running↔Paused` scheduler; `skipIfStillRunning`/`onOneServer`; buffer-flush after response | `schedule:list`/`schedule:run`/`pause`/`resume` CLI; `queue:failed`/`queue:retry` CLI; Cloud metrics output (`pendingSize`/`delayedSize`/`reservedSize`/`creationTimeOfOldestPendingJob`) |
-| **M5** | `TestCase` container ports (distinct per test binary) | `Shutdownable` trait on long-running commands; `Artisan::call` in-process invocation; declarative attrs `#[tries]`/`#[backoff]`/`#[timeout]`/`#[usage]`/`#[help]`/`#[hidden]`/`#[withoutBroadcasting]` | `make:*` generator idempotence (`AlreadyExists` without `--force`); prompt cancellation (`confirm` → abort, exit 1) | `cargo rustavel list --json` + per-command help `usage`; `make:controller/model/.../agent/tool` files `rustfmt`+`clippy` clean; `table`/`progressBar`/`spinner` rendering; paginator `bootstrap-3` view |
+| **M5** | `TestCase` container ports (distinct per test binary) | `Shutdownable` trait on long-running commands; `Artisan::call` in-process invocation; declarative attrs `#[tries]`/`#[backoff]`/`#[timeout]`/`#[usage]`/`#[help]`/`#[hidden]`/`#[withoutBroadcasting]` | `make:*` generator idempotence (`AlreadyExists` without `--force`); prompt cancellation (`confirm` → abort, exit 1) | `cargo rustasea list --json` + per-command help `usage`; `make:controller/model/.../agent/tool` files `rustfmt`+`clippy` clean; `table`/`progressBar`/`spinner` rendering; paginator `bootstrap-3` view |
 | **M6†** | `storage` disk roots, `pgvector` index lifecycle | `Storage` primary→fallback read-through + `copy_back`, `JsonApiResource` sparse fieldsets/inclusion/links/headers, `AiProvider` 12-provider adapter trait, `SimilaritySearch`/`FileStorage`/`ToolSearch` deferred loaders, `Str::toEmbeddings` | `BroadcastService` channel auth lifecycle; `Agent` streaming state (`event: token` ordering) + sub-agent delegation + MCP feature flag state (`McUnavailable` when off); queued-tool `→job` emission | WebSocket `private-chat.1` channel subscription + `4403 Unauthorized`; SSE `text/event-stream` chunks; JSON:API `application/vnd.api+json` media type + `RelationNotLoaded`; AI streaming over WebSocket; `make:agent`/`make:tool` scaffolds; `DeleteWhenMissingModels` visible outcome (skip, not retry) |
 
 Gates: no story is done without its row's DB+Service+State+UI suites passing (or explicitly N/A with justification per §6).
@@ -133,7 +133,7 @@ Selection rationale and per-crate catalog are detailed in `test-cases.md`. Cross
 ### Coverage Gates
 
 - **Line/branch (per crate):** ≥85% lines, ≥80% branches (workspace aggregate ≥80% lines). Measured via `cargo llvm-cov` / `tarpaulin`. Exceptions require ADR that maps excluded lines to generated-code shim.
-- **Mutation (periodic):** `cargo mutants` on `rustavel-orm`/`validation`/`auth` — threshold ≥65% killed mutants per PR touching those crates.
+- **Mutation (periodic):** `cargo mutants` on `rustasea-orm`/`validation`/`auth` — threshold ≥65% killed mutants per PR touching those crates.
 - **Contract conformance:** 100% of JSON-API documents validate the JSON:API 1.1 schema; 100% of `route:list --json` snapshots `cargo insta` reviewed.
 
 ---
@@ -266,3 +266,9 @@ Every Laravel 13 feature #1–#20 appears in §5 and has ≥1 row in `test-cases
 ---
 
 *Next: `test-cases.md` (case catalog) → `qa-design.md` (QA scenario + smoke) → `application/testing/*` (stubs per module). Updates to this plan require `TASK-010` comment.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

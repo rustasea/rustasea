@@ -19,3 +19,9 @@ Covers JWT+session `Auth::extend` + `GuardMismatch`, origin-aware CSRF `Sec-Fetc
 - Specs: [test-auth-validation.md](test-auth-validation.md)
 - API: [api-auth](../../api/identity-access/api-auth.md) · [api-validation](../../api/identity-access/api-validation.md)
 - Modules: [auth](../../modules/identity-access/auth.md) · [csrf](../../modules/identity-access/csrf.md) · [validation](../../modules/identity-access/validation.md)
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

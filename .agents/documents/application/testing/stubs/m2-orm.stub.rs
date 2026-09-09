@@ -5,7 +5,7 @@
 
 #[cfg(test)]
 mod m2_orm_stubs {
-    #[tokio::test] #[ignore = "stub: rustavel-orm drivers not yet implemented"]
+    #[tokio::test] #[ignore = "stub: rustasea-orm drivers not yet implemented"]
     async fn tc_m2_01_driver_abstraction_postgres_vs_sqlite() { assert!(true, "stub TC-M2-01: driver-specific SQL"); }
     #[tokio::test] #[ignore = "stub: #[derive(Model)] not yet implemented"]
     async fn tc_m2_02_model_derive_timestamps_soft_delete() { assert!(true, "stub TC-M2-02: id,created_at,updated_at,deleted_at + snake_plural"); }

@@ -1,0 +1,22 @@
+[package]
+name = "rustasea-auth"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea authentication and security — JWT/session guards, origin-aware CSRF, throttling"
+
+[dependencies]
+rustasea-foundation = { path = "../rustasea-foundation" }
+rustasea-http = { path = "../rustasea-http" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+jsonwebtoken = { workspace = true }
+argon2 = { workspace = true }
+tower = { workspace = true }
+axum = { workspace = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros", "time"] }

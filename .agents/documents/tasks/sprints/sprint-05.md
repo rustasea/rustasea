@@ -3,7 +3,7 @@
 > **Milestone:** M4 · **Window:** 2027-04-01 → 2027-06-30 · **Status:** Planned
 > **Parents:** `../roadmap.md` · `prd.md` FR-400–FR-410 · `fsd.md` FS-M4-01–FS-M4-06 · `design/architecture.md` + `design/database.md`
 > **Depends On:** M0 (S01), M2 (S03), M3 (S04)
-> **Crates:** `rustavel-queue`, `rustavel-cache`, `rustavel-events`, `rustavel-schedule`
+> **Crates:** `rustasea-queue`, `rustasea-cache`, `rustasea-events`, `rustasea-schedule`
 
 ---
 
@@ -30,12 +30,12 @@ Async workloads, caching, scheduling, and event dispatch with observable queue m
 
 | # | Task | FR | FSD | Deliverable | Est. | Acceptance |
 |---|------|----|-----|-------------|------|------------|
-| S05-T01 | `Job` trait + retry contracts + `#[tries]`/`#[backoff]`/`#[timeout]` | FR-400, FR-506 (M4 attrs) | FS-M4-01 | `crates/rustavel-queue/src/{job,retry,macros}.rs` + `rustavel-macros` attrs | M | `#[tries(3)] #[backoff(10)]` job fails twice → retried with 10s backoff, 3rd → `failed_jobs`; `ShouldRetryUntil` date respected; `#[failOnTimeout]` forces failure |
-| S05-T02 | Queue routing `Queue::route::<Job>` registry + `onQueue`/`onConnection` | FR-401, FR-409 (metrics trait shape) | FS-M4-02 | `crates/rustavel-queue/src/route.rs` | S | `Queue::route::<ProcessPodcast>(queue:"podcasts")` → `dispatch(payload)` lands on `podcasts` without explicit `onQueue`; duplicate `route` → error; registry is `OnceLock` post-`boot` |
-| S05-T03 | Queue drivers `sync`/`database`/`redis` + `chain`/`batch`/`failed_jobs` | FR-402, FR-409 | FS-M4-02/03 | `crates/rustavel-queue/src/drivers/{sync,database,redis}.rs` + `failed_jobs` table migration | L | `sync` executes inline; `database`/`redis` enqueue + worker dequeues; `chain [A,B,C]` where B fails → C not run + failure recorded; `batch` dispatch + `queue:failed`/`queue:retry`; `pendingSize` returns depth; `job-payload.schema.json` validated |
-| S05-T04 | Cache `Store`/`Repository` + `touch()` + `memory`/`redis` + `Lock` | FR-403, FR-404, FR-405 | FS-M4-04 | `crates/rustavel-cache/src/{store,repository,lock,memory,redis}.rs` | M | `put("k","v",60s)` → `touch("k",120s)` extends TTL without `get`; stores isolated (`redis` vs `memory`); `Lock("billing")` contention: holder blocks waiter; `Lock::block(5s)` timeout respected; `CacheTouchFailed` only on store errors |
-| S05-T05 | Events (`Event`/`Listener` + `Queue { enable: true }` + `dispatchAfterResponse` + renames) | FR-406, FR-010 deferred (withScheduling) | FS-M4-05 | `crates/rustavel-events/src/{event,listener,dispatcher}.rs` | M | `Listener { queue: Queue { enable: true } }` enqueued as job not inline; `dispatchAfterResponse` fires after HTTP response flush; `JobAttempted { exception }` and `QueueBusy { connectionName }` field renames asserted |
-| S05-T06 | Schedule (`schedule:run`/`list`/`pause`/`resume` + frequencies + `onOneServer` + deferred `withScheduling`) | FR-407, FR-408, FR-410 | FS-M4-06 | `crates/rustavel-schedule/src/{schedule,runner,pause}.rs` + `schedule_state` table/Redis key | M | `everyMinute` + `skipIfStillRunning` skips when previous active; `onOneServer` distributed lock via Redis `SET NX`; `schedule:pause` halts ticker + emits `SchedulePaused`; `withScheduling` deferred until first tick (not at `boot`); `schedule:list` shows next run |
+| S05-T01 | `Job` trait + retry contracts + `#[tries]`/`#[backoff]`/`#[timeout]` | FR-400, FR-506 (M4 attrs) | FS-M4-01 | `crates/rustasea-queue/src/{job,retry,macros}.rs` + `rustasea-macros` attrs | M | `#[tries(3)] #[backoff(10)]` job fails twice → retried with 10s backoff, 3rd → `failed_jobs`; `ShouldRetryUntil` date respected; `#[failOnTimeout]` forces failure |
+| S05-T02 | Queue routing `Queue::route::<Job>` registry + `onQueue`/`onConnection` | FR-401, FR-409 (metrics trait shape) | FS-M4-02 | `crates/rustasea-queue/src/route.rs` | S | `Queue::route::<ProcessPodcast>(queue:"podcasts")` → `dispatch(payload)` lands on `podcasts` without explicit `onQueue`; duplicate `route` → error; registry is `OnceLock` post-`boot` |
+| S05-T03 | Queue drivers `sync`/`database`/`redis` + `chain`/`batch`/`failed_jobs` | FR-402, FR-409 | FS-M4-02/03 | `crates/rustasea-queue/src/drivers/{sync,database,redis}.rs` + `failed_jobs` table migration | L | `sync` executes inline; `database`/`redis` enqueue + worker dequeues; `chain [A,B,C]` where B fails → C not run + failure recorded; `batch` dispatch + `queue:failed`/`queue:retry`; `pendingSize` returns depth; `job-payload.schema.json` validated |
+| S05-T04 | Cache `Store`/`Repository` + `touch()` + `memory`/`redis` + `Lock` | FR-403, FR-404, FR-405 | FS-M4-04 | `crates/rustasea-cache/src/{store,repository,lock,memory,redis}.rs` | M | `put("k","v",60s)` → `touch("k",120s)` extends TTL without `get`; stores isolated (`redis` vs `memory`); `Lock("billing")` contention: holder blocks waiter; `Lock::block(5s)` timeout respected; `CacheTouchFailed` only on store errors |
+| S05-T05 | Events (`Event`/`Listener` + `Queue { enable: true }` + `dispatchAfterResponse` + renames) | FR-406, FR-010 deferred (withScheduling) | FS-M4-05 | `crates/rustasea-events/src/{event,listener,dispatcher}.rs` | M | `Listener { queue: Queue { enable: true } }` enqueued as job not inline; `dispatchAfterResponse` fires after HTTP response flush; `JobAttempted { exception }` and `QueueBusy { connectionName }` field renames asserted |
+| S05-T06 | Schedule (`schedule:run`/`list`/`pause`/`resume` + frequencies + `onOneServer` + deferred `withScheduling`) | FR-407, FR-408, FR-410 | FS-M4-06 | `crates/rustasea-schedule/src/{schedule,runner,pause}.rs` + `schedule_state` table/Redis key | M | `everyMinute` + `skipIfStillRunning` skips when previous active; `onOneServer` distributed lock via Redis `SET NX`; `schedule:pause` halts ticker + emits `SchedulePaused`; `withScheduling` deferred until first tick (not at `boot`); `schedule:list` shows next run |
 
 ## 4. Dependencies
 
@@ -44,7 +44,7 @@ Async workloads, caching, scheduling, and event dispatch with observable queue m
 
 ## 5. Deliverables
 
-- Crates `rustavel-queue`, `rustavel-cache`, `rustavel-events`, `rustavel-schedule`.
+- Crates `rustasea-queue`, `rustasea-cache`, `rustasea-events`, `rustasea-schedule`.
 - Tables `jobs`, `failed_jobs`, `job_batches`, `cache`, `schedule_state`.
 - Tag `v0.5.0`; `failed_jobs` schema frozen; `Store::touch` default impl documented (`Unsupported` fallback for non-Redis stores).
 
@@ -55,9 +55,15 @@ Async workloads, caching, scheduling, and event dispatch with observable queue m
 - [ ] `Listener` with `Queue { enable: true }` enqueues; `dispatchAfterResponse` fires after response.
 - [ ] `schedule:pause` halts ticker + emits `SchedulePaused`; `onOneServer` prevents duplicate run across workers.
 - [ ] Cloud metrics `pendingSize`/`delayedSize`/`reservedSize`/`creationTimeOfOldestPendingJob` return correct RFC3339/depth; NFR-Sca-01 (100 workers + 1k HTTP concurrency) bench passes.
-- [ ] `xtask check-cycles` still acyclic; `cargo check -p rustavel-cache` does not pull `async-openai`.
+- [ ] `xtask check-cycles` still acyclic; `cargo check -p rustasea-cache` does not pull `async-openai`.
 
 ## 7. Risks
 
 - R-04 Redis Cluster `touch` diverges — driver abstracts `EXPIRE` fallback; matrix tests standalone + cluster.
 - R-05 Wrong-queue delivery — `OnceLock` registry + duplicate-route error + E2E per-job test.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

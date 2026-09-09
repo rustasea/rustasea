@@ -5,11 +5,11 @@
 
 #[cfg(test)]
 mod m1_router_http_stubs {
-    #[test] #[ignore = "stub: rustavel-router not yet implemented"]
+    #[test] #[ignore = "stub: rustasea-router not yet implemented"]
     fn tc_m1_01_resource_expands_seven_routes() { assert!(true, "stub TC-M1-01: resource 7 CRUD routes"); }
-    #[test] #[ignore = "stub: rustavel-router prefix not yet implemented"]
+    #[test] #[ignore = "stub: rustasea-router prefix not yet implemented"]
     fn tc_m1_02_group_prefix_applied() { assert!(true, "stub TC-M1-02: /api/v1/users"); }
-    #[test] #[ignore = "stub: rustavel-router duplicate name guard not yet implemented"]
+    #[test] #[ignore = "stub: rustasea-router duplicate name guard not yet implemented"]
     fn tc_m1_03_duplicate_named_route_conflict() { assert!(true, "stub TC-M1-03: RouteError::Conflict"); }
     #[tokio::test] #[ignore = "stub: domain routing not yet implemented (FR-102 #19)"]
     async fn tc_m1_04_domain_wins_over_non_domain() { assert!(true, "stub TC-M1-04: tenant catch-all wins docs.example.com/docs"); }

@@ -1,4 +1,4 @@
-# Rustavel — Technical Architecture
+# RustaSea — Technical Architecture
 
 > **Status:** Draft — P3 Technical Architecture & Domain Design (TASK-008)
 > **Date:** 2026-09-07 | **Milestones:** M0–M6 | **Stack:** tokio 1.x · axum+tower · sqlx (primary) + sea-orm (optional) · deadpool · serde · clap+xtask · syn/quote · moka+deadpool-redis · pgvector
@@ -13,7 +13,7 @@
 | G-01 | Laravel-ergonomic DX on Rust (BR-01–BR-07) | Business | Every public API must have a Goravel/Laravel analogue mapped in `README.md` §Laravel 13 Feature Map; proc-macros generating `rustfmt`-clean code |
 | G-02 | Zero-cost ergonomics (NFR-Per-04, NFR-Sca-02) | Architectural | Pay-for-crates-you-use: workspace-gated `features`; single crate `cargo check` pulls no transitive AI/queue deps |
 | G-03 | Hardened security defaults (Laravel 13 #11/#12) | Security | JSON session serialization default; `serializable_classes` allow-list; `Sec-Fetch-Site` CSRF; `-cache-` hyphenated prefixes |
-| G-04 | AI/vector-native from day one (Laravel 13 #6, #1–#2) | Differentiator | `pgvector` feature-flagged but present in M2; `rustavel-ai` is `optional` but its trait is designed upfront |
+| G-04 | AI/vector-native from day one (Laravel 13 #6, #1–#2) | Differentiator | `pgvector` feature-flagged but present in M2; `rustasea-ai` is `optional` but its trait is designed upfront |
 
 **Hard constraints (C-01–C-05 from PRD §5):** Rust 1.80+ stable, edition 2021, `tokio` everywhere; no `static mut` facades (`Arc<AppState>` via `axum::extract::State`); no `any`/`Box<dyn Any>` for domain payloads; `rustfmt`+`clippy -D warnings` on all `make:*` output; each crate `cargo check`-clean standalone.
 
@@ -25,18 +25,18 @@
 
 ```mermaid
 C4Context
-title Rustavel System Context
-Person(dev, "Rust Developer", "Writes handlers/models/jobs via cargo rustavel make:*")
-System(rustavel, "Rustavel Application", "Axum HTTP + ORM + Queue/Cache/Schedule/Events + Broadcast + AI SDK")
+title RustaSea System Context
+Person(dev, "Rust Developer", "Writes handlers/models/jobs via cargo rustasea make:*")
+System(rustasea, "RustaSea Application", "Axum HTTP + ORM + Queue/Cache/Schedule/Events + Broadcast + AI SDK")
 System_Ext(db, "Postgres / MySQL / SQLite", "Primary persistence; pgvector on Postgres")
 System_Ext(redis, "Redis", "Queue + Cache + distributed Lock/Schedule onOneServer")
 System_Ext(provider, "AI Providers (12)", "OpenAI, Anthropic, Gemini, Azure, Bedrock, Groq, xAI, DeepSeek, Mistral, Ollama, OpenRouter, OpenAI-Compatible")
 System_Ext(s3, "Object Storage", "S3 / GCS / Azure via object_store; local fallback via tokio::fs")
-Rel(dev, rustavel, "code + cargo run/test", "Rust")
-Rel(rustavel, db, "sqlx / deadpool", "TCP+TLS")
-Rel(rustavel, redis, "deadpool-redis", "RESP")
-Rel(rustavel, provider, "async-openai + per-provider SDK", "HTTPS")
-Rel(rustavel, s3, "object_store + tokio::fs", "HTTPS/fs")
+Rel(dev, rustasea, "code + cargo run/test", "Rust")
+Rel(rustasea, db, "sqlx / deadpool", "TCP+TLS")
+Rel(rustasea, redis, "deadpool-redis", "RESP")
+Rel(rustasea, provider, "async-openai + per-provider SDK", "HTTPS")
+Rel(rustasea, s3, "object_store + tokio::fs", "HTTPS/fs")
 ```
 
 External actors other than the developer: **Platform/SRE** (reads queue metrics, triggers `schedule:pause`/`resume`, observes graceful shutdown), **Browser/Client** (HTTP + WebSocket + SSE), **Security auditor** (validates CSRF origin, session allow-list).
@@ -45,12 +45,12 @@ External actors other than the developer: **Platform/SRE** (reads queue metrics,
 
 ```mermaid
 C4Container
-title Rustavel Containers
-Container(app, "Rustavel App Binary", "Rust / tokio", "bootstrap/app.rs + routes/web.rs + app/* ; axum Router")
+title RustaSea Containers
+Container(app, "RustaSea App Binary", "Rust / tokio", "bootstrap/app.rs + routes/web.rs + app/* ; axum Router")
 ContainerDb(postgres, "Postgres + pgvector", "sqlx PgPool", "Migrations, vector columns, jobs table (database driver)")
 ContainerDb(cache, "Redis", "deadpool-redis", "Queue lists, cache K/V, TTL, Lock SET NX, distributed schedule lock")
 Container(storage, "Object/Local Storage", "object_store + tokio::fs", "Read-through primary+fallback")
-Container(ai, "AI Provider Adapters", "rustavel-ai (optional feature)", "One adapter per provider; streaming + tool-call queueing")
+Container(ai, "AI Provider Adapters", "rustasea-ai (optional feature)", "One adapter per provider; streaming + tool-call queueing")
 Rel(app, postgres, "sqlx queries, migrate")
 Rel(app, cache, "enqueue/dequeue, get/put/touch, Lock")
 Rel(app, storage, "Storage::get/put/path")
@@ -64,37 +64,37 @@ Deployment: single binary; queue workers and HTTP server share the same `AppStat
 ```mermaid
 flowchart TB
 subgraph foundation["M0 — Foundation"]
-  RF["rustavel (umbrella)"]
-  RFO["rustavel-foundation\nApplication, Container, Provider, Runner, Shutdown"]
-  RC["rustavel-config\nconfig/*.toml + env + dotenvy + serde typed"]
+  RF["rustasea (umbrella)"]
+  RFO["rustasea-foundation\nApplication, Container, Provider, Runner, Shutdown"]
+  RC["rustasea-config\nconfig/*.toml + env + dotenvy + serde typed"]
 end
 subgraph http["M1 — HTTP"]
-  RR["rustavel-router\nRoute, Group, resource, domain precedence, route:list"]
-  RH["rustavel-http\nExtractors, Json/View, Middleware, Http client (reqwest)"]
-  RMAC["rustavel-macros\n#[route] #[middleware] #[validate] #[derive(Model)] #[tries] #[backoff] ..."]
+  RR["rustasea-router\nRoute, Group, resource, domain precedence, route:list"]
+  RH["rustasea-http\nExtractors, Json/View, Middleware, Http client (reqwest)"]
+  RMAC["rustasea-macros\n#[route] #[middleware] #[validate] #[derive(Model)] #[tries] #[backoff] ..."]
 end
 subgraph data["M2 — Data"]
-  RO["rustavel-orm\nsqlx query builder, Model derive expansion, pgvector, migrations"]
+  RO["rustasea-orm\nsqlx query builder, Model derive expansion, pgvector, migrations"]
 end
 subgraph auth["M3 — Security"]
-  RA["rustavel-auth\nJWT (jsonwebtoken)+argon2, session (tower-sessions), Guard, Csrf"]
-  RV["rustavel-validation\nvalidator + strict rules + ErrorBag + Validatable"]
+  RA["rustasea-auth\nJWT (jsonwebtoken)+argon2, session (tower-sessions), Guard, Csrf"]
+  RV["rustasea-validation\nvalidator + strict rules + ErrorBag + Validatable"]
 end
 subgraph async["M4 — Async"]
-  RQ["rustavel-queue\nJob typed trait, Queue::route registry, drivers sync/db/redis, chain/batch"]
-  RCA["rustavel-cache\nStore + Repository traits, moka + redis, touch, Lock"]
-  RE["rustavel-events\nEvent/Listener, dispatchAfterResponse, JobAttempted/QueueBusy renames"]
-  RS["rustavel-schedule\ncron + everyMinute etc., pause/resume, onOneServer"]
+  RQ["rustasea-queue\nJob typed trait, Queue::route registry, drivers sync/db/redis, chain/batch"]
+  RCA["rustasea-cache\nStore + Repository traits, moka + redis, touch, Lock"]
+  RE["rustasea-events\nEvent/Listener, dispatchAfterResponse, JobAttempted/QueueBusy renames"]
+  RS["rustasea-schedule\ncron + everyMinute etc., pause/resume, onOneServer"]
 end
 subgraph dx["M5 — DX"]
-  RCLI["rustavel-cli\nclap+xtask, list, make:* generators, Artisan::call"]
-  RT["rustavel-testing\nTestCase, testcontainers, Str factory reset, paginator views"]
+  RCLI["rustasea-cli\nclap+xtask, list, make:* generators, Artisan::call"]
+  RT["rustasea-testing\nTestCase, testcontainers, Str factory reset, paginator views"]
 end
 subgraph advanced["M6 — Advanced"]
-  RB["rustavel-broadcast\naxum ws + tokio-tungstenite, ShouldBroadcast, eventStream"]
-  RST["rustavel-storage\nStorage read-through + path confinement, object_store"]
-  RSE["rustavel-search\nwhereVectorSimilarTo, Str::toEmbeddings, dropVectorIndex"]
-  RAI["rustavel-ai\nAiProvider trait, 12 adapters, Agent/Tool, streaming, MCP, sub-agents"]
+  RB["rustasea-broadcast\naxum ws + tokio-tungstenite, ShouldBroadcast, eventStream"]
+  RST["rustasea-storage\nStorage read-through + path confinement, object_store"]
+  RSE["rustasea-search\nwhereVectorSimilarTo, Str::toEmbeddings, dropVectorIndex"]
+  RAI["rustasea-ai\nAiProvider trait, 12 adapters, Agent/Tool, streaming, MCP, sub-agents"]
 end
 ```
 
@@ -106,25 +106,25 @@ Edges mean "depends on" (compile-time). Validated post-generation with `cargo me
 
 ```mermaid
 flowchart TB
-  UMBRELLA["rustavel (umbrella, re-exports only)"]
-  FND["rustavel-foundation"]
-  CFG["rustavel-config"]
-  MAC["rustavel-macros<br/>(proc-macro; no runtime dep)"]
-  RTR["rustavel-router"]
-  RHTTP["rustavel-http"]
-  ORM["rustavel-orm"]
-  AUTH["rustavel-auth"]
-  VAL["rustavel-validation"]
-  CACHE["rustavel-cache"]
-  QUEUE["rustavel-queue"]
-  EVENTS["rustavel-events"]
-  SCHED["rustavel-schedule"]
-  CLI["rustavel-cli"]
-  TESTING["rustavel-testing"]
-  BC["rustavel-broadcast"]
-  STOR["rustavel-storage"]
-  SEARCH["rustavel-search"]
-  AI["rustavel-ai<br/>(optional; feature = ai)"]
+  UMBRELLA["rustasea (umbrella, re-exports only)"]
+  FND["rustasea-foundation"]
+  CFG["rustasea-config"]
+  MAC["rustasea-macros<br/>(proc-macro; no runtime dep)"]
+  RTR["rustasea-router"]
+  RHTTP["rustasea-http"]
+  ORM["rustasea-orm"]
+  AUTH["rustasea-auth"]
+  VAL["rustasea-validation"]
+  CACHE["rustasea-cache"]
+  QUEUE["rustasea-queue"]
+  EVENTS["rustasea-events"]
+  SCHED["rustasea-schedule"]
+  CLI["rustasea-cli"]
+  TESTING["rustasea-testing"]
+  BC["rustasea-broadcast"]
+  STOR["rustasea-storage"]
+  SEARCH["rustasea-search"]
+  AI["rustasea-ai<br/>(optional; feature = ai)"]
 
   UMBRELLA --> FND & CFG & MAC & RTR & RHTTP & ORM & AUTH & VAL & CACHE & QUEUE & EVENTS & SCHED & CLI & TESTING & BC & STOR & SEARCH & AI
   RTR --> FND
@@ -170,12 +170,12 @@ axum = "0.7"
 # ... single source of truth; crates use workspace = true
 ```
 
-Application skeleton generated by `cargo rustavel new <app>`:
+Application skeleton generated by `cargo rustasea new <app>`:
 
 ```
 <app>/
-├── Cargo.toml                # depends on rustavel = { version="0.x", features=[...] }
-├── rustavel.toml             # optional overrides (app name, MSRV hint)
+├── Cargo.toml                # depends on rustasea = { version="0.x", features=[...] }
+├── rustasea.toml             # optional overrides (app name, MSRV hint)
 ├── bootstrap/{app.rs,providers.rs,commands.rs}
 ├── config/{app.toml,database.toml,cache.toml,queue.toml,auth.toml}
 ├── routes/web.rs
@@ -215,7 +215,7 @@ Auth: `jsonwebtoken` HS256, `argon2` with per-password salt, constant-time verif
 Storage: `Storage::path()` canonicalizes and enforces `path.starts_with(disk_root)` — returns `PathTraversal` on escape; fuzzed with `..` payloads.
 
 ### Observability
-`route:list --json` emits `{ method, path, name, middleware[], binding_fields[] }` (FS-M1-03); `cargo rustavel show:model` emits `ModelInspector` attributes/relations/casts (FR-109); Queue metrics `pendingSize`/`delayedSize`/`reservedSize`/`creationTimeOfOldestPendingJob` via `Queue` trait (FS-M4-03); schedule emits `SchedulePaused`/`ScheduleResumed` domain events; throttles log `429` with `Retry-After`.
+`route:list --json` emits `{ method, path, name, middleware[], binding_fields[] }` (FS-M1-03); `cargo rustasea show:model` emits `ModelInspector` attributes/relations/casts (FR-109); Queue metrics `pendingSize`/`delayedSize`/`reservedSize`/`creationTimeOfOldestPendingJob` via `Queue` trait (FS-M4-03); schedule emits `SchedulePaused`/`ScheduleResumed` domain events; throttles log `429` with `Retry-After`.
 
 ### Configuration
 Layered merge `defaults < config/*.toml < .env < process env` via `config` + `dotenvy`; typed `Deserialize` structs (`AppConfig`, `DatabaseConfig`, …) resolved through `AppState::config::<T>()`; parse errors carry `file`+`line` per `ConfigError::Parse`.
@@ -241,7 +241,7 @@ Single binary with three `tokio::spawn` task groups sharing one `PgPool`/`RedisP
 
 ```
 main
- ├─ axum::Server (bind :3000, Router from rustavel-router)
+ ├─ axum::Server (bind :3000, Router from rustasea-router)
  ├─ Queue workers (deadpool-redis BRPOP / DB poll; configurable concurrency)
  └─ Scheduler ticker (cron evaluation every 60s; respects schedule_paused flag)
 
@@ -259,5 +259,11 @@ Health probes: `/health` (liveness), `/ready` (pool connectivity + migration sta
 
 - **Acyclicity:** `cargo metadata --format-version 1` DAG has no back-edge across milestone indices (script `xtask check-cycles`).
 - **Stack justification:** each table row cites a FR or NFR; ADRs 001–003 provide matrices.
-- **Incremental adoption:** `cargo check -p rustavel-router` must not pull `sqlx`/`async-openai` (tested in CI with `cargo tree --depth 1`).
+- **Incremental adoption:** `cargo check -p rustasea-router` must not pull `sqlx`/`async-openai` (tested in CI with `cargo tree --depth 1`).
 - **Security:** CSRF origin, session JSON, allow-list, and path-confinement each have a BDD scenario in `bdd-scenarios.md` covering happy/error/edge.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

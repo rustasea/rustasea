@@ -82,7 +82,7 @@ erDiagram
     }
 ```
 
-- `Str::toEmbeddings` is `rustavel-search` glue → `AiProvider::embeddings` (vector integration `data-orm/vector.md`).
+- `Str::toEmbeddings` is `rustasea-search` glue → `AiProvider::embeddings` (vector integration `data-orm/vector.md`).
 
 ## 5. Public Interface
 
@@ -95,8 +95,8 @@ trait Agent: Send + Sync { async fn prompt(&self, input: String) -> Result<impl 
 // Anonymous
 // Ai::agent(|a| a.tool(MyTool)).prompt("hi").stream().await?
 // Generators
-// cargo rustavel make:agent SupportAgent -> app/ai/agents/support_agent.rs
-// cargo rustavel make:tool SearchDocs    -> app/ai/tools/search_docs.rs  (#[derive(Tool)])
+// cargo rustasea make:agent SupportAgent -> app/ai/agents/support_agent.rs
+// cargo rustasea make:tool SearchDocs    -> app/ai/tools/search_docs.rs  (#[derive(Tool)])
 // Embeddings
 impl Str { async fn to_embeddings(text: &str, provider: &str) -> Result<Vec<f32>, AiError>; }
 // Vector DDL
@@ -106,7 +106,7 @@ struct AiChunk { event: String, data: String } // event: token frames
 ```
 
 ## 6. Dependencies
-- `rustavel-ai` (AiProvider, embedding dimension per `api-contracts §5`), `rustavel-search` vector, `broadcast` for WS streaming, `queue` for queued tools, `xtask` generators.
+- `rustasea-ai` (AiProvider, embedding dimension per `api-contracts §5`), `rustasea-search` vector, `broadcast` for WS streaming, `queue` for queued tools, `xtask` generators.
 
 ## 7. Limitations
 - `XL→3` split enforces incremental delivery; `agent.stream()` backpressure is `broadcast.md` `Lagged` (bounded `mpsc(64)`).
@@ -140,3 +140,9 @@ struct AiChunk { event: String, data: String } // event: token frames
 | Contract | `test-generation` — `make:agent` scaffold shape |
 | Security | `security-audit` — queued tool payload `serializable_classes` gating adjacency |
 | Chaos | `non-functional-testing` — truncated mid-token WS close, `dropVectorIndex` mid-search seq-scan |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -85,7 +85,7 @@ struct UserCreated { id: u64 } // example app-level
 ```
 
 ## 6. Dependencies
-- `rustavel-queue` (for `QUEUE=true` → Job), `foundation` (`Dispatcher`), `domain.md §4 Events E-02..E-04`.
+- `rustasea-queue` (for `QUEUE=true` → Job), `foundation` (`Dispatcher`), `domain.md §4 Events E-02..E-04`.
 
 ## 7. Limitations
 - Subsequent `schedule:pause` `SchedulePaused` emission is not duplicated on tick suppression (idempotent flag).
@@ -114,3 +114,9 @@ struct UserCreated { id: u64 } // example app-level
 | BDD | `test-generation` — `SchedulePaused` adjacency in `schedule.md` |
 | Contract | `test-generation` — field-rename invariant via typed probe |
 | Chaos | `non-functional-testing` — kill PG while `dispatchAfterResponse` buffered |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

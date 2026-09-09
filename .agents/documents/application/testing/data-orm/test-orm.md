@@ -60,5 +60,11 @@
 - **Idempotence:** `migrate` twice consecutively no-op (row count / schema hash unchanged).
 - **Bulk:** `migrate:fresh --seed` → seeded row PKs retrievable via `get`.
 - **Irreversible:** declared `Irreversible { name }` → `down` emits `MigrationError::Irreversible{name}`.
-- Fixtures live in `crates/rustavel-orm/tests/migration_roundtrip.rs` (QA design asserts harness shape).
+- Fixtures live in `crates/rustasea-orm/tests/migration_roundtrip.rs` (QA design asserts harness shape).
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

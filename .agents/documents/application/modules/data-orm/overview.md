@@ -2,7 +2,7 @@
 
 > **Status:** P8 Final — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `requirements/{prd §M2,fsd §3.3,tdd BC-2,bdd-scenarios §2.3,user-stories US-M2-01..06}.md` · `design/{architecture BC-2,domain BC-2,database §2,api-contracts §2}` · `decisions/ADR-002 sqlx/sea-orm, ADR-006 vector` · `modules/manifest.md` · `sprints/sprint-03.md`
-> **Crates:** `rustavel-orm` · `rustavel-macros` (`#[derive(Model)]`) · `pgvector` (feature-flag)
+> **Crates:** `rustasea-orm` · `rustasea-macros` (`#[derive(Model)]`) · `pgvector` (feature-flag)
 > **Milestone:** M2 | **BR:** BR-03 | **FR:** FR-200..210 | **FSD:** FS-M2-01..06 | **BC:** BC-2 | **Stories:** US-M2-01..06
 
 ## Header & Navigation
@@ -18,7 +18,7 @@ Fluent, type-safe persistence over `sqlx` (primary) + optional `sea-orm` shim, `
 
 ### 1.2 Position & Role
 - **Type:** Persistence kernel. `deadpool` sized via `config.database.pool`.
-- **Value:** Eloquent-style ergonomics with compile-time-checked queries. Vector is M2-initial; M6 (`rustavel-search`) completes it.
+- **Value:** Eloquent-style ergonomics with compile-time-checked queries. Vector is M2-initial; M6 (`rustasea-search`) completes it.
 - **Depends on:** `foundation` (config/Container/AppState) + `http-routing` types for handler returns. **Enables:** M3 (user model), M4 (jobs table), M6 (vector search).
 
 ## 2. Feature List
@@ -84,3 +84,9 @@ flowchart TB
 - Migration idempotence: `migrate` re-run is no-op; `migrate:fresh` reversible (NFR-Rel-02).
 - Collection serialization: serde round-trip preserves `relations` map (FSD FS-M2-02; `proptest` TC-PROP-01).
 - Vector dimension mismatch → `VectorDimensionMismatch{expected,actual}` (fixture `testing/fixtures/vector-dim.json`).
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

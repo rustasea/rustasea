@@ -135,3 +135,9 @@ struct UpsertResult { inserted: usize, updated: usize }
 | BDD | `test-generation` — `@query-builder-additions` |
 | Contract | `test-generation` — `toSql` snapshots |
 | Chaos | `non-functional-testing` — `select_for_update` contenders |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

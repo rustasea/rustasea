@@ -1,0 +1,23 @@
+[package]
+name = "rustasea-testing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea testing harness — TestCase, testcontainers isolation, factory sequence resets, paginator views."
+
+[features]
+default = ["containers"]
+containers = ["dep:dotenvy"]
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+uuid = { workspace = true, features = ["v4", "serde"] }
+thiserror = { workspace = true }
+rustasea-foundation = { path = "../rustasea-foundation" }
+rustasea-config = { path = "../rustasea-config" }
+rustasea-orm = { path = "../rustasea-orm" }
+rustasea-cache = { path = "../rustasea-cache" }
+dotenvy = { workspace = true, optional = true }

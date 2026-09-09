@@ -1,6 +1,6 @@
-# Rustavel — Test Case Design (per Crate)
+# RustaSea — Test Case Design (per Crate)
 
-> **Owner:** vheins/rustavel | **Phase:** Implementation P5 | **Task:** TASK-010 | **Date:** 2026-09-07
+> **Owner:** vheins/rustasea | **Phase:** Implementation P5 | **Task:** TASK-010 | **Date:** 2026-09-07
 > **Parents:** `test-plan.md` (pyramid + 4-concern) · `brd.md` · `prd.md` (FR-000..612) · `fsd.md` (FS-M0-01..M6-07) · `user-stories.md` (US-M0-01..M6-07) · `bdd-scenarios.md` (33 features, Business language)
 > **Techniques:** EP (Equivalence Partitioning), BVA (Boundary Value Analysis), Decision Tables, State Transition, Error Guessing — selected per feature per `test-planning/rules/test-design.md` and `test-planning/rules/boundary-taxonomy.md`.
 
@@ -8,7 +8,7 @@
 
 ---
 
-## M0 — Bootstrap & Core (`rustavel-foundation`, `rustavel-config`)
+## M0 — Bootstrap & Core (`rustasea-foundation`, `rustasea-config`)
 
 *Depends on nothing. FSD FS-M0-01..04. Stories US-M0-01/02.*
 
@@ -23,7 +23,7 @@
 | TC-M0-07 | FR-002, FS-M0-02 | Service | EP | No binding for `Mailer` | `Make::<Option<Mailer>> == None` (no auto-construct) | Unit | P0 | nullable-class `Option` |
 | TC-M0-08 | FR-002 | Service | EP | No binding for `PaymentGateway` | `ContainerError::NotFound { type_name:"PaymentGateway" }` | Unit | P0 | NotFound |
 | TC-M0-09 | FR-006, FS-M0-02 | Service | Error Guessing | Cache driver via `Manager::extend(|m,c| MyStore::new(m.prefix()))` | Closure sees manager prefix equal to registered prefix | Unit | P1 | `Manager::extend` bound closure |
-| TC-M0-10 | FR-005, FS-M0-01 | UI | Decision Table | `cargo rustavel new demo` invoked | `demo/bootstrap/app.rs`, `config/`, `routes/web.rs`, `.env.example`, `Cargo.toml` exist; `cargo check` passes in scaffold | Isolated | P0 | scaffold |
+| TC-M0-10 | FR-005, FS-M0-01 | UI | Decision Table | `cargo rustasea new demo` invoked | `demo/bootstrap/app.rs`, `config/`, `routes/web.rs`, `.env.example`, `Cargo.toml` exist; `cargo check` passes in scaffold | Isolated | P0 | scaffold |
 | TC-M0-11 | FR-007/008 | Service | Error Guessing | Missing `config/app.toml` (defaults present), `AppState::app()` called from provider `boot` | Boots with defaults, same `Application` via `AppState::app()` | Unit | P2 | missing config fallback + App singleton |
 | TC-M0-12 | FS-M0-04 | Service | BVA | `shutdown_timeout_secs = 1` and request 5 s in-flight | Exits with `1` after logging outstanding count (timeout path) | Integration | P1 | graceful drain timeout edge |
 
@@ -31,7 +31,7 @@
 
 ---
 
-## M1 — Routing & HTTP (`rustavel-router`, `rustavel-http`, `rustavel-macros`)
+## M1 — Routing & HTTP (`rustasea-router`, `rustasea-http`, `rustasea-macros`)
 
 *Depends on M0. FSD FS-M1-01..06. Stories US-M1-01..06.*
 
@@ -56,7 +56,7 @@
 
 ---
 
-## M2 — ORM & Database (`rustavel-orm`, `rustavel-macros`, `pgvector`)
+## M2 — ORM & Database (`rustasea-orm`, `rustasea-macros`, `pgvector`)
 
 *Depends on M0+M1. FSD FS-M2-01..06. Stories US-M2-01..06.*
 
@@ -88,7 +88,7 @@
 
 ---
 
-## M3 — Auth, Middleware & Validation (`rustavel-auth`, `rustavel-validation`, `rustavel-macros`)
+## M3 — Auth, Middleware & Validation (`rustasea-auth`, `rustasea-validation`, `rustasea-macros`)
 
 *Depends on M1+M2. FSD FS-M3-01..06. Stories US-M3-01..05.*
 
@@ -122,7 +122,7 @@
 
 ---
 
-## M4 — Queue, Cache, Scheduling & Events (`rustavel-queue`, `rustavel-cache`, `rustavel-events`, `rustavel-schedule`)
+## M4 — Queue, Cache, Scheduling & Events (`rustasea-queue`, `rustasea-cache`, `rustasea-events`, `rustasea-schedule`)
 
 *Depends on M0+M2+M3. FSD FS-M4-01..05. Stories US-M4-01..06.*
 
@@ -152,13 +152,13 @@
 
 ---
 
-## M5 — DX, CLI & Testing (`rustavel-cli`, `rustavel-macros`, `rustavel-testing`)
+## M5 — DX, CLI & Testing (`rustasea-cli`, `rustasea-macros`, `rustasea-testing`)
 
 *Depends on M0..M4. FSD FS-M5-01..04. Stories US-M5-01..04.*
 
 | Case | FR | Concern | Technique | Input / Precondition | Expected | Env | P | Gherkin |
 |------|----|---------|-----------|----------------------|----------|-----|---|---------|
-| TC-M5-01 | FR-500/502, FS-M5-01 | UI | Contract | `cargo rustavel list --json` | JSON with `make:controller` + `migrate` + `usage` strings | Isolated | P0 | `@generators @attributes` |
+| TC-M5-01 | FR-500/502, FS-M5-01 | UI | Contract | `cargo rustasea list --json` | JSON with `make:controller` + `migrate` + `usage` strings | Isolated | P0 | `@generators @attributes` |
 | TC-M5-02 | FR-502, FS-M5-01 | UI | EP | `AppSend` with `#[usage("app:send {user}")]` then `list --help` | Help line contains `app:send {user}` | Unit | P1 | usage |
 | TC-M5-03 | FR-503, FS-M5-01 | UI | State Transition | Command asks `confirm("Proceed?")`, user answers `n` | Command aborts, exit `1` | Isolated | P1 | prompt abort |
 | TC-M5-04 | FR-505, FS-M5-01 | Service | EP | `Artisan::call("migrate", vec![])` in-process | Migration runs without subprocess (spy verifies) | Integration | P1 | Artisan::call |
@@ -174,7 +174,7 @@
 | TC-M5-14 | FR-508, FS-M5-04 | Service | BVA | `Factory::sequence` at 10 in test A, `UserFactory::create(1)` in test B | Email `user1@example.com` (reset) | Integration | P0 | Str reset |
 | TC-M5-15 | FR-509, FS-M5-04 | UI | EP | `paginate(15)` view `bootstrap-3` rendered | Paginator HTML with `bootstrap-3` classes | Unit | P3 | paginator view |
 | TC-M5-16 | FS-M5-04 | Service | Error Guessing | `testcontainers` startup timeout `30s` expired | `TestError::ContainerTimeout` | Integration | P1 | container timeout |
-| TC-M5-17 | FS-M5-04 | State | EP | After `cargo test` completes | No container `rustavel-test-*` left running | Integration | P0 | teardown |
+| TC-M5-17 | FS-M5-04 | State | EP | After `cargo test` completes | No container `rustasea-test-*` left running | Integration | P0 | teardown |
 
 *Generator matrix for TC-M5-10:*
 
@@ -188,7 +188,7 @@
 
 ---
 
-## M6 — Advanced (`rustavel-broadcast`, `rustavel-storage`, `rustavel-search`, `rustavel-ai`)†
+## M6 — Advanced (`rustasea-broadcast`, `rustasea-storage`, `rustasea-search`, `rustasea-ai`)†
 
 *Depends on M1..M5. FSD FS-M6-01..07. Stories US-M6-01..07. Feature-flagged `ai`/`broadcast`/`storage`.*
 
@@ -208,7 +208,7 @@
 | TC-M6-12 | FR-605, FS-M6-04 | State | EP | Same notification where user exists | Notification delivered | Integration | P2 | delivered |
 | TC-M6-13 | FR-606, FS-M6-05 | Service | Contract | `Ai::provider("openai").text("hello")` vs same call `provider("anthropic")` | Same `AiResponse{text,usage,tool_calls}` shape | Unit (fake adapter) | P0 | `@ai-sdk` provider switch |
 | TC-M6-14 | FR-606, FS-M6-05 | Service | Decision Table | Provider×capability matrix (ollama×`reranking`, groq×`files`) | `AiError::UnsupportedCapability{provider,capability}` | Unit | P1 | unsupported capability |
-| TC-M6-15 | FR-606/612, FS-M6-05 | Service | EP | Feature flag `ai` disabled, workspace `rustavel-router` only then `cargo check` | `async-openai`/provider crates absent from dep graph | Isolated | P0 | feature-gated dep |
+| TC-M6-15 | FR-606/612, FS-M6-05 | Service | EP | Feature flag `ai` disabled, workspace `rustasea-router` only then `cargo check` | `async-openai`/provider crates absent from dep graph | Isolated | P0 | feature-gated dep |
 | TC-M6-16 | FR-606, FS-M6-05 | Service | EP | Each of 12 provider names requested | Adapter available (per-row existence) | Unit | P0 | 12 providers |
 | TC-M6-17 | FR-607/610, FS-M6-06 | Service | State Transition | `SupportAgent` with `SearchDocs` tool, prompt `"summarize ticket 42"`, streaming enabled + WS subscriber | `SearchDocs::call` invoked; chunks stream `event:token` in order to subscriber | Integration (WS+AI fake) | P0 | `@ai-agents` stream |
 | TC-M6-18 | FR-608, FS-M6-06 | UI | Contract | `make:agent SupportAgent` | `app/ai/agents/support_agent.rs` with `Agent` marker + formatted+clean | Isolated | P0 | make:agent |
@@ -270,3 +270,9 @@ Every Laravel 13 feature #1–#20 has ≥1 case above (mirrors `prd.md` §8 · `
 *Counts:* M0 12 · M1 16 · M2 21 · M3 14 · M4 21 · M5 17 · M6 26 · cross 7 = **134 test cases** plus decision-table row expansions.
 
 *Sources:* `test-plan.md` §4 pyramid and §5 4-concern matrix are the normative gate; rows above implement that gate per crate. Parametrized matrices use `rstest`/`proptest` — each logical row is a distinct `cargo test` case.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

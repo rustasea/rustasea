@@ -1,0 +1,27 @@
+[package]
+name = "rustasea-ai"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea AI SDK — provider-agnostic AiProvider trait, Agent/Tool, MCP, deferred loaders"
+
+[dependencies]
+async-trait = { workspace = true }
+futures-core = "0.3"
+futures-util = { version = "0.3", default-features = false }
+rustasea-search = { path = "../rustasea-search", optional = true }
+rustasea-storage = { path = "../rustasea-storage", optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+
+[features]
+default = []
+search = ["dep:rustasea-search"]
+storage = ["dep:rustasea-storage"]
+mcp = []
+
+[dev-dependencies]
+rustasea-search = { path = "../rustasea-search" }
+tokio = { workspace = true }

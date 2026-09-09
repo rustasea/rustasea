@@ -2,7 +2,7 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §1` · `requirements/prd FR-000..008` · `requirements/fsd FS-M0-01..04` · `requirements/tdd BC-0`
-> **Crates:** `rustavel` (umbrella) · `rustavel-foundation` · `rustavel-config`
+> **Crates:** `rustasea` (umbrella) · `rustasea-foundation` · `rustasea-config`
 > **Module:** [modules/foundation/overview.md](../../modules/foundation/overview.md) · **Testing:** [testing/foundation/overview.md](../../testing/foundation/overview.md)
 
 > **Note:** M0 has no HTTP endpoints. This spec documents trait contracts per `api-module.md` Source Analysis — derived from `api-contracts.md §1` + `tdd.md BC-0` traits. Consumers are provider authors, not HTTP clients. Chaos-annotated status is included (§8).
@@ -73,7 +73,7 @@ let state = Application::configure()
 No `curl` — prove boot via `cargo test`:
 
 ```bash
-cargo test -p rustavel-foundation --test m0_foundation -- --nocapture
+cargo test -p rustasea-foundation --test m0_foundation -- --nocapture
 # stub is #[ignore = "stub: crate not yet implemented"] until crate ships
 ```
 
@@ -82,7 +82,7 @@ cargo test -p rustavel-foundation --test m0_foundation -- --nocapture
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Foundation — Bootstrap Contracts (no HTTP)
+  title: RustaSea Foundation — Bootstrap Contracts (no HTTP)
   version: 0.1.0
   description: Trait-level contracts inferred from design/api-contracts.md §1 + tdd.md BC-0. Not a wire API.
 x-inferred: true
@@ -148,7 +148,7 @@ let none: Option<Arc<Mailer>> = state.make_opt::<Mailer>(); // None when unbound
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Container — Make<T> contracts
+  title: RustaSea Container — Make<T> contracts
   version: 0.1.0
 paths: {}
 components:
@@ -177,7 +177,7 @@ x-inferred: true
 ## 4. Usage (copy-paste proof)
 
 ```bash
-cargo test -p rustavel-foundation --test m0_foundation -- --include-ignored --list | grep stub:
+cargo test -p rustasea-foundation --test m0_foundation -- --include-ignored --list | grep stub:
 cargo insta test --accept  # snapshots once crate lands
 ```
 
@@ -208,3 +208,9 @@ cargo insta test --accept  # snapshots once crate lands
 
 Per `chaos-engineering` rules: foundation is the reboot path — chaos inject is `docker pause postgres` during `migrate` + `kill -TERM` mid-boot to validate drain gate. See [testing/foundation/test-boot-container.md](../../testing/foundation/test-boot-container.md) §4 Monkey.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

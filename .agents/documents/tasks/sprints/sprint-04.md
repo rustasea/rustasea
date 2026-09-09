@@ -3,7 +3,7 @@
 > **Milestone:** M3 · **Window:** 2027-02-15 → 2027-05-15 · **Status:** Planned
 > **Parents:** `../roadmap.md` · `prd.md` FR-300–FR-311 · `fsd.md` FS-M3-01–FS-M3-06 · `design/architecture.md`
 > **Depends On:** M1 (S02), M2 (S03)
-> **Crates:** `rustavel-auth`, `rustavel-validation`
+> **Crates:** `rustasea-auth`, `rustasea-validation`
 
 ---
 
@@ -19,7 +19,7 @@ Complete auth, authorization, and validation with hardened security defaults —
 - `#[middleware]` + `#[authorize]` attributes
 - Rate limiter `limit.perMinute(n).by(ip)` → `Throttle` middleware (keyed buckets)
 - CORS via `tower-http`
-- Validation: strict `in_array`/`contains`/`doesnt_contain` (no loose equality), `ErrorBag` per form request, `#[validate]` proc-macro wiring `validator` derive rules; `validator` + custom `rustavel-validation`
+- Validation: strict `in_array`/`contains`/`doesnt_contain` (no loose equality), `ErrorBag` per form request, `#[validate]` proc-macro wiring `validator` derive rules; `validator` + custom `rustasea-validation`
 - Session store JSON default + hyphenated prefixes (`-cache-` / `-session-`) + `serializable_classes` allow-list for cache/session deserialization
 - `app/http/middleware/`, `make:middleware`/`make:request` (runtime in S04; CLI wiring in S06)
 
@@ -30,11 +30,11 @@ Complete auth, authorization, and validation with hardened security defaults —
 
 | # | Task | FR | FSD | Deliverable | Est. | Acceptance |
 |---|------|----|-----|-------------|------|------------|
-| S04-T01 | Guards (JWT + session) + `Auth::extend` + `GuardMismatch` | FR-300, FR-301, FR-311 | FS-M3-01 | `crates/rustavel-auth/src/{guard,jwt,session}.rs` | M | `login(&creds)` → token; `parse(token)` → `user.id`; wrong guard → `GuardMismatch { expected, actual }`; `markEmailAsUnverified` clears `email_verified_at` |
-| S04-T02 | Origin-aware CSRF `PreventRequestForgery` | FR-302 | FS-M3-02 | `crates/rustavel-auth/src/csrf.rs` | S | `POST /form` with `Sec-Fetch-Site: cross-site` + invalid origin → `403 CsrfError::UntrustedOrigin`; token-only bypass rejected; `GET` exempt; `csrf-matrix.json` fixture covers spec branches |
-| S04-T03 | `#[middleware]` / `#[authorize]` + rate limiter + CORS | FR-305, FR-306, FR-310 | FS-M3-03 | `crates/rustavel-macros/src/{middleware,authorize}.rs` + `crates/rustavel-auth/src/throttle.rs` | M | `#[middleware("auth:jwt")]` unauthenticated → `401`; `limit.per_minute(10).by_ip()` 11th → `429` + `Retry-After`; CORS allow-list enforced; `by_key(fn)` custom key |
-| S04-T04 | Validation strict rules + `ErrorBag` + `#[validate]` | FR-307, FR-308, FR-309 | FS-M3-04 | `crates/rustavel-validation/src/{rules,error_bag,validate_macro}.rs` | M | `in_array: [1,"1"]` strict — `1` (int) ≠ `"1"` (str); multi-field errors both in `ErrorBag`; `#[validate] name: length(min=3)` with `"ab"` → validation fails before handler body; 422 JSON shape matches `jsonapi.schema.json` contract |
-| S04-T05 | Session hardening (JSON default, hyphenated prefix, allow-list) | FR-303, FR-304 | FS-M3-05 | `crates/rustavel-auth/src/session.rs` + `crates/rustavel-cache` config | S | Cookie `serialization = "json"`; cache prefix contains `-cache-` (not `_cache_`); cached `AdminDto` not in `serializable_classes` → error on deserialize; `allowlist-corpus.json` fuzz passes |
+| S04-T01 | Guards (JWT + session) + `Auth::extend` + `GuardMismatch` | FR-300, FR-301, FR-311 | FS-M3-01 | `crates/rustasea-auth/src/{guard,jwt,session}.rs` | M | `login(&creds)` → token; `parse(token)` → `user.id`; wrong guard → `GuardMismatch { expected, actual }`; `markEmailAsUnverified` clears `email_verified_at` |
+| S04-T02 | Origin-aware CSRF `PreventRequestForgery` | FR-302 | FS-M3-02 | `crates/rustasea-auth/src/csrf.rs` | S | `POST /form` with `Sec-Fetch-Site: cross-site` + invalid origin → `403 CsrfError::UntrustedOrigin`; token-only bypass rejected; `GET` exempt; `csrf-matrix.json` fixture covers spec branches |
+| S04-T03 | `#[middleware]` / `#[authorize]` + rate limiter + CORS | FR-305, FR-306, FR-310 | FS-M3-03 | `crates/rustasea-macros/src/{middleware,authorize}.rs` + `crates/rustasea-auth/src/throttle.rs` | M | `#[middleware("auth:jwt")]` unauthenticated → `401`; `limit.per_minute(10).by_ip()` 11th → `429` + `Retry-After`; CORS allow-list enforced; `by_key(fn)` custom key |
+| S04-T04 | Validation strict rules + `ErrorBag` + `#[validate]` | FR-307, FR-308, FR-309 | FS-M3-04 | `crates/rustasea-validation/src/{rules,error_bag,validate_macro}.rs` | M | `in_array: [1,"1"]` strict — `1` (int) ≠ `"1"` (str); multi-field errors both in `ErrorBag`; `#[validate] name: length(min=3)` with `"ab"` → validation fails before handler body; 422 JSON shape matches `jsonapi.schema.json` contract |
+| S04-T05 | Session hardening (JSON default, hyphenated prefix, allow-list) | FR-303, FR-304 | FS-M3-05 | `crates/rustasea-auth/src/session.rs` + `crates/rustasea-cache` config | S | Cookie `serialization = "json"`; cache prefix contains `-cache-` (not `_cache_`); cached `AdminDto` not in `serializable_classes` → error on deserialize; `allowlist-corpus.json` fuzz passes |
 
 ## 4. Dependencies
 
@@ -43,7 +43,7 @@ Complete auth, authorization, and validation with hardened security defaults —
 
 ## 5. Deliverables
 
-- Crates `rustavel-auth`, `rustavel-validation`; `app/http/middleware/` + `make:middleware`/`make:request` scaffolds.
+- Crates `rustasea-auth`, `rustasea-validation`; `app/http/middleware/` + `make:middleware`/`make:request` scaffolds.
 - Tag `v0.4.0` with security advisory notes if CSRF/session behavior changed vs `v0.3.0`.
 
 ## 6. Acceptance (Sprint Done)
@@ -57,3 +57,9 @@ Complete auth, authorization, and validation with hardened security defaults —
 ## 7. Risks
 
 - R-03 `Sec-Fetch-Site` spec divergence — gate tests on spec version; keep token as primary gate; missing header path tested.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

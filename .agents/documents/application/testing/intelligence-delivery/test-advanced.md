@@ -19,7 +19,7 @@
 | INTEL-POS-005 | US-M6-03 | JSON:API fieldset+include | user Ada with posts loaded | `UserResource::new(user).include("posts").fields(["name"])` | `application/vnd.api+json` attributes only `name` + `included` posts | High |
 | INTEL-POS-006 | US-M6-05 | Provider switch preserves shape | `openai` text success | `anthropic` same prompt | same `AiResponse{ text, usage}` shape | High |
 | INTEL-POS-007 | US-M6-06 | Agent invokes tool + streams | `SupportAgent` with `SearchDocs` | `prompt "summarize ticket 42"` | `SearchDocs::call` invoked + chunks `event: token` streaming | High |
-| INTEL-POS-008 | US-M6-06 | Generator scaffolds agent | `cargo rustavel make:agent SupportAgent` | generate | `app/ai/agents/support_agent.rs` with `Agent` + `rustfmt`-clean | High |
+| INTEL-POS-008 | US-M6-06 | Generator scaffolds agent | `cargo rustasea make:agent SupportAgent` | generate | `app/ai/agents/support_agent.rs` with `Agent` + `rustfmt`-clean | High |
 | INTEL-POS-009 | US-M6-06 | Sub-agent + middleware observed | `ParentAgent{sub_agents:[KnowledgeAgent], middleware:[Logging]}` requires sub-agent | `prompt` requiring sub-agent | `Logging` observes parent+sub-agent | High |
 | INTEL-POS-010 | US-M6-06 | Broadcast streams agent output WS | agent streaming 1000 tokens + WS subscriber | stream | subscriber receives chunks in order `event: token` | High |
 | INTEL-POS-011 | US-M6-06 | Deferred similarity loads before tool | `SimilaritySearch` deferred loader | `prompt` | `whereVectorSimilarTo` fetches docs before `Tool::call` | High |
@@ -50,7 +50,7 @@
 | INTEL-MNK-003 | Trail traversal fuzz | `%2e%2e`, `..\\`, long chains, symlink corpus | `testing/fixtures/path-traversal.corpus.json` | all variants → `PathTraversal` |
 | INTEL-MNK-004 | Vector index dropped mid-search | `dropVectorIndex` while `whereVectorSimilarTo` active | active query | fallback seq scan returns results (TC-M6-25) |
 | INTEL-MNK-005 | Provider 500 injection | inject 500 per provider | `Ai::provider(name).text(...)` | `AiError::Provider` typed not panic; capability fallback not masked |
-| INTEL-MNK-006 | Opt-in flag gate | no `ai` feature | `cargo check -p rustavel-router` | no `async-openai` in `cargo tree` |
+| INTEL-MNK-006 | Opt-in flag gate | no `ai` feature | `cargo check -p rustasea-router` | no `async-openai` in `cargo tree` |
 | INTEL-MNK-007 | Sparse fieldset controls exact visible | `fields name` → `name`, `fields name,email` → `name,email` (outline) | `UserResource` sparse matrix | attributes contain exactly visible list |
 
 ## 4. Security Testing
@@ -64,3 +64,9 @@
 | INTEL-SEC-005 | Auditor | Notification queue payload allow-list | `Notification{user}` serialized `User` model | queued payload `serializable_classes` gating adjacency (RegisterSec02) |
 | INTEL-SEC-006 | Auditor | WS `Lagged` does not disclose other-channel data | mpsc overflow on `private-chat.1` | dropped chunk not from `private-chat.2` (isolation) |
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

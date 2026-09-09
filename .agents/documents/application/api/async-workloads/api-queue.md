@@ -2,13 +2,13 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §4` · `requirements/prd FR-400..402, FR-409` · `requirements/fsd FS-M4-01..03` · `requirements/tdd BC-4 QueueRegistry/Job` · `design/domain BC-4` · `design/database §2 jobs/failed_jobs/job_batches`
-> **Crates:** `rustavel-queue` · `rustavel-cache` (pendingSize via Queue) · **BDD:** `@queue-routing`, `@queue`, `@queue-metrics`
+> **Crates:** `rustasea-queue` · `rustasea-cache` (pendingSize via Queue) · **BDD:** `@queue-routing`, `@queue`, `@queue-metrics`
 
 ## 1. Standar Global
 
 - **Producer URL:** `POST /jobs` is an app-level dispatch endpoint if the app exposes it; most jobs are dispatched from handlers/schedule/event listeners, not direct HTTP. CLI is the primary operative surface: `queue:work`/`queue:failed`/`queue:retry`. Metrics are Rust traits: `Queue::pendingSize(...)`.
 - **Content-Type:** `application/json` (job payload `serde_json` via `testing/contracts/job-payload.schema.json`).
-- **Base URL:** `http://localhost:3000` for operative HTTP (schedule dispatch), CLI `cargo rustavel ...` otherwise.
+- **Base URL:** `http://localhost:3000` for operative HTTP (schedule dispatch), CLI `cargo rustasea ...` otherwise.
 - **Format Tanggal:** RFC3339 `2026-09-07T10:00:00Z` for `creationTimeOfOldestPendingJob`.
 
 ## 2. Endpoints
@@ -111,23 +111,23 @@ Job::batch([Job{1}, Job{2}]).dispatch().await?;                  // -> BatchId
 
 ### 2.2 CLI — `queue:work` / `queue:failed` / `queue:retry`
 
-#### `cargo rustavel queue:work`
+#### `cargo rustasea queue:work`
 
 ```bash
-cargo rustavel queue:work --connection=redis --queue=podcasts --max-jobs=100
+cargo rustasea queue:work --connection=redis --queue=podcasts --max-jobs=100
 # implements Shutdownable — SIGTERM drains
 ```
 
 - **Success:** exits `0` after draining `max-jobs` or `SIGTERM`.
 - **Error:** `UnknownConnection` → non-zero with `code QueueError::UnknownConnection`.
 
-#### `cargo rustavel queue:failed` / `queue:retry`
+#### `cargo rustasea queue:failed` / `queue:retry`
 
 ```bash
-cargo rustavel queue:failed
+cargo rustasea queue:failed
 # [{"id":"abc","queue":"podcasts","payload":{ ... },"exception":"JobError::Exception","failed_at":"2026-09-07T10:00:00Z"}]
 
-cargo rustavel queue:retry abc
+cargo rustasea queue:retry abc
 # -> Job a1b2c3d4... re-queued; failed_jobs entry abc cleared after retry succeeds
 ```
 
@@ -156,7 +156,7 @@ queue.reserved_size("redis","podcasts").await?;
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Queue — dispatch + CLI + metrics
+  title: RustaSea Queue — dispatch + CLI + metrics
   version: 0.1.0
   description: Typed Job + Queue::route + drivers + metrics per api-contracts.md §4
 servers:
@@ -271,3 +271,9 @@ components:
 
 `docker pause redis` / `kill -KILL postgres` mid-queue is nightly chaos in [testing/async-workloads/overview.md](../../testing/async-workloads/overview.md) § Chaos — must return typed `StoreUnavailable`, not panic; jobs re-queued on retry.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

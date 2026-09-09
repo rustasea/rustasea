@@ -19,3 +19,9 @@ Covers `RouteRegistry` 7-route `resource`, domain precedence, `route:list --json
 - Specs: [test-routing.md](test-routing.md)
 - API: [api-routing](../../api/http-routing/api-routing.md) · [api-http-client](../../api/http-routing/api-http-client.md)
 - Module docs: [routing](../../modules/http-routing/routing.md) · [middleware](../../modules/http-routing/middleware.md) · [http-client](../../modules/http-routing/http-client.md)
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

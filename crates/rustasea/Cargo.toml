@@ -1,0 +1,42 @@
+[package]
+name = "rustasea"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rustasea-foundation = { path = "../rustasea-foundation" }
+rustasea-config = { path = "../rustasea-config" }
+rustasea-router = { path = "../rustasea-router" }
+rustasea-http = { path = "../rustasea-http" }
+rustasea-macros = { path = "../rustasea-macros" }
+rustasea-orm = { path = "../rustasea-orm" }
+rustasea-auth = { path = "../rustasea-auth" }
+rustasea-validation = { path = "../rustasea-validation" }
+rustasea-queue = { path = "../rustasea-queue" }
+rustasea-cache = { path = "../rustasea-cache" }
+rustasea-events = { path = "../rustasea-events" }
+rustasea-schedule = { path = "../rustasea-schedule" }
+rustasea-cli = { path = "../rustasea-cli" }
+rustasea-testing = { path = "../rustasea-testing" }
+# M6 advanced crates (Sprint 07). rustasea-ai is opt-in (NFR-Sca-02):
+# core builds never pull AI/provider SDKs without the `ai` feature.
+rustasea-broadcast = { path = "../rustasea-broadcast" }
+rustasea-storage = { path = "../rustasea-storage" }
+rustasea-search = { path = "../rustasea-search" }
+rustasea-jsonapi = { path = "../rustasea-jsonapi" }
+rustasea-ai = { path = "../rustasea-ai", optional = true }
+
+[features]
+default = []
+# M6 AI SDK is additive; `ai-search`/`ai-storage`/`ai-mcp` forward the
+# deferred-loader features of rustasea-ai itself.
+ai = ["dep:rustasea-ai"]
+ai-search = ["dep:rustasea-ai", "rustasea-ai/search"]
+ai-storage = ["dep:rustasea-ai", "rustasea-ai/storage"]
+ai-mcp = ["dep:rustasea-ai", "rustasea-ai/mcp"]
+
+[dev-dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros"] }

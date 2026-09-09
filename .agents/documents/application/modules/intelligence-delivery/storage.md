@@ -123,3 +123,9 @@ enum StorageError { NotFound, PathTraversal, StoreUnavailable }
 | BDD | `test-generation` — outlines Missing files uniform + copy-back |
 | Security | `security-audit` — RegisterSec03 PathTraversal corpus (#9) |
 | Chaos | `non-functional-testing` — S3 down mid-readthrough fallback observable |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

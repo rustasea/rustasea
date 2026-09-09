@@ -2,7 +2,7 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §3` · `requirements/prd FR-300..311` · `requirements/fsd FS-M3-01..06` · `requirements/tdd BC-3`
-> **Crates:** `rustavel-auth` · `rustavel-validation` · · **BDD:** `@auth`, `@csrf-origin`, `@cache-session-hardening`, `@attributes`, `@throttle`
+> **Crates:** `rustasea-auth` · `rustasea-validation` · · **BDD:** `@auth`, `@csrf-origin`, `@cache-session-hardening`, `@attributes`, `@throttle`
 > **Module:** [modules/identity-access/overview.md](../../modules/identity-access/overview.md) · **Testing:** [testing/identity-access/overview.md](../../testing/identity-access/overview.md)
 
 ## 1. Standar Global
@@ -215,7 +215,7 @@ curl -s -X POST http://localhost:3000/form \
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Identity — Auth + CSRF
+  title: RustaSea Identity — Auth + CSRF
   version: 0.1.0
   description: Auth guards + origin-aware CSRF per api-contracts.md §3
 servers:
@@ -396,3 +396,9 @@ components:
 
 `Sec-Fetch-Site` header evolution via nightly browsers is a `spec-version` gate (R-03); CSRF matrix is nightly-rerun.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

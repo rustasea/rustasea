@@ -2,7 +2,7 @@
 
 > **Status:** P8 Final — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `requirements/{prd §M4,fsd §3.5,tdd BC-4,bdd-scenarios §2.5,user-stories US-M4-01..06}.md` · `design/{architecture BC-4,domain BC-4,database §2 (jobs/cache),api-contracts §4,capacity.md}` · `modules/manifest.md` · `sprints/sprint-05.md`
-> **Crates:** `rustavel-queue` · `rustavel-cache` · `rustavel-events` · `rustavel-schedule`
+> **Crates:** `rustasea-queue` · `rustasea-cache` · `rustasea-events` · `rustasea-schedule`
 > **Milestone:** M4 | **BR:** BR-05 | **FR:** FR-400..410 | **FSD:** FS-M4-01..05 | **BC:** BC-4 | **Stories:** US-M4-01..06
 
 ## Header & Navigation
@@ -35,22 +35,22 @@ Observable async workloads: typed `Job<T: Serialize+DeserializeOwned>` with `#[t
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"background": "#ffffff", "mainBkg": "#ffffff", "primaryColor": "#bbdefb", "secondaryColor": "#fff9c4", "tertiaryColor": "#c8e6c9"}}}%%
 flowchart TB
-    subgraph Queue["Queue (rustavel-queue)"]
+    subgraph Queue["Queue (rustasea-queue)"]
         Route["Queue::route::<Job>\nOnceLock registry"]
         Dispatch["dispatch / onQueue / chain / batch"]
         Driver["Drivers\nsync / database / redis (BRPOP)"]
         Failed["failed_jobs\n+ queue:retry"]
     end
-    subgraph Cache["Cache (rustavel-cache)"]
+    subgraph Cache["Cache (rustasea-cache)"]
         Store["Store trait\nmoka + deadpool-redis"]
         Touch["touch(key, ttl) -> bool"]
         Lock["Lock::get / block\nSET NX EX"]
     end
-    subgraph Events["Events (rustavel-events)"]
+    subgraph Events["Events (rustasea-events)"]
         DispatchE["dispatch / dispatchAfterResponse\n(flush after Response)"]
         Listener["Listener {QUEUE=true} -> Job"]
     end
-    subgraph Schedule["Schedule (rustavel-schedule)"]
+    subgraph Schedule["Schedule (rustasea-schedule)"]
         Sched["Schedule::command().daily()\n.cron().skipIfStillRunning().onOneServer()"]
         Pause["schedule:pause/resume\nSchedulePaused/Resumed"]
         Metrics["pendingSize / delayedSize\ncreationTimeOfOldestPendingJob"]
@@ -88,3 +88,9 @@ flowchart TB
 - Cloud metrics via `Queue` trait (NFR-Mai-01, #8).
 - Deadpool pools sized via config; `Lock::block` respects timeout + lease expiry (NFR-Rel-03, NFR-Sca-01).
 - `JobPayload` contract triaged for security (Sec-02 allow-list) in `queue.md §7`.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

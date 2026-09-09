@@ -35,7 +35,7 @@
 | FOUND-MNK-001 | Concurrency | Concurrent `Make::<Counter>` Singleton from 10 tasks | `Singleton::<Counter>` registered | all task `Arc::ptr_eq` after converge |
 | FOUND-MNK-002 | Shutdown liveness | `SIGTERM` twice (reentrancy) | request draining | drain not invoked twice, second signal no double-free |
 | FOUND-MNK-003 | Reboot after Failed | `boot` failed Cycle then fixed providers | `Cycle` error then `configure().providers(fixed).boot()` | second `boot()` reaches `Running` |
-| FOUND-MNK-004 | Bootstrap probe | `cargo check -p rustavel-foundation` | workspace only | no `sqlx`/`async-openai` in `cargo tree --depth 1` (NFR-Sca-02) |
+| FOUND-MNK-004 | Bootstrap probe | `cargo check -p rustasea-foundation` | workspace only | no `sqlx`/`async-openai` in `cargo tree --depth 1` (NFR-Sca-02) |
 
 ## 4. Security Testing
 
@@ -44,3 +44,9 @@
 | FOUND-SEC-001 | Operator | Config secret leak on invalid TOML | `config/database.toml` invalid line 7 with leaked secret | diagnostic does not echo raw `DATABASE_URL` secret value |
 | FOUND-SEC-002 | Developer | Container missing secrets vs permissive | `Make::<Option<SecretStore>>` when unbound | `None`, not `SecretStore` with zeroed secret |
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

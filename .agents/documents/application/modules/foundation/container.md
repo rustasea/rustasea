@@ -110,3 +110,9 @@ enum ContainerError { NotFound { type_name: &'static str }, AlreadyBound { type_
 | QA | `test-planning` | `@container` bucket |
 | Contract | `test-generation` | `Arc::ptr_eq` probe |
 | Chaos | `non-functional-testing` | concurrent `Make::<Counter>` from two tasks |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

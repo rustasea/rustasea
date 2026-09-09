@@ -54,3 +54,9 @@
 
  > **Note on migration testing terminology:** The phrase "migration testing scenarios" in the task description corresponds to `test-generation/rules/migration-test.md` (round-trip/idempotence/bulk/irreversible) — **not** database table `migrations`. Those scenarios are documented in [testing/data-orm/test-orm.md](../data-orm/test-orm.md) §5. This doc covers `TestCase` migration-running harness adjacency.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

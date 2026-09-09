@@ -3,7 +3,7 @@ name = "xtask"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Rustavel cargo-xtask — CI gates: fmt, clippy, cycles (M5)."
+description = "RustaSea cargo-xtask — CI gates: fmt, clippy, cycles (M5)."
 
 [[bin]]
 name = "xtask"

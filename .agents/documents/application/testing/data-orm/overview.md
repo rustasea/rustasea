@@ -19,3 +19,9 @@ Covers `#[derive(Model)]` + relations + soft delete, fluent builder, `vector` Bl
 - Specs: [test-orm.md](test-orm.md)
 - API: [api-query-builder](../../api/data-orm/api-query-builder.md)
 - Module docs: [model-relations](../../modules/data-orm/model-relations.md) · [query-builder](../../modules/data-orm/query-builder.md) · [migrations](../../modules/data-orm/migrations.md) · [vector](../../modules/data-orm/vector.md)
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

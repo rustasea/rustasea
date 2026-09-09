@@ -4,7 +4,7 @@
 > **Stories:** US-M1-06 (throw + timeouts) + US-M1-03 (route:list) · **BDD:** `@http-client-process`, `@observability-tooling`
 
 ## 1. Feature Overview
-- **Brief Description:** `Http::get(url).header(k,v).timeout(d).throw(|resp| predicate).send().await -> Result<Response, HttpError>` over `reqwest`; `throw` callback inspects `Response` and maps to `HttpError::Status` / `ThrowCallback`; idle timeout watches inter-byte silence distinct from total timeout (`HttpError::Timeout{ kind: Connect|Total|Idle }`); `FakeInvokedProcess::stop`/`ensureNotTimedOut` for fakes; `cargo rustavel route:list [--json]` + `show:model` ModelInspector bindings.
+- **Brief Description:** `Http::get(url).header(k,v).timeout(d).throw(|resp| predicate).send().await -> Result<Response, HttpError>` over `reqwest`; `throw` callback inspects `Response` and maps to `HttpError::Status` / `ThrowCallback`; idle timeout watches inter-byte silence distinct from total timeout (`HttpError::Timeout{ kind: Connect|Total|Idle }`); `FakeInvokedProcess::stop`/`ensureNotTimedOut` for fakes; `cargo rustasea route:list [--json]` + `show:model` ModelInspector bindings.
 - **Role in Module:** Outbound HTTP companion to inbound routing; introspection is the M1 observability signal (NFR-Mai-01).
 - **Business Value:** Downstream failure classification without ad-hoc mapping.
 
@@ -82,8 +82,8 @@ impl Http {
 enum HttpError { Status { code: u16 }, Timeout { kind: TimeoutKind }, ThrowCallback { source: Box<dyn Error> } }
 enum TimeoutKind { Connect, Total, Idle }
 // Introspection
-// cargo rustavel route:list [--json]  -> Vec<RouteMeta>
-// cargo rustavel show:model User     -> ModelInspector {attributes,relations,casts}
+// cargo rustasea route:list [--json]  -> Vec<RouteMeta>
+// cargo rustasea show:model User     -> ModelInspector {attributes,relations,casts}
 struct ModelInspector { attributes: Vec<String>, relations: Vec<String>, casts: Vec<String> }
 ```
 
@@ -91,7 +91,7 @@ struct ModelInspector { attributes: Vec<String>, relations: Vec<String>, casts: 
 - `reqwest` (under hood), `tokio`, `serde`, `schemars` (route:list schema), `wiremock`/`httpmock` for `throw` predicate fakes.
 
 ## 7. Limitations
-- `FakeInvokedProcess::stop`/`ensureNotTimedOut` is behind `cargo rustavel` internal tooling (FS-M1-06 process idle-timeout adjacency), not general-purpose process supervisor.
+- `FakeInvokedProcess::stop`/`ensureNotTimedOut` is behind `cargo rustasea` internal tooling (FS-M1-06 process idle-timeout adjacency), not general-purpose process supervisor.
 
 ## 8. Compliance
 - `oha` p95 benchmark is 100-parallel invariant on localhost mock (NFR-Per-02 adjacency).
@@ -116,3 +116,9 @@ struct ModelInspector { attributes: Vec<String>, relations: Vec<String>, casts: 
 | QA | `test-planning` — decision table on throw predicates |
 | Contract | `test-generation` — `route:list` JSON-Schema + snapshot |
 | Chaos | `non-functional-testing` — upstream `docker pause` / 500 burst |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

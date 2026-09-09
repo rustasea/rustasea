@@ -1,4 +1,4 @@
-# Laravel 13 Feature Research — Rustavel Discovery
+# Laravel 13 Feature Research — RustaSea Discovery
 
 **Date:** 2026-09-07 | **Target:** Laravel 13.0.0 (2026-03-17) + patch 13.x to v13.30.1 | **Baseline:** Laravel 12
 
@@ -72,12 +72,12 @@ Release notes (1) explicitly state: *"relatively minor upgrade in terms of effor
 | Low | Polymorphic pivot table name now plural | Set explicit `$table` on custom pivots |
 | Very Low | `Cache\Store::touch`, `Queue::pendingSize` etc., `Dispatcher::dispatchAfterResponse`, `MustVerifyEmail::markEmailAsUnverified` added to contracts | Implement on custom drivers |
 
-## Rustavel Implications (Opportunities to Borrow)
+## RustaSea Implications (Opportunities to Borrow)
 
-1. **AI-native is the headline** — parity via a `rustavel-ai` crate with provider-agnostic trait + agentic workflow (tools, streams, queues) would differentiate from Goravel.
+1. **AI-native is the headline** — parity via a `rustasea-ai` crate with provider-agnostic trait + agentic workflow (tools, streams, queues) would differentiate from Goravel.
 2. **Declarative attributes** — Rust proc-macros (`#[middleware]`, `#[tries(3)]`, `#[authorize]`) are idiomatic; mirrors Laravel 13's expanded attribute surface.
 3. **Queue routing + Cloud** — central `Queue::route::<Job>(queue:)` maps cleanly to a Rust builder/registry.
-4. **Vector search first-class** — `whereVectorSimilarTo` + `toEmbeddings` suggests `rustavel` should ship a `vector` query extension + embedding trait from day one (pgvector).
+4. **Vector search first-class** — `whereVectorSimilarTo` + `toEmbeddings` suggests `rustasea` should ship a `vector` query extension + embedding trait from day one (pgvector).
 5. **Security defaults hardening** — JSON session serialization + `serializable_classes` allow-list is a pattern to adopt in Rust (serde allow-listing) even more naturally.
 
 ## Verification

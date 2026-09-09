@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "ModelInspector metadata — `cargo rustavel show:model`",
+  "title": "ModelInspector metadata — `cargo rustasea show:model`",
   "description": "Validates NFR-Mai-01 / FR-109 / FS-M1-03. Attributes, relations, casts, soft-delete flag.",
   "type": "object",
   "required": ["model","table","attributes","relations"],

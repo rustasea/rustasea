@@ -1,4 +1,4 @@
-//! Rustavel `cargo xtask` entrypoint.
+//! RustaSea `cargo xtask` entrypoint.
 //!
 //! Provides the CI-facing task surface documented for M5: `cargo xtask ci`
 //! gates the workspace on rustfmt + clippy (C-04) and `cargo xtask

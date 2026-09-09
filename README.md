@@ -1,4 +1,4 @@
-# Rustavel
+# RustaSea
 
 > A Rust framework with Laravel ergonomics — expressive syntax, convention over configuration, and Rust-grade safety and performance.
 
@@ -10,9 +10,9 @@
 
 ## Vision
 
-Rustavel brings the developer experience that made Laravel the most loved PHP framework to Rust — without sacrificing what makes Rust great. Route definitions that read like prose, Eloquent-inspired query builders with compile-time safety, Artisan-like code generation via proc-macros, and a service container that leverages Rust's type system instead of fighting it.
+RustaSea brings the developer experience that made Laravel the most loved PHP framework to Rust — without sacrificing what makes Rust great. Route definitions that read like prose, Eloquent-inspired query builders with compile-time safety, Artisan-like code generation via proc-macros, and a service container that leverages Rust's type system instead of fighting it.
 
-**Core thesis:** Laravel proves ergonomics and velocity win hearts; Rust proves safety and performance win production. Rustavel proves you can have both.
+**Core thesis:** Laravel proves ergonomics and velocity win hearts; Rust proves safety and performance win production. RustaSea proves you can have both.
 
 **Design principles:**
 
@@ -25,7 +25,7 @@ Rustavel brings the developer experience that made Laravel the most loved PHP fr
 
 ## Why Rust × Laravel Ergonomics
 
-| What Laravel does best | What Rust does best | Rustavel synthesis |
+| What Laravel does best | What Rust does best | RustaSea synthesis |
 |---|---|---|
 | Expressive routing, middleware, validation | Ownership, lifetimes, fearless concurrency | `axum` routing with typed extractors + proc-macro attributes (`#[middleware]`, `#[validate]`) |
 | Eloquent ORM — fluent, chainable | Compile-time query checking | `sqlx` / `sea-orm` query builder with derive macros; `whereVectorSimilarTo` from day one |
@@ -34,15 +34,15 @@ Rustavel brings the developer experience that made Laravel the most loved PHP fr
 | Blade / JSON:API resources | `serde` / `askama` / `minijinja` | `JsonApiResource` via `serde` with sparse fieldsets + relationship inclusion |
 | Batteries-included DX | Minimal runtime, no GC | Pay only for crates you include; workspace-gated features |
 
-**Who is Rustavel for?** Teams that outgrew dynamic-language frameworks on performance, correctness, or concurrency — but do not want to outgrow the productivity that made them ship fast.
+**Who is RustaSea for?** Teams that outgrew dynamic-language frameworks on performance, correctness, or concurrency — but do not want to outgrow the productivity that made them ship fast.
 
 ---
 
 ## Laravel 13 Feature Map
 
-Laravel 13.0.0 shipped 2026-03-17 (PHP 8.3+, 20 headline features). Every feature is mapped to the Rustavel milestone that delivers its equivalent.
+Laravel 13.0.0 shipped 2026-03-17 (PHP 8.3+, 20 headline features). Every feature is mapped to the RustaSea milestone that delivers its equivalent.
 
-| # | Laravel 13 Feature | Type | Rustavel Milestone | Notes |
+| # | Laravel 13 Feature | Type | RustaSea Milestone | Notes |
 |---|---|---|---|---|
 | 1 | AI SDK (`laravel/ai`) — 12 providers, agents, tools, streams | NEW | **M6** | Provider-agnostic trait + agentic workflow |
 | 2 | AI Agents (tools, structured output, streaming, MCP, queueing) | NEW | **M6** | `make:agent` / `make:tool`, sub-agents, middleware |
@@ -81,9 +81,9 @@ Laravel 13.0.0 shipped 2026-03-17 (PHP 8.3+, 20 headline features). Every featur
 - **Artisan CLI** (`make:controller`, `make:job`, signatures + typed Args/Flags) maps to `clap` + `cargo xtask` with `#[command]` proc-macros.
 - **Queue / Event / Schedule / Cache / Auth** — typed `queue.Arg` / `event.Arg` patterns, `Cache::Remember`, `Auth(ctx).Login` all have direct Rust analogues.
 
-**What Rustavel does differently:**
+**What RustaSea does differently:**
 
-| Goravel (Go) | Rustavel (Rust) |
+| Goravel (Go) | RustaSea (Rust) |
 |---|---|
 | Global facades `facades.Cache().Get()` | Explicit `AppState` via `axum::extract::State` (`OnceLock` / `Arc`, no global `static mut`) |
 | `any` / `interface{}` job/event args | Strongly-typed generic jobs/events — `Job<T>`, `Event<T>` |
@@ -106,7 +106,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 |---|---|
 | **Goal** | Bootable application skeleton with config, container, and service providers. |
 | **Scope** | `foundation::Application`, typed config loader (TOML/YAML + env overlay), service container (`Bind`/`Singleton`/`Instance`), provider lifecycle (`register` → `boot`), graceful shutdown, `.env` support. |
-| **Deliverables** | `rustavel` umbrella crate, `rustavel-foundation` crate, `cargo artisan new <app>` scaffold, `config/` directory, `bootstrap/app.rs` entry point, example `AppServiceProvider`. |
+| **Deliverables** | `rustasea` umbrella crate, `rustasea-foundation` crate, `cargo artisan new <app>` scaffold, `config/` directory, `bootstrap/app.rs` entry point, example `AppServiceProvider`. |
 | **Success Criteria** | `cargo run` boots, loads config from `config/*.toml` + `.env`, resolves a bound singleton from the container, and shuts down gracefully on `SIGTERM`. |
 | **Laravel 13 features** | Container `call` semantics, `Manager::extend` closure binding. |
 
@@ -116,7 +116,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 |---|---|
 | **Goal** | Expressive HTTP layer with routing, middleware, and request/response ergonomics. |
 | **Scope** | `axum`-backed router (`get`/`post`/`put`/`delete`/`patch`/`options`/`any`), route groups + prefix + naming, `resource` helper, domain-aware routing (domain routes prioritized), `route:list` introspection, middleware stack (including `throttle` / `cors`), typed request extractors, `Json`/`View` responses, HTTP client (`reqwest` wrapper with `throw` callbacks). |
-| **Deliverables** | `rustavel-router` + `rustavel-http` crates, `routes/web.rs`, `#[route]` proc-macro, `cargo artisan route:list`. |
+| **Deliverables** | `rustasea-router` + `rustasea-http` crates, `routes/web.rs`, `#[route]` proc-macro, `cargo artisan route:list`. |
 | **Success Criteria** | Define `Route::get("/users", [UserController, "index"])` equivalent in Rust, hit it with `cargo test` HTTP assertions, see it in `route:list` with middleware and binding fields. Domain catch-all routes do not shadow non-domain routes. |
 | **Laravel 13 features** | #18 HTTP Client & Process, #19 domain-route priority, #20 `route:list` binding fields. |
 
@@ -126,7 +126,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 |---|---|
 | **Goal** | Fluent, type-safe database layer with migrations, seeders, and factories. |
 | **Scope** | Query builder over `sqlx` / `sea-orm` (drivers: Postgres, MySQL, SQLite), `where`/`orWhere`/`whereJson*`, `find`/`first`/`firstOrFail`, `create`/`save`/`update`/`delete`/`forceDelete`, `paginate`/`cursor`, scopes, transactions, `toSql`/`toRawSql`, pessimistic locks, raw queries, `insertOrIgnoreReturning`/`saveOrIgnore`/`refreshForUpdate`/`whereBinary`/`chunkBy`/`orWhereKey`, `#[derive(Model)]` with `id`/`created_at`/`updated_at`/`deleted_at` (soft deletes), snake_plural table convention, vector extension (`whereVectorSimilarTo`, `vector` column type). Migrations (`cargo artisan make:migration` + `migrate`/`migrate:fresh`), seeders, factories. |
-| **Deliverables** | `rustavel-orm` crate, `database/migrations/`, `database/seeders/`, `#[derive(Model)]` macro, `cargo artisan make:model` generator, `pgvector` support behind feature flag. |
+| **Deliverables** | `rustasea-orm` crate, `database/migrations/`, `database/seeders/`, `#[derive(Model)]` macro, `cargo artisan make:model` generator, `pgvector` support behind feature flag. |
 | **Success Criteria** | Create a `User` model, run `cargo artisan migrate`, `Factory::create(&user)` in tests, demonstrate `whereVectorSimilarTo` with `pgvector`, and round-trip a collection with eager-loaded relations via `serde`. |
 | **Laravel 13 features** | #6 vector search, #13 collection serialization, #14 upsert/delete, #15 query builder additions. |
 
@@ -136,7 +136,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 |---|---|
 | **Goal** | Complete auth, authorization, and validation with hardened security defaults. |
 | **Scope** | Auth guards (JWT via `jsonwebtoken` + session), `login`/`loginUsingId`/`parse`/`refresh`/`logout`/`user`/`id`, `Auth::extend` for custom guards, `#[authorize]` attribute, CSRF origin-aware protection (`PreventRequestForgery` with `Sec-Fetch-Site` check), `#[middleware]` attribute, rate limiter (`limit.perMinute().by(ip)` → `Throttle`), CORS, validation rules (strict `in_array`/`contains`/`doesnt_contain`, `ErrorBag` for form requests), `#[validate]` proc-macro, session store (JSON serialization by default), security allow-list for deserialization. |
-| **Deliverables** | `rustavel-auth` + `rustavel-validation` crates, `app/http/middleware/`, `cargo artisan make:middleware` / `make:request`, JWT + session guard implementations. |
+| **Deliverables** | `rustasea-auth` + `rustasea-validation` crates, `app/http/middleware/`, `cargo artisan make:middleware` / `make:request`, JWT + session guard implementations. |
 | **Success Criteria** | Guard mismatch returns typed `Error::GuardMismatch`; CSRF rejects cross-site `POST` without valid `Sec-Fetch-Site`; `#[validate]` rejects strict-mismatch payloads; session cookie uses JSON serialization and hyphenated cache prefix. |
 | **Laravel 13 features** | #11 origin-aware CSRF, #12 cache/session hardening, #19 strict validation + `ErrorBag`. |
 
@@ -146,7 +146,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 |---|---|
 | **Goal** | Async workloads, caching, scheduling, and event dispatch with observable queue metrics. |
 | **Scope** | Queue: `Queue::route::<Job>(connection:, queue:)` central routing, `Job` trait with `handle`, `ShouldRetry` / `#[tries]` / `#[backoff]` / `#[timeout]`, drivers `sync` + `database` + `redis` (via `deadpool-redis`), `dispatch`/`dispatchSync`/`chain`/`delay`/`onQueue`/`onConnection`, batch dispatch, `queue:failed` / `queue:retry`, `failed_jobs` table. Cache: `get`/`put`/`add`/`remember`/`forever`/`forget`/`flush`/`increment`/`decrement`/`pull`/`has` + `touch()` (extend TTL), `Lock` (atomic `get`/`block`/`release`), stores `memory` + `redis`, `withContext`/`store("redis")`. Events: `Event` trait, `Listener` with `Queue { enable: true }` for async, `dispatch` + `dispatchAfterResponse`, `JobAttempted { exception }`, `QueueBusy { connectionName }`. Schedule: `schedule:list`, `schedule:run`, `schedule:pause`/`schedule:resume` + `SchedulePaused`/`ScheduleResumed` events, frequencies (`daily`/`cron`/`everyMinute`/`skipIfStillRunning`/`onOneServer`). Cloud queue metrics (`pendingSize`/`delayedSize`/`reservedSize`/`creationTimeOfOldestPendingJob`). |
-| **Deliverables** | `rustavel-queue` + `rustavel-cache` + `rustavel-events` + `rustavel-schedule` crates, `app/jobs/`, `app/events/`, `app/listeners/`, `cargo artisan make:job` / `make:event` / `make:listener`. |
+| **Deliverables** | `rustasea-queue` + `rustasea-cache` + `rustasea-events` + `rustasea-schedule` crates, `app/jobs/`, `app/events/`, `app/listeners/`, `cargo artisan make:job` / `make:event` / `make:listener`. |
 | **Success Criteria** | Dispatch a typed job to a routed queue and assert it executes; `Cache::touch` extends TTL without re-reading; `schedule:pause` halts the scheduler and emits `SchedulePaused`; event listener runs async when `Queue { enable: true }`. |
 | **Laravel 13 features** | #4 queue routing, #5 `Cache::touch`, #8 Cloud queue metrics, #10 schedule pause/resume, #16 event/queue contracts. |
 
@@ -158,7 +158,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 |---|---|
 | **Goal** | First-class developer experience: CLI, code generation, and a testing story that feels like Laravel. |
 | **Scope** | `cargo artisan` CLI (via `clap` + `cargo xtask`): `list`, `make:*` (controller, model, provider, command, job, event, listener, observer, test, seeder, agent, tool), typed command args/flags, `ask`/`secret`/`confirm`/`choice`/`multiSelect` prompts, `table`/`progressBar`/`spinner`, graceful shutdown (`Shutdownable`), programmatic `Artisan::call()`. Declarative attributes: `#[middleware]`, `#[authorize]`, `#[tries]`, `#[backoff]`, `#[timeout]`, `#[usage]`/`#[help]`/`#[hidden]` for commands. Testing: `cargo test` integration, `TestCase` harness, per-package `.env.testing`, `testcontainers` isolated DB/cache, `Factory::create`, `Str` factory resets between tests, paginator views. |
-| **Deliverables** | `rustavel-cli` + `rustavel-macros` + `rustavel-testing` crates, `bootstrap/commands.rs`, `tests/` directory, `cargo artisan make:test` generator, `#[test]` helpers. |
+| **Deliverables** | `rustasea-cli` + `rustasea-macros` + `rustasea-testing` crates, `bootstrap/commands.rs`, `tests/` directory, `cargo artisan make:test` generator, `#[test]` helpers. |
 | **Success Criteria** | `cargo artisan make:controller UserController` scaffolds a controller with a route; all generated `make:*` commands produce `rustfmt`-clean code that compiles; `cargo test` spins up an isolated Postgres via `testcontainers` and tears it down. |
 | **Laravel 13 features** | #7 expanded attributes (all `#[Tries]`/`#[Backoff]`/`#[Timeout]`/`#[WithoutBroadcasting]` etc.), #20 `ModelInspector`/`route:list`/`Str` factory resets. |
 
@@ -166,9 +166,9 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 
 | Field | Detail |
 |---|---|
-| **Goal** | Differentiate Rustavel with AI-native capabilities and complete Laravel parity on advanced features. |
-| **Scope** | Broadcasting & real-time: WebSocket via `axum` + `tokio-tungstenite`, channel auth, `ShouldBroadcast` trait, SSE via `Response::eventStream`. Search: `whereVectorSimilarTo` integration with embedding providers, `Str::toEmbeddings`, `dropVectorIndex`. Filesystem: read-through disk (primary + fallback with optional copy), `Storage::path()` confinement, `Storage` facade over `object_store` / local. JSON:API resources: `JsonApiResource` with sparse fieldsets, relationship inclusion, links, headers. Notifications & mail (queued with `#[deleteWhenMissingModels]`). AI SDK (`rustavel-ai`): provider-agnostic trait over 12 providers (OpenAI, Anthropic, Gemini, Azure, Bedrock, Groq, xAI, DeepSeek, Mistral, Ollama, OpenRouter, OpenAI-Compatible), `Agent` contracts, `make:agent`/`make:tool`, `SimilaritySearch`/`FileStorage`/`ToolSearch` deferred loading, sub-agents, middleware, anonymous agents, streaming + broadcasting + queueing, MCP support. |
-| **Deliverables** | `rustavel-broadcast` + `rustavel-storage` + `rustavel-search` + `rustavel-ai` crates, `app/ai/agents/` + `app/ai/tools/`, `resources/views/` (askama/minijinja), `cargo artisan make:agent` / `make:tool`. |
+| **Goal** | Differentiate RustaSea with AI-native capabilities and complete Laravel parity on advanced features. |
+| **Scope** | Broadcasting & real-time: WebSocket via `axum` + `tokio-tungstenite`, channel auth, `ShouldBroadcast` trait, SSE via `Response::eventStream`. Search: `whereVectorSimilarTo` integration with embedding providers, `Str::toEmbeddings`, `dropVectorIndex`. Filesystem: read-through disk (primary + fallback with optional copy), `Storage::path()` confinement, `Storage` facade over `object_store` / local. JSON:API resources: `JsonApiResource` with sparse fieldsets, relationship inclusion, links, headers. Notifications & mail (queued with `#[deleteWhenMissingModels]`). AI SDK (`rustasea-ai`): provider-agnostic trait over 12 providers (OpenAI, Anthropic, Gemini, Azure, Bedrock, Groq, xAI, DeepSeek, Mistral, Ollama, OpenRouter, OpenAI-Compatible), `Agent` contracts, `make:agent`/`make:tool`, `SimilaritySearch`/`FileStorage`/`ToolSearch` deferred loading, sub-agents, middleware, anonymous agents, streaming + broadcasting + queueing, MCP support. |
+| **Deliverables** | `rustasea-broadcast` + `rustasea-storage` + `rustasea-search` + `rustasea-ai` crates, `app/ai/agents/` + `app/ai/tools/`, `resources/views/` (askama/minijinja), `cargo artisan make:agent` / `make:tool`. |
 | **Success Criteria** | Define an `Agent` with a `Tool`, stream its response over WebSocket, and assert the stream includes structured output; `Storage` read falls through to fallback disk and `path()` never escapes root; `JsonApiResource` renders correct `Content-Type: application/vnd.api+json` with sparse fieldsets. |
 | **Laravel 13 features** | #1 AI SDK, #2 AI Agents, #3 JSON:API Resources, #6 semantic/vector search (full), #9 read-through filesystem, #17 mail/notification defaults, #18 SSE `eventStream`. |
 
@@ -185,7 +185,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 | ORM / DB | `sqlx` (primary) + `sea-orm` (optional) | `sqlx` gives compile-time checked queries and `pgvector` support; `sea-orm` offers ActiveRecord-style ergonomics where desired. `sqlx::migrate!` for migrations. |
 | Connection pooling | `deadpool` / `bb8` | `deadpool` for Postgres/Redis; `bb8` if `diesel`-backed. Async-native, `tokio`-aware. |
 | Migrations | `sqlx::migrate` / `sea-orm-migration` | Versioned, reversible, `cargo artisan migrate` wraps them. |
-| Validation | `validator` + custom `rustavel-validation` | `validator` derive macros for struct-level rules; custom crate for `ErrorBag` + FormRequest semantics. |
+| Validation | `validator` + custom `rustasea-validation` | `validator` derive macros for struct-level rules; custom crate for `ErrorBag` + FormRequest semantics. |
 | Auth | `jsonwebtoken` + `argon2` + `tower-sessions` | `jsonwebtoken` for JWT guards; `argon2` for password hashing; `tower-sessions` for session store (JSON by default). |
 | Serialization | `serde` + `serde_json` | Universal; powers config, JSON:API, queue payloads, session store. |
 | Config | `config` + `dotenvy` | Layered `config/*.toml` + env overlay + `.env` via `dotenvy`. Typed via `serde`. |
@@ -209,9 +209,9 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 Workspace with one crate per milestone domain. Application code lives in `app/` (mirrors Laravel/Goravel conventions).
 
 ```
-rustavel/                          # workspace root
+rustasea/                          # workspace root
 ├── Cargo.toml                     # [workspace] — members = ["crates/*"]
-├── rustavel.toml                  # framework config (optional)
+├── rustasea.toml                  # framework config (optional)
 ├── .env.example
 ├── bootstrap/
 │   ├── app.rs                     # Application::configure() — providers, routing, schedule, events
@@ -238,25 +238,25 @@ rustavel/                          # workspace root
 ├── docs/
 │   └── laravel-13-research.md
 ├── crates/
-│   ├── rustavel/                  # umbrella re-export crate (like `laravel/framework`)
-│   ├── rustavel-foundation/       # M0 — Application, Container, ServiceProvider
-│   ├── rustavel-config/           # M0 — layered config loader
-│   ├── rustavel-router/           # M1 — routing + route:list
-│   ├── rustavel-http/             # M1 — request/response, middleware, HTTP client
-│   ├── rustavel-orm/              # M2 — query builder, Model derive, migrations
-│   ├── rustavel-macros/           # M2/M5 — proc-macros (Model, route, middleware, validate, tries, …)
-│   ├── rustavel-auth/             # M3 — guards, JWT, session, authorize
-│   ├── rustavel-validation/       # M3 — rules, ErrorBag, FormRequest
-│   ├── rustavel-queue/            # M4 — jobs, routing, workers, failed_jobs
-│   ├── rustavel-cache/            # M4 — Store trait, memory + redis, Lock, touch
-│   ├── rustavel-events/           # M4 — Event/Listener, dispatchAfterResponse
-│   ├── rustavel-schedule/         # M4 — scheduler, pause/resume, frequencies
-│   ├── rustavel-cli/              # M5 — clap CLI, make:* generators, xtask
-│   ├── rustavel-testing/          # M5 — TestCase, factories, testcontainers helpers
-│   ├── rustavel-broadcast/        # M6 — WebSocket, SSE, channel auth
-│   ├── rustavel-storage/          # M6 — Storage facade, read-through disks
-│   ├── rustavel-search/           # M6 — vector search, embeddings
-│   └── rustavel-ai/               # M6 — provider trait, Agent, Tool, MCP, streaming
+│   ├── rustasea/                  # umbrella re-export crate (like `laravel/framework`)
+│   ├── rustasea-foundation/       # M0 — Application, Container, ServiceProvider
+│   ├── rustasea-config/           # M0 — layered config loader
+│   ├── rustasea-router/           # M1 — routing + route:list
+│   ├── rustasea-http/             # M1 — request/response, middleware, HTTP client
+│   ├── rustasea-orm/              # M2 — query builder, Model derive, migrations
+│   ├── rustasea-macros/           # M2/M5 — proc-macros (Model, route, middleware, validate, tries, …)
+│   ├── rustasea-auth/             # M3 — guards, JWT, session, authorize
+│   ├── rustasea-validation/       # M3 — rules, ErrorBag, FormRequest
+│   ├── rustasea-queue/            # M4 — jobs, routing, workers, failed_jobs
+│   ├── rustasea-cache/            # M4 — Store trait, memory + redis, Lock, touch
+│   ├── rustasea-events/           # M4 — Event/Listener, dispatchAfterResponse
+│   ├── rustasea-schedule/         # M4 — scheduler, pause/resume, frequencies
+│   ├── rustasea-cli/              # M5 — clap CLI, make:* generators, xtask
+│   ├── rustasea-testing/          # M5 — TestCase, factories, testcontainers helpers
+│   ├── rustasea-broadcast/        # M6 — WebSocket, SSE, channel auth
+│   ├── rustasea-storage/          # M6 — Storage facade, read-through disks
+│   ├── rustasea-search/           # M6 — vector search, embeddings
+│   └── rustasea-ai/               # M6 — provider trait, Agent, Tool, MCP, streaming
 └── app/                           # application layer (generated by `cargo artisan new`)
     ├── http/
     │   ├── controllers/
@@ -292,7 +292,7 @@ rustavel/                          # workspace root
 
 ```mermaid
 gantt
-    title Rustavel Roadmap
+    title RustaSea Roadmap
     dateFormat YYYY-MM-DD
     section Core
     M0 Bootstrap & Core          :m0, 2026-10-01, 2026-12-31
@@ -314,7 +314,7 @@ gantt
 > Early stage — the project is in discovery. Contributions to research, RFCs, and prototype crates are welcome.
 
 1. **Read the research** — [`docs/laravel-13-research.md`](docs/laravel-13-research.md) and `TASK-002` Goravel study.
-2. **Pick a milestone** — check the [Issues](https://github.com/vheins/rustavel/issues) for `milestone:M0` … `milestone:M6` labels.
+2. **Pick a milestone** — check the [Issues](https://github.com/vheins/rustasea/issues) for `milestone:M0` … `milestone:M6` labels.
 3. **Open an RFC** — for any cross-crate design decision, open a discussion/issue before coding.
 4. **Conventions** — `rustfmt` + `clippy -- -D warnings` must pass; generated code must be `rustfmt`-clean; workspace `Cargo.toml` is the source of truth for versions.
 
@@ -325,7 +325,7 @@ cargo xtask migrate  # run migrations
 cargo test --workspace
 ```
 
-Questions? Open a [Discussion](https://github.com/vheins/rustavel/discussions) or reach out via Issues.
+Questions? Open a [Discussion](https://github.com/vheins/rustasea/discussions) or reach out via Issues.
 
 ---
 

@@ -1,6 +1,6 @@
-# Rustavel — Component Inventory (Crate & CLI Components)
+# RustaSea — Component Inventory (Crate & CLI Components)
 
-> **Owner:** vheins/rustavel | **Phase:** P4 Design Planning (CLI & DX)  
+> **Owner:** vheins/rustasea | **Phase:** P4 Design Planning (CLI & DX)  
 > **Date:** 2026-09-07 | **Task:** TASK-009 (parent TASK-001)  
 > **Parents:** `requirements/brd.md` + `requirements/prd.md` (FR-000 … FR-612) + `requirements/fsd.md` (FS-M0-01 … FS-M6-07) + `requirements/bdd-scenarios.md`  
 > **Adaptation note:** This inventory adapts `design-specification` component-spec rules to a **Rust workspace / framework DX** context. "Components" are **crates, proc-macros, CLI commands, and prompt/output primitives** — not browser UI components. Each entry has PascalCase name, states (implemented as Rust states/errors), and reuse level.
@@ -13,46 +13,46 @@ Reuse levels: `P0 shared` (used by ≥3 milestones) · `P1 domain` (1–2 milest
 
 | # | Crate (PascalCase) | Crate slug | Milestone | Reuse | Status | Depends On | Provides (public API surface) |
 |---|--------------------|------------|-----------|-------|--------|------------|-------------------------------|
-| 1 | `Rustavel` | `rustavel` | M0 | P0 shared | planned | all below (re-export) | Umbrella re-export — `pub use rustavel_foundation::*` etc. (like `laravel/framework`); feature-gated per domain |
-| 2 | `RustavelFoundation` | `rustavel-foundation` | M0 | P0 shared | planned | `rustavel-config`, `rustavel-container` | `Application`, `ServiceProvider` (register→boot DAG), `Runner` (HTTP/Queue/Schedule), `AppState(Arc)` |
-| 3 | `RustavelConfig` | `rustavel-config` | M0 | P0 shared | planned | — | Layered loader `config/*.toml` + env overlay + `.env` via `dotenvy`; typed `Config` via `serde`; `ConfigError` |
-| 4 | `RustavelContainer` | `rustavel-container` | M0 | P0 shared | planned | — | `Container { Bind, Singleton, Instance, Make<T> }`, `Manager::extend` closure binding, `ContainerError` |
-| 5 | `RustavelRouter` | `rustavel-router` | M1 | P0 shared | planned | `rustavel-foundation`, `rustavel-http` | `Route::get/post/.../any`, group `prefix/name/middleware`, `resource` helper, domain-route prioritization, route table + binding fields |
-| 6 | `RustavelHttp` | `rustavel-http` | M1 | P0 shared | planned | `rustavel-foundation` | Typed extractors `Json<T>/Query<T>/Path<T>/State`, responses `Json/View/Redirect`, middleware `Throttle/Cors`, HTTP client `Http::get(...).throw(...).timeout(...)`, `HttpError` |
-| 7 | `RustavelOrm` | `rustavel-orm` | M2 | P0 shared | planned | `rustavel-config`, `rustavel-macros` | Query builder (`where/orWhere/chunkBy/...`), `Model` trait, `Db/Transaction`, relations, `vector` column + `whereVectorSimilarTo`, migrations, seeders, `QueryError` |
-| 8 | `RustavelMacros` | `rustavel-macros` | M2/M5 | P0 shared | planned | — (proc-macro) | `#[derive(Model)]`, `#[route]`, `#[middleware]`, `#[authorize]`, `#[validate]`, `#[tries]`/`#[backoff]`/`#[timeout]`/`#[usage]`/`#[help]`/`#[hidden]` (Laravel 13 #7); compile-time only |
-| 9 | `RustavelAuth` | `rustavel-auth` | M3 | P1 domain | planned | `rustavel-http`, `rustavel-orm` | Guards `JwtGuard/SessionGuard`, `Auth::guard("jwt").login/parse/refresh/logout/user`, `Auth::extend`, `Error::GuardMismatch` |
-| 10 | `RustavelValidation` | `rustavel-validation` | M3 | P1 domain | planned | `rustavel-macros` | `Rule` set, `ErrorBag { field -> Vec<ValidationError> }`, `#[validate]` wiring, strict `in_array`/`contains` helpers, `Validatable` |
-| 11 | `RustavelQueue` | `rustavel-queue` | M4 | P1 domain | planned | `rustavel-foundation`, `rustavel-orm` | `Job<T>` trait, `ShouldRetry`, `Queue::route::<Job>(connection:, queue:)`, drivers `sync/database/redis`, `dispatch/chain/batch/delay/onQueue`, `failed_jobs`, `QueueError` |
-| 12 | `RustavelCache` | `rustavel-cache` | M4 | P1 domain | planned | `rustavel-foundation` | `Store` trait (`get/put/touch/...`), `Repository` (`remember/forever/...`), `Lock` (`get/block/release`), stores `memory(moka)/redis`, `CacheError` |
-| 13 | `RustavelEvents` | `rustavel-events` | M4 | P1 domain | planned | `rustavel-queue` | `Event` trait, `Listener { queue: Queue{enable} }`, `Dispatcher::dispatch/dispatchAfterResponse`, `JobAttempted{exception}`/`QueueBusy{connectionName}` |
-| 14 | `RustavelSchedule` | `rustavel-schedule` | M4 | P1 domain | planned | `rustavel-cache`, `rustavel-events` | `Schedule::command(...).daily/cron/everyMinute/skipIfStillRunning/onOneServer`, `schedule:list/run/pause/resume`, `SchedulePaused/Resumed` events |
-| 15 | `RustavelCli` | `rustavel-cli` | M5 | P0 shared | planned | all above via `AppState` | `clap` CLI (`list`, `route:list`, `migrate`, `queue:*`, `schedule:*`), `make:*` generators (12), prompts (`ask/secret/confirm/choice/multiSelect`), output (`table/progressBar/spinner`), `Shutdownable`, `Artisan::call` |
-| 16 | `RustavelTesting` | `rustavel-testing` | M5 | P1 domain | planned | `rustavel-orm`, `rustavel-foundation` | `TestCase` harness, `testcontainers` PG/Redis isolation, per-package `.env.testing`, `Factory::create`, `Str` factory reset, paginator views |
-| 17 | `RustavelBroadcast` | `rustavel-broadcast` | M6 | P2 feature-flagged | planned | `rustavel-http`, `rustavel-auth` | `ShouldBroadcast`, channel auth, WebSocket (`axum::extract::ws` + `tokio-tungstenite`), `Response::eventStream` (SSE), `BroadcastError` |
-| 18 | `RustavelStorage` | `rustavel-storage` | M6 | P2 feature-flagged | planned | `rustavel-config` | `Storage/{disk, get, put, path}` over `object_store`/`tokio::fs`, read-through (primary+fallback, copy_back), `StorageError::PathTraversal` |
-| 19 | `RustavelSearch` | `rustavel-search` | M6 | P2 feature-flagged | planned | `rustavel-orm`, `rustavel-ai` | `whereVectorSimilarTo`, `Str::toEmbeddings`, `dropVectorIndex`, embedding trait, `pgvector` driver |
-| 20 | `RustavelAi` | `rustavel-ai` | M6 | P2 feature-flagged | planned | `rustavel-search`, `rustavel-queue`, `rustavel-broadcast` | `AiProvider` trait (12 providers), `Agent`/`Tool`, streaming/broadcast/queue/MCP, sub-agents/middleware, `AiError` |
-| 21 | `RustavelJsonApi` | `rustavel-jsonapi` | M6 | P2 feature-flagged | planned | `rustavel-orm`, `rustavel-http` | `JsonApiResource` (sparse fieldsets, `include`, `links`, `Content-Type: application/vnd.api+json`), `JsonApiError::RelationNotLoaded` |
-| 22 | `Xtask` | `xtask` | M0 | P0 shared | planned | `rustavel-cli` | Build tooling binary (`cargo xtask check/migrate/...`); not a framework crate, but part of CLI DX |
+| 1 | `RustaSea` | `rustasea` | M0 | P0 shared | planned | all below (re-export) | Umbrella re-export — `pub use rustasea_foundation::*` etc. (like `laravel/framework`); feature-gated per domain |
+| 2 | `RustaSeaFoundation` | `rustasea-foundation` | M0 | P0 shared | planned | `rustasea-config`, `rustasea-container` | `Application`, `ServiceProvider` (register→boot DAG), `Runner` (HTTP/Queue/Schedule), `AppState(Arc)` |
+| 3 | `RustaSeaConfig` | `rustasea-config` | M0 | P0 shared | planned | — | Layered loader `config/*.toml` + env overlay + `.env` via `dotenvy`; typed `Config` via `serde`; `ConfigError` |
+| 4 | `RustaSeaContainer` | `rustasea-container` | M0 | P0 shared | planned | — | `Container { Bind, Singleton, Instance, Make<T> }`, `Manager::extend` closure binding, `ContainerError` |
+| 5 | `RustaSeaRouter` | `rustasea-router` | M1 | P0 shared | planned | `rustasea-foundation`, `rustasea-http` | `Route::get/post/.../any`, group `prefix/name/middleware`, `resource` helper, domain-route prioritization, route table + binding fields |
+| 6 | `RustaSeaHttp` | `rustasea-http` | M1 | P0 shared | planned | `rustasea-foundation` | Typed extractors `Json<T>/Query<T>/Path<T>/State`, responses `Json/View/Redirect`, middleware `Throttle/Cors`, HTTP client `Http::get(...).throw(...).timeout(...)`, `HttpError` |
+| 7 | `RustaSeaOrm` | `rustasea-orm` | M2 | P0 shared | planned | `rustasea-config`, `rustasea-macros` | Query builder (`where/orWhere/chunkBy/...`), `Model` trait, `Db/Transaction`, relations, `vector` column + `whereVectorSimilarTo`, migrations, seeders, `QueryError` |
+| 8 | `RustaSeaMacros` | `rustasea-macros` | M2/M5 | P0 shared | planned | — (proc-macro) | `#[derive(Model)]`, `#[route]`, `#[middleware]`, `#[authorize]`, `#[validate]`, `#[tries]`/`#[backoff]`/`#[timeout]`/`#[usage]`/`#[help]`/`#[hidden]` (Laravel 13 #7); compile-time only |
+| 9 | `RustaSeaAuth` | `rustasea-auth` | M3 | P1 domain | planned | `rustasea-http`, `rustasea-orm` | Guards `JwtGuard/SessionGuard`, `Auth::guard("jwt").login/parse/refresh/logout/user`, `Auth::extend`, `Error::GuardMismatch` |
+| 10 | `RustaSeaValidation` | `rustasea-validation` | M3 | P1 domain | planned | `rustasea-macros` | `Rule` set, `ErrorBag { field -> Vec<ValidationError> }`, `#[validate]` wiring, strict `in_array`/`contains` helpers, `Validatable` |
+| 11 | `RustaSeaQueue` | `rustasea-queue` | M4 | P1 domain | planned | `rustasea-foundation`, `rustasea-orm` | `Job<T>` trait, `ShouldRetry`, `Queue::route::<Job>(connection:, queue:)`, drivers `sync/database/redis`, `dispatch/chain/batch/delay/onQueue`, `failed_jobs`, `QueueError` |
+| 12 | `RustaSeaCache` | `rustasea-cache` | M4 | P1 domain | planned | `rustasea-foundation` | `Store` trait (`get/put/touch/...`), `Repository` (`remember/forever/...`), `Lock` (`get/block/release`), stores `memory(moka)/redis`, `CacheError` |
+| 13 | `RustaSeaEvents` | `rustasea-events` | M4 | P1 domain | planned | `rustasea-queue` | `Event` trait, `Listener { queue: Queue{enable} }`, `Dispatcher::dispatch/dispatchAfterResponse`, `JobAttempted{exception}`/`QueueBusy{connectionName}` |
+| 14 | `RustaSeaSchedule` | `rustasea-schedule` | M4 | P1 domain | planned | `rustasea-cache`, `rustasea-events` | `Schedule::command(...).daily/cron/everyMinute/skipIfStillRunning/onOneServer`, `schedule:list/run/pause/resume`, `SchedulePaused/Resumed` events |
+| 15 | `RustaSeaCli` | `rustasea-cli` | M5 | P0 shared | planned | all above via `AppState` | `clap` CLI (`list`, `route:list`, `migrate`, `queue:*`, `schedule:*`), `make:*` generators (12), prompts (`ask/secret/confirm/choice/multiSelect`), output (`table/progressBar/spinner`), `Shutdownable`, `Artisan::call` |
+| 16 | `RustaSeaTesting` | `rustasea-testing` | M5 | P1 domain | planned | `rustasea-orm`, `rustasea-foundation` | `TestCase` harness, `testcontainers` PG/Redis isolation, per-package `.env.testing`, `Factory::create`, `Str` factory reset, paginator views |
+| 17 | `RustaSeaBroadcast` | `rustasea-broadcast` | M6 | P2 feature-flagged | planned | `rustasea-http`, `rustasea-auth` | `ShouldBroadcast`, channel auth, WebSocket (`axum::extract::ws` + `tokio-tungstenite`), `Response::eventStream` (SSE), `BroadcastError` |
+| 18 | `RustaSeaStorage` | `rustasea-storage` | M6 | P2 feature-flagged | planned | `rustasea-config` | `Storage/{disk, get, put, path}` over `object_store`/`tokio::fs`, read-through (primary+fallback, copy_back), `StorageError::PathTraversal` |
+| 19 | `RustaSeaSearch` | `rustasea-search` | M6 | P2 feature-flagged | planned | `rustasea-orm`, `rustasea-ai` | `whereVectorSimilarTo`, `Str::toEmbeddings`, `dropVectorIndex`, embedding trait, `pgvector` driver |
+| 20 | `RustaSeaAi` | `rustasea-ai` | M6 | P2 feature-flagged | planned | `rustasea-search`, `rustasea-queue`, `rustasea-broadcast` | `AiProvider` trait (12 providers), `Agent`/`Tool`, streaming/broadcast/queue/MCP, sub-agents/middleware, `AiError` |
+| 21 | `RustaSeaJsonApi` | `rustasea-jsonapi` | M6 | P2 feature-flagged | planned | `rustasea-orm`, `rustasea-http` | `JsonApiResource` (sparse fieldsets, `include`, `links`, `Content-Type: application/vnd.api+json`), `JsonApiError::RelationNotLoaded` |
+| 22 | `Xtask` | `xtask` | M0 | P0 shared | planned | `rustasea-cli` | Build tooling binary (`cargo xtask check/migrate/...`); not a framework crate, but part of CLI DX |
 
 ### Atomic Grouping (shared primitives)
 
 | Primitive | Lives In | Reused By |
 |-----------|----------|-----------|
-| `AppState(Arc)` | `rustavel-foundation` | Every HTTP handler, middleware, test, CLI command that needs app context |
-| `ContainerError` / `ConfigError` | `rustavel-container` / `rustavel-config` | Boot diagnostics; surfaced by every `M0` flow |
-| `ErrorBag` | `rustavel-validation` | HTTP extractors + `show:model` + any `#[validate]` handler |
-| `Store` trait | `rustavel-cache` | Cache, session, schedule `onOneServer` lock, queue metrics backend |
-| `Job<T>` generic | `rustavel-queue` | Queue, events (async listeners), AI tool calls queued as jobs, notifications |
-| `Tool` trait | `rustavel-ai` | AI agents, MCP discovery, `make:tool` scaffold |
-| CLI prompt primitives | `rustavel-cli` | `new`, `migrate:fresh` (confirm), `make:*` (ask/choice), long-running workers (spinner) |
+| `AppState(Arc)` | `rustasea-foundation` | Every HTTP handler, middleware, test, CLI command that needs app context |
+| `ContainerError` / `ConfigError` | `rustasea-container` / `rustasea-config` | Boot diagnostics; surfaced by every `M0` flow |
+| `ErrorBag` | `rustasea-validation` | HTTP extractors + `show:model` + any `#[validate]` handler |
+| `Store` trait | `rustasea-cache` | Cache, session, schedule `onOneServer` lock, queue metrics backend |
+| `Job<T>` generic | `rustasea-queue` | Queue, events (async listeners), AI tool calls queued as jobs, notifications |
+| `Tool` trait | `rustasea-ai` | AI agents, MCP discovery, `make:tool` scaffold |
+| CLI prompt primitives | `rustasea-cli` | `new`, `migrate:fresh` (confirm), `make:*` (ask/choice), long-running workers (spinner) |
 
 ### Gap Analysis (what the inventory intentionally does NOT invent)
 
 - No REST endpoint inventory (framework, not an app) — endpoints are generated per project via `routes/web.rs`.
 - No browser component library (no Filament/Nova admin per `brd.md` Won't list — post-M6).
-- No per-DB driver crates (drivers are feature flags inside `rustavel-orm`, not separate crates).
+- No per-DB driver crates (drivers are feature flags inside `rustasea-orm`, not separate crates).
 - No hosting/PaaS crate (framework ≠ platform).
 
 ---
@@ -81,7 +81,7 @@ The CLI itself is a **form** — typed `Args`/`Flags` per command via `clap` der
 | Field | Type | Required | Rules | Error message | Help text |
 |-------|------|----------|-------|---------------|-----------|
 | `<Name>` (e.g., `make:controller`) | `String` (PascalCase) | Yes | `^[A-Z][A-Za-z0-9]*$` (or `snake_case` for `make:migration`) | `error: invalid name 'foo_bar' — hint: use PascalCase e.g. UserController` | `The name of the controller class` |
-| `--resource` / `-m` / `--force` | `bool flag` | No | flag present = true | N/A | Shown in `cargo rustavel make:controller --help` |
+| `--resource` / `-m` / `--force` | `bool flag` | No | flag present = true | N/A | Shown in `cargo rustasea make:controller --help` |
 | `<id>` for `queue:retry` | `String` | Yes | non-empty, matches `failed_jobs.id` | `error: job 'abc' not found in failed_jobs` | `The ID of the failed job` |
 | `--json` | `bool flag` | No | — | N/A | `Output as JSON` |
 | `--all` (for `list`) | `bool flag` | No | — | N/A | `Show hidden commands` |
@@ -129,3 +129,9 @@ The CLI itself is a **form** — typed `Args`/`Flags` per command via `clap` der
 ---
 
 *Generated for TASK-009 · P4 Design Planning. Adapted from `design-specification` component-spec rules to CLI/framework DX context.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

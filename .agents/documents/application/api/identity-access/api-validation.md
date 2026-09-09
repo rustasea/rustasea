@@ -2,13 +2,13 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §3` · `requirements/prd FR-307..309` · `requirements/fsd FS-M3-05..06` · `requirements/tdd BC-3 Validatable/ErrorBag`
-> **Crates:** `rustavel-validation` (`#[validate]`) · `rustavel-macros` · **BDD:** `@attributes`, `@routing-validation` / `@cache-session-hardening` adjacency
+> **Crates:** `rustasea-validation` (`#[validate]`) · `rustasea-macros` · **BDD:** `@attributes`, `@routing-validation` / `@cache-session-hardening` adjacency
 
 ## 1. Standar Global
 
 - **Sits on:** every `POST`/`PUT`/`PATCH` handler with `#[validate]` vs `Validatable` trait — e.g., `POST /users` (see [api-routing](../../api/http-routing/api-routing.md) §2.3) returns `201` on valid else `422`.
 - **Content-Type:** `application/json` for `ErrorBag`.
-- **Validation engine:** `validator` derive + `rustavel-validation` strict helpers (`in_array`/`contains`/`doesnt_contain` are type+value).
+- **Validation engine:** `validator` derive + `rustasea-validation` strict helpers (`in_array`/`contains`/`doesnt_contain` are type+value).
 
 ## 2. Endpoint Contract (via `POST /users` as example)
 
@@ -61,7 +61,7 @@
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Validation — ErrorBag 422
+  title: RustaSea Validation — ErrorBag 422
   version: 0.1.0
   description: ErrorBag contract shared by every #[validate] endpoint
 paths:
@@ -163,3 +163,9 @@ curl -s -X POST http://localhost:3000/users \
 - [x] 422 body with `message` + `errors[field]` multi-field keys.
 - [x] YAML valid OpenAPI 3.0, constraints (`minLength`, `format: email`), example.
 - [x] curl valid.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

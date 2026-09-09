@@ -1,6 +1,6 @@
-# Rustavel — Presentation Brief
+# RustaSea — Presentation Brief
 
-> **Purpose:** Stakeholder-facing overview of the Rustavel SDLC blueprint — for investors, leadership, and engineering review. Concise synthesis; prior docs are the source of truth.
+> **Purpose:** Stakeholder-facing overview of the RustaSea SDLC blueprint — for investors, leadership, and engineering review. Concise synthesis; prior docs are the source of truth.
 > **Date:** 2026-09-07 | **Status:** Discovery Complete — Conditional Pass (Blueprint Audit P8A)
 > **Sources:** `README.md` · `docs/laravel-13-research.md` · `requirements/{brief,brd,prd,validation}.md` · `design/architecture.md` · `tasks/{roadmap.md,sprints/manifest.md}` · `application/blueprint-audit.md`
 
@@ -8,13 +8,13 @@
 
 ## 1. Executive Summary
 
-**Rustavel is a Rust framework with Laravel ergonomics** — expressive routing, Eloquent-fluent ORM, Artisan-style code generation, and batteries-included DX — on Rust's ownership, compile-time safety, and `tokio`-native concurrency.
+**RustaSea is a Rust framework with Laravel ergonomics** — expressive routing, Eloquent-fluent ORM, Artisan-style code generation, and batteries-included DX — on Rust's ownership, compile-time safety, and `tokio`-native concurrency.
 
-**Core thesis:** *Laravel proves ergonomics and velocity win hearts; Rust proves safety and performance win production. Rustavel proves you can have both.* (`README.md` §Vision, `brd.md` §1)
+**Core thesis:** *Laravel proves ergonomics and velocity win hearts; Rust proves safety and performance win production. RustaSea proves you can have both.* (`README.md` §Vision, `brd.md` §1)
 
 | Dimension | Answer |
 |-----------|--------|
-| **What** | Workspace framework: 18 crates (`rustavel-*`) + umbrella `rustavel` — incremental adoption, pay-for-crates-you-use |
+| **What** | Workspace framework: 18 crates (`rustasea-*`) + umbrella `rustasea` — incremental adoption, pay-for-crates-you-use |
 | **Why now** | Laravel 13 shipped AI SDK + vector + declarative attributes as headlines (2026-03-17, 20 features); `tokio`/`axum`/`sqlx`/`pgvector` stabilized; Goravel v1.18 proves Laravel→compiled-language thesis |
 | **Scope** | 7 dependency-ordered milestones M0–M6; 76 FRs (FR-000–FR-612), 9 BRs, 20/20 Laravel 13 features traced; 37 blueprint docs + 6 ADRs + 134 test cases |
 | **Horizon** | Q4 2026 → Q4 2027 · 7 sprints (1:1 with milestones) · ~13–18 weeks wall-clock @2 devs +20% contingency (30–40% M6) |
@@ -51,7 +51,7 @@ Platform/SRE (queue metrics, graceful shutdown) and AI builders (provider-agnost
 ### Opportunity
 
 - **Validation signal:** Goravel 1.8k+ stars, v1.18 — proves demand for Laravel DX on a compiled language.
-- **Falsifiable hypothesis:** If we ship Laravel-idiomatic Rust with `cargo rustavel make:*`, typed container/providers, `axum` routing, `sqlx` ORM + `#[derive(Model)]`, and typed `Job<T>`/`Event<T>`, teams like Mira's will adopt for ≥1 production service within 90 days because it eliminates 3–5 days of per-service boilerplate. (`validation.md` §2)
+- **Falsifiable hypothesis:** If we ship Laravel-idiomatic Rust with `cargo rustasea make:*`, typed container/providers, `axum` routing, `sqlx` ORM + `#[derive(Model)]`, and typed `Job<T>`/`Event<T>`, teams like Mira's will adopt for ≥1 production service within 90 days because it eliminates 3–5 days of per-service boilerplate. (`validation.md` §2)
 - **Highest-risk assumptions (pre-M2 gates):** #1 demand for framework DX (High) — 10 interviews; #2 `axum`/`tower`/`sqlx`/`tokio` can support Laravel idioms without `unsafe` (High) — 2-week M0 spike.
 
 ---
@@ -60,17 +60,17 @@ Platform/SRE (queue metrics, graceful shutdown) and AI builders (provider-agnost
 
 ### Value Proposition
 
-> **For backend teams that outgrew Laravel on performance but not on productivity, Rustavel is the Rust framework that boots a production-ready service in minutes — unlike raw `axum`/`actix` (weeks of assembly) and unlike Goravel/Go (reintroduces `any` and global facades), Rustavel leverages Rust's type system to make ergonomics safer.** (`validation.md` §3.4)
+> **For backend teams that outgrew Laravel on performance but not on productivity, RustaSea is the Rust framework that boots a production-ready service in minutes — unlike raw `axum`/`actix` (weeks of assembly) and unlike Goravel/Go (reintroduces `any` and global facades), RustaSea leverages Rust's type system to make ergonomics safer.** (`validation.md` §3.4)
 
 **Four principles:** Convention over configuration · Type safety as a feature · Zero-cost ergonomics · Incremental adoption (one crate or the full stack). (`brief.md`, `brd.md`)
 
 **Design synthesis:**
 
-| Laravel strength | Rust strength | Rustavel synthesis |
+| Laravel strength | Rust strength | RustaSea synthesis |
 |------------------|---------------|--------------------|
 | Expressive routing, middleware, validation | Ownership, fearless concurrency | `axum` + typed extractors + `#[middleware]`/`#[validate]` proc-macros |
 | Eloquent — fluent, chainable | Compile-time checked queries | `sqlx`/`sea-orm` + `#[derive(Model)]` + `whereVectorSimilarTo` from M2 |
-| Artisan code generation | `cargo` + proc-macros + `clap` | `cargo rustavel make:*` via `clap`+`xtask` |
+| Artisan code generation | `cargo` + proc-macros + `clap` | `cargo rustasea make:*` via `clap`+`xtask` |
 | Queue / Schedule / Events | `tokio` async runtime | Typed jobs/events, backpressure-aware queues |
 | Blade / JSON:API resources | `serde`/`askama` | `JsonApiResource` via `serde` |
 | Batteries-included DX | Minimal runtime, no GC | Pay only for crates you include |
@@ -81,7 +81,7 @@ Unlike Goravel: explicit `AppState: Arc` via `axum::extract::State` (no `static 
 
 All 20 Laravel 13.0.0 features (2026-03-17, PHP 8.3+) mapped to milestones — 10 NEW + 10 IMPROVED. Full matrix in `README.md` §Laravel 13 Feature Map and `prd.md` §8.
 
-| # | Laravel 13 Feature | Type | Milestone | Rustavel Delivery |
+| # | Laravel 13 Feature | Type | Milestone | RustaSea Delivery |
 |---|---------------------|------|-----------|-------------------|
 | 1 | AI SDK (`laravel/ai`, 12 providers) | NEW | **M6** | Provider-agnostic `AiProvider` trait |
 | 2 | AI Agents (tools, streaming, MCP, queueing) | NEW | **M6** | `make:agent`/`make:tool`, sub-agents, middleware |
@@ -118,30 +118,30 @@ All 20 Laravel 13.0.0 features (2026-03-17, PHP 8.3+) mapped to milestones — 1
 |-------|------------|----------|-------|
 | **TAM** | Web backend where Rust is viable (perf-sensitive APIs, platforms, infra) | **~450k devs** (1.5M Rust devs × ~30% web/backend) | Rust Survey 2025–2026, GitHub/Stack Overflow — proxy |
 | **SAM** | Values perf **and** ergonomics (would choose batteries-included over raw crates) | **~110k–160k devs** (25–35% of TAM; ex-Laravel/Rails/Django or Goravel teams) | Goravel traction + Laravel "most loved" + `axum`/`actix` download ratios |
-| **SOM (3yr)** | Rustavel's realistic capture if M0–M2 ship with strong DX | **~600–2,000 active projects** (0.5–1.5% of SAM) | Analog: Goravel ~1.8k stars in Go; Loco/Rocket <5k each |
+| **SOM (3yr)** | RustaSea's realistic capture if M0–M2 ship with strong DX | **~600–2,000 active projects** (0.5–1.5% of SAM) | Analog: Goravel ~1.8k stars in Go; Loco/Rocket <5k each |
 | **Model** | MIT/Apache-2.0 OSS — adoption, not revenue, is the near-term metric; paid Cloud/support/vector are post-M6 options mirroring Laravel Cloud (#8) | — | `README.md` §License |
 
 ### Competitor Matrix (7)
 
-| Competitor | Language | Positioning | Core Strengths | Weakness vs. Rustavel Thesis |
+| Competitor | Language | Positioning | Core Strengths | Weakness vs. RustaSea Thesis |
 |------------|----------|-------------|----------------|------------------------------|
-| **Laravel 13** | PHP 8.3+ | DX king; 20 features (AI SDK, vector, JSON:API, queue routing) | Unmatched ergonomics, ecosystem, hiring pool | Dynamic typing, GC, concurrency limits — the ceiling Rustavel escapes |
-| **Goravel v1.18** | Go | Laravel port for Go — closest prior art | Proves providers, container, ORM facades, Artisan CLI translate; 1.8k+ stars | `any`/`interface{}` payloads, global facades, `gin`, stringly-typed config — all fixed by Rustavel (`AppState`, generics, proc-macros, typed `config`+`serde`) |
-| **Axum** | Rust | Modular HTTP on `tokio`/`tower` | `tower` middleware, extractors, `tokio` alignment — **Rustavel's chosen base** | Deliberately unopinionated — no ORM/auth/queue/CLI |
+| **Laravel 13** | PHP 8.3+ | DX king; 20 features (AI SDK, vector, JSON:API, queue routing) | Unmatched ergonomics, ecosystem, hiring pool | Dynamic typing, GC, concurrency limits — the ceiling RustaSea escapes |
+| **Goravel v1.18** | Go | Laravel port for Go — closest prior art | Proves providers, container, ORM facades, Artisan CLI translate; 1.8k+ stars | `any`/`interface{}` payloads, global facades, `gin`, stringly-typed config — all fixed by RustaSea (`AppState`, generics, proc-macros, typed `config`+`serde`) |
+| **Axum** | Rust | Modular HTTP on `tokio`/`tower` | `tower` middleware, extractors, `tokio` alignment — **RustaSea's chosen base** | Deliberately unopinionated — no ORM/auth/queue/CLI |
 | **Actix Web** | Rust | High-perf actor-based HTTP | Benchmark leader, mature | Actor model diverges from Laravel mental model; Tower gap |
 | **Rocket** | Rust | Ergonomic, codegen-heavy | Attribute macros, batteries-included feel (closest DX in Rust) | Historically nightly-tied, slower `tokio` alignment; no ORM/queue story |
 | **Loco** | Rust | Rails-like framework | Convention, jobs, `sea-orm` — most direct "Rails for Rust" | Rails mapping (not Laravel/Goravel); no AI/vector headline; smaller community |
 | **Dioxus** | Rust | Fullstack / frontend-first | Excellent for UI-heavy Rust apps | **Indirect** — not a backend competitor; validates Rust DX appetite |
 
-### Feature Gaps Rustavel Exploits
+### Feature Gaps RustaSea Exploits
 
-| Gap | Who Leaves It | Rustavel Opportunity |
+| Gap | Who Leaves It | RustaSea Opportunity |
 |-----|---------------|----------------------|
 | Laravel-grade DX on a compiled, memory-safe runtime | `axum`/`actix` (DIY), Loco (Rails idioms) | Typed Laravel idioms: container, providers + DAG, `make:*`, `Job<T>` |
 | Strongly-typed jobs/events/queue routing | Goravel `any`; raw Rust `serde_json::Value` | `Queue::route::<Job>` + typed traits (M4, #4) |
 | Vector search as a framework primitive | Bolt-on per project | `whereVectorSimilarTo` from M2 via `pgvector` (#6) |
 | Declarative attributes over config | Laravel 13 expanded #7 | Proc-macros are idiomatic Rust: `#[middleware]`, `#[tries]` |
-| JSON:API + real-time + AI in one stack | Fragmented crates | M6: `JsonApiResource`, WebSocket/SSE, 12-provider `rustavel-ai` |
+| JSON:API + real-time + AI in one stack | Fragmented crates | M6: `JsonApiResource`, WebSocket/SSE, 12-provider `rustasea-ai` |
 
 ---
 
@@ -165,7 +165,7 @@ All 20 Laravel 13.0.0 features (2026-03-17, PHP 8.3+) mapped to milestones — 1
 
 ```mermaid
 gantt
-    title Rustavel Roadmap (Q4 2026 -> Q4 2027)
+    title RustaSea Roadmap (Q4 2026 -> Q4 2027)
     dateFormat YYYY-MM-DD
     section Core
     M0 Bootstrap & Core          :m0, 2026-10-01, 2026-12-31
@@ -196,13 +196,13 @@ Critical path: M0 → M1 → M2 → M3 → M4 → M5 → M6. Slack: M4 can start
 
 | Milestone | Goal | Key Deliverables | Success Criteria (testable) | Laravel 13 Trace |
 |-----------|------|------------------|-----------------------------|------------------|
-| **M0** | Bootable skeleton | `rustavel` umbrella, `rustavel-foundation`, `rustavel-config`, `cargo rustavel new <app>` scaffold, `bootstrap/app.rs`, `config/`, `AppServiceProvider` | `cargo run` boots, loads `config/*.toml`+`.env` (env wins), resolves `Singleton` via `Make` (`Arc::ptr_eq`), `SIGTERM` drains | #20 `Manager::extend`, Container `call` |
-| **M1** | Expressive HTTP | `rustavel-router`, `rustavel-http`, `routes/web.rs`, `#[route]` macro, `route:list` | `Route::get` equivalent returns `200`; `route:list --json` shows `binding_fields: ["slug"]`; domain catch-all does not shadow; `throttle` emits `429` | #18 HTTP client, #19 domain priority, #20 `route:list` |
-| **M2** | Type-safe DB | `rustavel-orm`, `#[derive(Model)]`, `database/migrations/`, `make:model`/`make:migration`, `pgvector` flag | `User` model → `migrate` → `Factory::create` → `whereVectorSimilarTo` top-10 → `serde` round-trip preserves relations | #6 vector, #13 serialization, #14 upsert/delete, #15 builder |
-| **M3** | Hardened auth/validation | `rustavel-auth`, `rustavel-validation`, `make:middleware`/`make:request`, JWT+session guards | Guard mismatch → `GuardMismatch`; cross-site `POST` without valid `Sec-Fetch-Site` → `403`; strict validation rejects loose equality | #11 CSRF, #12 hardening, #19 validation |
-| **M4** | Observable async | `rustavel-queue`/`cache`/`events`/`schedule`, `make:job`/`make:event`/`make:listener` | Routed job executes; `Cache::touch` extends TTL without `get`/`set`; `schedule:pause` emits `SchedulePaused` | #4 queue routing, #5 `touch`, #8 metrics, #10 pause/resume, #16 contracts |
-| **M5** | Laravel-like DX loop | `rustavel-cli`, `rustavel-macros`, `rustavel-testing`, `bootstrap/commands.rs`, `tests/feature/` | `make:controller` scaffolds compiles; `cargo test` spins isolated Postgres via `testcontainers`; `Str` factories reset | #7 attributes, #20 `ModelInspector`/`route:list` |
-| **M6** | Differentiate | `rustavel-broadcast`/`storage`/`search`/`ai`, `app/ai/agents/`+`tools/`, `make:agent`/`make:tool`, `JsonApiResource` | `Agent`+`Tool` streams over WebSocket in order; `Storage::path("../../etc/passwd")` → `PathTraversal`; `cargo check -p rustavel-router` does not pull `async-openai` | #1 AI SDK, #2 Agents, #3 JSON:API, #6 full, #9 FS, #17 mail, #18 SSE |
+| **M0** | Bootable skeleton | `rustasea` umbrella, `rustasea-foundation`, `rustasea-config`, `cargo rustasea new <app>` scaffold, `bootstrap/app.rs`, `config/`, `AppServiceProvider` | `cargo run` boots, loads `config/*.toml`+`.env` (env wins), resolves `Singleton` via `Make` (`Arc::ptr_eq`), `SIGTERM` drains | #20 `Manager::extend`, Container `call` |
+| **M1** | Expressive HTTP | `rustasea-router`, `rustasea-http`, `routes/web.rs`, `#[route]` macro, `route:list` | `Route::get` equivalent returns `200`; `route:list --json` shows `binding_fields: ["slug"]`; domain catch-all does not shadow; `throttle` emits `429` | #18 HTTP client, #19 domain priority, #20 `route:list` |
+| **M2** | Type-safe DB | `rustasea-orm`, `#[derive(Model)]`, `database/migrations/`, `make:model`/`make:migration`, `pgvector` flag | `User` model → `migrate` → `Factory::create` → `whereVectorSimilarTo` top-10 → `serde` round-trip preserves relations | #6 vector, #13 serialization, #14 upsert/delete, #15 builder |
+| **M3** | Hardened auth/validation | `rustasea-auth`, `rustasea-validation`, `make:middleware`/`make:request`, JWT+session guards | Guard mismatch → `GuardMismatch`; cross-site `POST` without valid `Sec-Fetch-Site` → `403`; strict validation rejects loose equality | #11 CSRF, #12 hardening, #19 validation |
+| **M4** | Observable async | `rustasea-queue`/`cache`/`events`/`schedule`, `make:job`/`make:event`/`make:listener` | Routed job executes; `Cache::touch` extends TTL without `get`/`set`; `schedule:pause` emits `SchedulePaused` | #4 queue routing, #5 `touch`, #8 metrics, #10 pause/resume, #16 contracts |
+| **M5** | Laravel-like DX loop | `rustasea-cli`, `rustasea-macros`, `rustasea-testing`, `bootstrap/commands.rs`, `tests/feature/` | `make:controller` scaffolds compiles; `cargo test` spins isolated Postgres via `testcontainers`; `Str` factories reset | #7 attributes, #20 `ModelInspector`/`route:list` |
+| **M6** | Differentiate | `rustasea-broadcast`/`storage`/`search`/`ai`, `app/ai/agents/`+`tools/`, `make:agent`/`make:tool`, `JsonApiResource` | `Agent`+`Tool` streams over WebSocket in order; `Storage::path("../../etc/passwd")` → `PathTraversal`; `cargo check -p rustasea-router` does not pull `async-openai` | #1 AI SDK, #2 Agents, #3 JSON:API, #6 full, #9 FS, #17 mail, #18 SSE |
 
 ---
 
@@ -216,11 +216,11 @@ Critical path: M0 → M1 → M2 → M3 → M4 → M5 → M6. Slack: M4 can start
 | HTTP | `axum` 0.7 + `tower` + `tower-http` | Extractor routing, Tower middleware (CORS, rate-limit, tracing); preferred over `actix-web` for `tokio` alignment |
 | ORM / DB | `sqlx` (primary) + `sea-orm` (optional shim) | `sqlx` compile-time checked queries + `pgvector`; `sea-orm` ActiveRecord ergonomics behind flag |
 | Pooling | `deadpool` / `bb8` | Postgres + Redis, `tokio`-aware |
-| Validation | `validator` + `rustavel-validation` | Derive macros + `ErrorBag`/`FormRequest` |
+| Validation | `validator` + `rustasea-validation` | Derive macros + `ErrorBag`/`FormRequest` |
 | Auth | `jsonwebtoken` + `argon2` + `tower-sessions` | JWT guards, password hashing, session store (JSON default) |
 | Serialization | `serde` + `serde_json` | Config, JSON:API, queue payloads, session |
 | Config | `config` + `dotenvy` | Layered `config/*.toml` + env + `.env`, typed via `serde` |
-| CLI | `clap` (derive) + `cargo xtask` | `cargo rustavel` subcommands; `dialoguer`/`indicatif` for prompts |
+| CLI | `clap` (derive) + `cargo xtask` | `cargo rustasea` subcommands; `dialoguer`/`indicatif` for prompts |
 | Proc-macros | `syn` + `quote` + `proc-macro2` | `#[route]`, `#[middleware]`, `#[derive(Model)]`, `#[tries]` |
 | Queue | `tokio` + `deadpool-redis` + `serde_json` | Redis-backed typed payloads; `backoff` for retry |
 | Cache | `moka` (memory) + `deadpool-redis` | TTL-aware `moka` + distributed Redis behind `Store` trait |
@@ -229,7 +229,7 @@ Critical path: M0 → M1 → M2 → M3 → M4 → M5 → M6. Slack: M4 can start
 | WebSocket/SSE | `tokio-tungstenite` + `axum::extract::ws` | Real-time broadcast + `eventStream` |
 | HTTP client | `reqwest` | Async client with `throw` callbacks |
 | Filesystem | `object_store` + `tokio::fs` | S3/GCS/Azure abstraction + local read-through |
-| Vector/AI | `pgvector` + `async-openai` + per-provider SDKs | `rustavel-ai` feature-flagged trait over 12 providers |
+| Vector/AI | `pgvector` + `async-openai` + per-provider SDKs | `rustasea-ai` feature-flagged trait over 12 providers |
 | Testing | `testcontainers` + `sqlx::test` + `cargo test` | Isolated DB/cache per test run |
 | Lint/Format | `rustfmt` + `clippy -D warnings` | CI-enforced; generated code is format-clean |
 
@@ -239,25 +239,25 @@ Critical path: M0 → M1 → M2 → M3 → M4 → M5 → M6. Slack: M4 can start
 
 ```mermaid
 flowchart TB
-  UMBRELLA["rustavel (umbrella, re-exports only)"]
-  FND["rustavel-foundation"]
-  CFG["rustavel-config"]
-  MAC["rustavel-macros<br/>(proc-macro; no runtime dep)"]
-  RTR["rustavel-router"]
-  RHTTP["rustavel-http"]
-  ORM["rustavel-orm"]
-  AUTH["rustavel-auth"]
-  VAL["rustavel-validation"]
-  CACHE["rustavel-cache"]
-  QUEUE["rustavel-queue"]
-  EVENTS["rustavel-events"]
-  SCHED["rustavel-schedule"]
-  CLI["rustavel-cli"]
-  TESTING["rustavel-testing"]
-  BC["rustavel-broadcast"]
-  STOR["rustavel-storage"]
-  SEARCH["rustavel-search"]
-  AI["rustavel-ai<br/>(optional; feature = ai)"]
+  UMBRELLA["rustasea (umbrella, re-exports only)"]
+  FND["rustasea-foundation"]
+  CFG["rustasea-config"]
+  MAC["rustasea-macros<br/>(proc-macro; no runtime dep)"]
+  RTR["rustasea-router"]
+  RHTTP["rustasea-http"]
+  ORM["rustasea-orm"]
+  AUTH["rustasea-auth"]
+  VAL["rustasea-validation"]
+  CACHE["rustasea-cache"]
+  QUEUE["rustasea-queue"]
+  EVENTS["rustasea-events"]
+  SCHED["rustasea-schedule"]
+  CLI["rustasea-cli"]
+  TESTING["rustasea-testing"]
+  BC["rustasea-broadcast"]
+  STOR["rustasea-storage"]
+  SEARCH["rustasea-search"]
+  AI["rustasea-ai<br/>(optional; feature = ai)"]
 
   UMBRELLA --> FND & CFG & MAC & RTR & RHTTP & ORM & AUTH & VAL & CACHE & QUEUE & EVENTS & SCHED & CLI & TESTING & BC & STOR & SEARCH & AI
   RTR --> FND
@@ -342,8 +342,8 @@ Full ADRs: `design/decisions/ADR-00*.md`. New cross-crate decisions **MUST** add
 
 | Gate | Criterion | What Happens on Fail |
 |------|-----------|----------------------|
-| **M0 spike gate** (2 weeks, 1–2 eng) | Container + `ServiceProvider` lifecycle + `#[route]` demonstrates Laravel-like ergonomics without `unsafe`, acceptable `cargo check` time | **Pivot:** re-scope to focused library crates (`rustavel-router` + `rustavel-orm` standalone) |
-| **Public M0 gate** (`v0.1.0`) | `cargo rustavel new` published; measure adoption (stars/issues/try-outs) before committing M2 headcount | Invest in docs/examples before more code |
+| **M0 spike gate** (2 weeks, 1–2 eng) | Container + `ServiceProvider` lifecycle + `#[route]` demonstrates Laravel-like ergonomics without `unsafe`, acceptable `cargo check` time | **Pivot:** re-scope to focused library crates (`rustasea-router` + `rustasea-orm` standalone) |
+| **Public M0 gate** (`v0.1.0`) | `cargo rustasea new` published; measure adoption (stars/issues/try-outs) before committing M2 headcount | Invest in docs/examples before more code |
 | **M2 exit gate** | `serde` collection round-trip + migration story green; `whereVectorSimilarTo` stays feature-flagged | M6 (AI SDK) cannot start |
 | **M3–M6 re-validation gate** | Re-run competitor check (Loco/Rocket/Axum releases) and Laravel 14 delta before approving M3–M6 funding | Roadmap amendment via ADR |
 
@@ -352,7 +352,7 @@ Full ADRs: `design/decisions/ADR-00*.md`. New cross-crate decisions **MUST** add
 | Audience | Ask | Decision Needed By | Artifact to Approve |
 |----------|-----|--------------------|---------------------|
 | **Leadership / Investors** | Approve **GO Conditional** to fund M0 spike (2 weeks, 1–2 eng) | **Week of 2026-10-01** | This brief + `validation.md` §6 + `roadmap.md` §1–§6 |
-| **Engineering** | Staff Sprint 01; fix **D2-F01** (ASCII→Mermaid, ~10 min) and start `rustavel-foundation` + `rustavel-config` per `sprint-01.md` | Immediately after M0 green-light | `sprints/sprint-01.md` → `sprints/sprint-07.md` + `blueprint-audit.md` |
+| **Engineering** | Staff Sprint 01; fix **D2-F01** (ASCII→Mermaid, ~10 min) and start `rustasea-foundation` + `rustasea-config` per `sprint-01.md` | Immediately after M0 green-light | `sprints/sprint-01.md` → `sprints/sprint-07.md` + `blueprint-audit.md` |
 | **Security** | Review BR-04/NFR-Sec controls (CSRF origin, session allow-list, path confinement) | Before M0 tag (`v0.1.0`) | `tdd.md` BC-3/BC-6 + `api-contracts.md` §4.1 + `architecture.md` §5 |
 | **Product** | Confirm M0 spike timebox and public `v0.1.0` adoption signal (≥10 stars + ≥3 RFCs @ M0+30d) | At M0 kickoff | `brd.md` §2 BG-09 + `validation.md` pivot triggers |
 
@@ -380,3 +380,9 @@ Full ADRs: `design/decisions/ADR-00*.md`. New cross-crate decisions **MUST** add
 ---
 
 *Prepared for stakeholder review. For implementation handoff see `tasks/sprints/sprint-01.md` → `sprint-07.md`. For M0 feasibility evidence see `validation.md` Assumption Mapping (assumptions #1–#7). Generated per TASK-004 requirement.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

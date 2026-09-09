@@ -1,4 +1,4 @@
-# Rustavel — API Catalog
+# RustaSea — API Catalog
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Source:** `design/api-contracts.md` · `requirements/prd.md` FR-000..612 · `requirements/fsd.md` FS-M0-01..M6-07
@@ -48,7 +48,7 @@ All specs include 8 headers: Overview (method/path/summary/side effects), Auth, 
 | async-workloads | [api-queue.md](async-workloads/api-queue.md) | `Queue::route`, `dispatch`/`onQueue`/`onConnection`/`chain`/`batch`, `queue:work`/`failed`/`retry`, metrics `pendingSize`/… | — |
 | async-workloads | [api-cache.md](async-workloads/api-cache.md) | `get`/`put`/`touch`/`remember`, `Lock::get`/`block`, hyphenated prefixes | — |
 | async-workloads | [api-events-schedule.md](async-workloads/api-events-schedule.md) | `Dispatcher::dispatch`/`dispatchAfterResponse`, `Schedule::command().daily().cron()` … + `schedule:list`/`run`/`pause`/`resume` | — |
-| developer-platform | [api-cli.md](developer-platform/api-cli.md) | `cargo rustavel list`, `make:*` generators, `Artisan::call`, `#[usage]`/`#[help]`/`#[hidden]` | — |
+| developer-platform | [api-cli.md](developer-platform/api-cli.md) | `cargo rustasea list`, `make:*` generators, `Artisan::call`, `#[usage]`/`#[help]`/`#[hidden]` | — |
 | intelligence-delivery | [api-broadcast.md](intelligence-delivery/api-broadcast.md) | `ws://…/broadcasting/auth`, `GET /events` SSE `eventStream`, `ShouldBroadcast` + channel auth | Bearer (private) |
 | intelligence-delivery | [api-storage.md](intelligence-delivery/api-storage.md) | `Storage::disk("s3").get/put/path/exists` read-through + `PathTraversal` | — |
 | intelligence-delivery | [api-jsonapi.md](intelligence-delivery/api-jsonapi.md) | `JsonApiResource` sparse fieldsets / `include` / `RelationNotLoaded` | Bearer |
@@ -70,3 +70,9 @@ All specs include 8 headers: Overview (method/path/summary/side effects), Auth, 
 | Security triage | `security-audit` | `rules/security-triage.md` |
 
 Cross-links at the bottom of each `api-*.md` point to this catalog, to the module overview, and to the testing doc.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

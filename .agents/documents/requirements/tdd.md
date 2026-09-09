@@ -1,4 +1,4 @@
-# Rustavel — Technical Design Document (TDD)
+# RustaSea — Technical Design Document (TDD)
 
 > **Status:** Final — P6 Planning Docs Finalization
 > **Date:** 2026-09-07 · **Finalized:** 2026-09-07  
@@ -21,7 +21,7 @@ Single `tokio` binary with three task groups sharing `AppState: Arc<AppState>`:
 ```
 AppState { app: Application, config: ConfigRegistry, container: Container, db: Db, cache: CacheManager, queue: QueueRegistry, ... }
 main
- ├─ axum::Server (Router from rustavel-router)
+ ├─ axum::Server (Router from rustasea-router)
  ├─ queue workers (deadpool-redis BRPOP / DB poll)
  └─ scheduler ticker (cron eval every 60s; respects schedule_paused flag)
 Signal SIGTERM/SIGINT -> drain HTTP -> stop ticker -> drain queue -> flush after-response buffer -> exit 0
@@ -33,7 +33,7 @@ Crate map and deployment topology: see `architecture.md §3–§7`. Bounded cont
 
 ## 3. Module Contracts (by Bounded Context)
 
-### BC-0 — Foundation (`rustavel-foundation` + `rustavel-config`)
+### BC-0 — Foundation (`rustasea-foundation` + `rustasea-config`)
 
 #### Traits
 
@@ -69,7 +69,7 @@ impl Container {
 
 Config layering `defaults < config/*.toml < .env < env`, typed `Deserialize`, `ConfigError::Parse { file, line, source }` (see `architecture.md §5`).
 
-### BC-1 — HTTP & Routing (`rustavel-router` + `rustavel-http` + `rustavel-macros`)
+### BC-1 — HTTP & Routing (`rustasea-router` + `rustasea-http` + `rustasea-macros`)
 
 ```rust
 struct Route { method: Method, path: Cow<'static, str>, name: Option<Cow<'static, str>>, handler: Handler, domain: Option<Cow<'static, str>> }
@@ -89,7 +89,7 @@ enum HttpError { Status{ code: u16 }, Timeout{ kind: Connect|Total|Idle }, Throw
 
 Domain-route precedence invariant: domain routes evaluated before non-domain (FSD FS-M1-02). `route:list --json` shape defined in `api-contracts.md §1`.
 
-### BC-2 — Data & ORM (`rustavel-orm` + `rustavel-macros`)
+### BC-2 — Data & ORM (`rustasea-orm` + `rustasea-macros`)
 
 ```rust
 #[derive(Model)] // generates id/created_at/updated_at/deleted_at, table_name(), relations(), serde preservation
@@ -118,7 +118,7 @@ enum QueryError { NotFound, InvalidCursor, UpsertEmptyUniqueBy, VectorDimensionM
 
 Vector Blueprint: `Blueprint::vector("embedding", 1536)` and `dropVectorIndex("embedding")`; distance operators `<=>`/` <->`; HNSW/IVFFLAT strategies (see `database.md §4–5`).
 
-### BC-3 — Identity & Access (`rustavel-auth` + `rustavel-validation`)
+### BC-3 — Identity & Access (`rustasea-auth` + `rustasea-validation`)
 
 ```rust
 trait Guard: Send + Sync {
@@ -144,7 +144,7 @@ struct ErrorBag { fields: HashMap<String, Vec<ValidationError>> } // 422 JSON on
 
 Session hardening: `session.serialization = "json"` default, `serializable_classes` allow-list checked before `Deserialize`, hyphenated `-cache-`/`-session-` prefixes (see `architecture.md §5`).
 
-### BC-4 — Async Workloads (`rustavel-queue` + `rustavel-cache` + `rustavel-events` + `rustavel-schedule`)
+### BC-4 — Async Workloads (`rustasea-queue` + `rustasea-cache` + `rustasea-events` + `rustasea-schedule`)
 
 ```rust
 trait Job: Serialize + DeserializeOwned + Send + Sync + 'static {
@@ -204,14 +204,14 @@ struct ScheduleBuilder { /* daily().at("08:00").skipIfStillRunning().onOneServer
 // Commands: schedule:list / schedule:run / schedule:pause / schedule:resume ; emits SchedulePaused/Resumed events
 ```
 
-### BC-5 — Developer Platform (`rustavel-cli` + `rustavel-macros` + `rustavel-testing`)
+### BC-5 — Developer Platform (`rustasea-cli` + `rustasea-macros` + `rustasea-testing`)
 
 - CLI via `clap` derive + `cargo xtask` (`cargo-xtask` bin). Commands implement `Command { fn signature()->&str; async fn handle(args, io) -> ExitCode }` with typed `Args`/`Flags`. Declarative `#[usage]`/`#[help]`/`#[hidden]`.
 - Generators `make:*` (controller/model/provider/command/job/event/listener/observer/test/seeder/agent/tool) each produce `rustfmt`+`clippy -D warnings` clean `.rs` files; model with `-m` also emits a migration.
 - `Artisan::call(cmd, args) -> CommandOutput` is in-process invocation (no subprocess).
 - `TestCase` trait sets up isolated Postgres (random port via `testcontainers`) + Redis; runs `migrate` once per test binary; resets `Str` factory sequences between tests; loads `.env.testing` overlay; teardown kills containers.
 
-### BC-6 — Intelligence & Delivery (`rustavel-broadcast` + `rustavel-storage` + `rustavel-search` + `rustavel-ai`)
+### BC-6 — Intelligence & Delivery (`rustasea-broadcast` + `rustasea-storage` + `rustasea-search` + `rustasea-ai`)
 
 ```rust
 #[async_trait]
@@ -268,7 +268,7 @@ trait JsonApiResource: Serialize {
 | Cache `get` p95 | <5ms (memory `moka`) / <20ms (redis localhost) | `testcontainers` bench | M4 |
 | `cargo check` after `make:*` | <10s incremental | `cargo check --timings` | M5 |
 | Shutdown drain | ≤ `shutdown_timeout` (default 10s) | in-flight request completes | M0/BC-0 |
-| Single-crate check | `cargo check -p rustavel-router` pulls no `sqlx`/`async-openai` | `cargo tree` in CI | Always |
+| Single-crate check | `cargo check -p rustasea-router` pulls no `sqlx`/`async-openai` | `cargo tree` in CI | Always |
 | Workspace acyclicity | no cycle | `xtask check-cycles` | CI |
 
 Security gates enumerated in `architecture.md §5` and `prd.md NFR-Sec-*`; path confinement fuzzed.
@@ -284,7 +284,7 @@ M0 (BC-0) — no prereq → M1 (BC-1) + M2 (BC-2) → M3 (BC-3) → M4 (BC-4) �
 Tagged releases: 0.1 (M0) → 0.2 (M1) → 0.3 (M2) → 0.4 (M3) → 0.5 (M4) → 0.6 (M5) → 1.0 (M6)
 ```
 
-Public M0 at `0.1.0` with `cargo rustavel new` is the adoption gate (see `validation.md §6` conditions). M6 work cannot start before M2 success criteria (vector primitive + serde round-trip + migrations) are green.
+Public M0 at `0.1.0` with `cargo rustasea new` is the adoption gate (see `validation.md §6` conditions). M6 work cannot start before M2 success criteria (vector primitive + serde round-trip + migrations) are green.
 
 ---
 
@@ -313,3 +313,9 @@ See `prd.md §7` (9 risks with L×I scoring; top-5 R-01 ORM duality, R-05 queue 
 | BC-6 | AiProvider, Agent/Tool, ShouldBroadcast, StorageManager, JsonApiResource | FS-M6-01..07 | FR-600..612 | BR-07 | BC-6 | domain.md BC-6 + database.md (vector) | api-contracts.md §5 | @broadcast, @storage-readthrough, @jsonapi, @ai-sdk, @ai-agents | jsonapi.schema.json, path-traversal.corpus, model-inspector schemas |
 
 Coverage gates: every FR (000–612) has a TDD contract; every BC has ≥1 BDD @tag; every contract has a `contracts/*.schema.json` or `fixtures/*.json` and a `stubs/*.stub.rs`. No FR without a test tag (prd.md §8 matrix is source of truth; this table mirrors it).
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

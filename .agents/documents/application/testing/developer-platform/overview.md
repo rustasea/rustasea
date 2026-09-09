@@ -6,7 +6,7 @@
 
 ## 1. Scope
 
-Covers `cargo rustavel list --json` (+ `#[usage]`/`#[help]`/`#[hidden]`), all `make:*` generators (controller/model -m/provider/command/job/event/listener/observer/test/seeder/agent/tool, `AlreadyExists`, `rustfmt`+`clippy` gate), declarative attributes bundle (`#[tries]` shadowing trait), and the `TestCase` harness (`testcontainers` random ports + `Str` reset + teardown + `.env.testing` + `Artisan::call` + paginator).
+Covers `cargo rustasea list --json` (+ `#[usage]`/`#[help]`/`#[hidden]`), all `make:*` generators (controller/model -m/provider/command/job/event/listener/observer/test/seeder/agent/tool, `AlreadyExists`, `rustfmt`+`clippy` gate), declarative attributes bundle (`#[tries]` shadowing trait), and the `TestCase` harness (`testcontainers` random ports + `Str` reset + teardown + `.env.testing` + `Artisan::call` + paginator).
 
 ## 2. Trace
 
@@ -19,3 +19,9 @@ Covers `cargo rustavel list --json` (+ `#[usage]`/`#[help]`/`#[hidden]`), all `m
 - Specs: [test-cli.md](test-cli.md)
 - API: [api-cli](../../api/developer-platform/api-cli.md)
 - Module: [cli](../../modules/developer-platform/cli.md) · [generators](../../modules/developer-platform/generators.md) · [testing-harness](../../modules/developer-platform/testing-harness.md)
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

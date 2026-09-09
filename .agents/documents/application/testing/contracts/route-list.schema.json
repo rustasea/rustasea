@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "RouteEntry[] — `cargo rustavel route:list --json`",
+  "title": "RouteEntry[] — `cargo rustasea route:list --json`",
   "description": "Validates TC-CTR-01 / TC-M1-06/07. Mirrors FSD FS-M1-03 and prd.md FR-103 binding_fields.",
   "type": "array",
   "items": {

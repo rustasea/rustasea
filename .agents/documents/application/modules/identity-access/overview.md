@@ -2,7 +2,7 @@
 
 > **Status:** P8 Final — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `requirements/{prd §M3,fsd §3.4,tdd BC-3,bdd-scenarios §2.4,user-stories US-M3-01..05}.md` · `design/{architecture BC-3,domain BC-3,api-contracts §3}` · `modules/manifest.md` · `sprints/sprint-04.md`
-> **Crates:** `rustavel-auth` · `rustavel-validation`
+> **Crates:** `rustasea-auth` · `rustasea-validation`
 > **Milestone:** M3 | **BR:** BR-04 | **FR:** FR-300..311 | **FSD:** FS-M3-01..06 | **BC:** BC-3 | **Stories:** US-M3-01..05
 
 ## Header & Navigation
@@ -34,7 +34,7 @@ Hardened identity and input layer at Laravel 13 security defaults: JWT guard (`j
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"background": "#ffffff", "mainBkg": "#ffffff", "primaryColor": "#bbdefb", "secondaryColor": "#fff9c4", "tertiaryColor": "#c8e6c9"}}}%%
 flowchart TB
-    subgraph Guard["Guards (rustavel-auth)"]
+    subgraph Guard["Guards (rustasea-auth)"]
         JWT["JWT Guard\njsonwebtoken HS256\nlogin/parse/refresh/logout"]
         Session["Session Guard\ntower-sessions"]
         Extend["Auth::extend('custom', |app| MyGuard)"]
@@ -77,3 +77,9 @@ flowchart TB
 - JSON session serialization + allow-list (NFR-Sec-02).
 - `argon2` + constant-time verify (NFR-Sec-04).
 - `ErrorBag` round-trips multiple field errors keyed by field (#19).
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

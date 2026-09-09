@@ -1,4 +1,4 @@
-# Rustavel — API Contracts by Milestone
+# RustaSea — API Contracts by Milestone
 
 > **Status:** Draft — P3 (TASK-008)  
 > **Date:** 2026-09-07  
@@ -18,7 +18,7 @@
 | `Container::Make` | query | `Make::<T> -> Result<Arc<T>>` / `Make::<Option<T>> -> Option<Arc<T>>` | `Singleton` is `ptr_eq` stable |
 | `ConfigRegistry` | query | `AppState::config::<T: Deserialize>() -> &T` | Layer `defaults < file < .env < env`; `ConfigError::Parse {file,line}` |
 
-**CLI:** `cargo rustavel new <app>` — produces `bootstrap/app.rs`, `config/*.toml`, `routes/web.rs`, `.env.example` (FR-005).
+**CLI:** `cargo rustasea new <app>` — produces `bootstrap/app.rs`, `config/*.toml`, `routes/web.rs`, `.env.example` (FR-005).
 
 ---
 
@@ -64,7 +64,7 @@ Http::get(url).header(k, v).timeout(Duration::from_secs(5))
 
 ### 2.4 Route Introspection
 
-**`cargo rustavel route:list [--json]` (FR-103/#20):**
+**`cargo rustasea route:list [--json]` (FR-103/#20):**
 
 ```json
 [
@@ -165,9 +165,9 @@ Job::batch([Job{1}, Job{2}]).dispatch().await?;                  // -> BatchId
 **CLI:**
 
 ```
-cargo rustavel queue:work [--connection=redis] [--queue=podcasts] [--max-jobs=100]
-cargo rustavel queue:failed
-cargo rustavel queue:retry <id>
+cargo rustasea queue:work [--connection=redis] [--queue=podcasts] [--max-jobs=100]
+cargo rustasea queue:failed
+cargo rustasea queue:retry <id>
 ```
 
 ### 5.2 Cache
@@ -206,10 +206,10 @@ Schedule::command("report").cron("0 * * * *").register();
 ```
 
 ```
-cargo rustavel schedule:list
-cargo rustavel schedule:run        // tick every 60s; respects paused flag
-cargo rustavel schedule:pause     // sets schedule_paused=true; emits SchedulePaused
-cargo rustavel schedule:resume    // clears flag; emits ScheduleResumed
+cargo rustasea schedule:list
+cargo rustasea schedule:run        // tick every 60s; respects paused flag
+cargo rustasea schedule:pause     // sets schedule_paused=true; emits SchedulePaused
+cargo rustasea schedule:resume    // clears flag; emits ScheduleResumed
 ```
 
 **Cloud queue metrics (FR-409/#8):**
@@ -228,24 +228,24 @@ Queue::creation_time_of_oldest_pending_job("redis", "podcasts").await?;  // Opti
 ### CLI
 
 ```
-cargo rustavel list [--json] [--all]        # enumerates commands with usage/help/hidden
-cargo rustavel make:controller UserController [--resource]
-cargo rustavel make:model Post -m           # + migration
-cargo rustavel make:provider AppProvider
-cargo rustavel make:command SendEmails
-cargo rustavel make:job ProcessPodcast
-cargo rustavel make:event UserCreated
-cargo rustavel make:listener SendWelcomeEmail
-cargo rustavel make:observer UserObserver
-cargo rustavel make:test UserTest
-cargo rustavel make:seeder UserSeeder
-cargo rustavel make:agent SupportAgent      # M6
-cargo rustavel make:tool SearchDocs         # M6
-cargo rustavel migrate [--fresh] [--seed]
-cargo rustavel route:list [--json]
-cargo rustavel show:model User
-cargo rustavel schedule:list|run|pause|resume
-cargo rustavel queue:work|failed|retry
+cargo rustasea list [--json] [--all]        # enumerates commands with usage/help/hidden
+cargo rustasea make:controller UserController [--resource]
+cargo rustasea make:model Post -m           # + migration
+cargo rustasea make:provider AppProvider
+cargo rustasea make:command SendEmails
+cargo rustasea make:job ProcessPodcast
+cargo rustasea make:event UserCreated
+cargo rustasea make:listener SendWelcomeEmail
+cargo rustasea make:observer UserObserver
+cargo rustasea make:test UserTest
+cargo rustasea make:seeder UserSeeder
+cargo rustasea make:agent SupportAgent      # M6
+cargo rustasea make:tool SearchDocs         # M6
+cargo rustasea migrate [--fresh] [--seed]
+cargo rustasea route:list [--json]
+cargo rustasea show:model User
+cargo rustasea schedule:list|run|pause|resume
+cargo rustasea queue:work|failed|retry
 ```
 
 Attributes `#[usage("...")]` / `#[help("...")]` / `#[hidden]` on commands control `list` output. `Artisan::call("migrate", args)` is in-process invocation for tests.
@@ -319,7 +319,7 @@ Ai::agent(|a| a.tool(MyTool)).prompt("hi").stream().await?;  // anonymous agent
 // Streaming -> broadcast over WebSocket: chunks arrive in order with event: token
 ```
 
-Feature gating: workspace with only `rustavel-router` has no `async-openai` in `cargo tree`; `rustavel-ai` is `optional` with per-provider features `features=["openai","anthropic",...]`.
+Feature gating: workspace with only `rustasea-router` has no `async-openai` in `cargo tree`; `rustasea-ai` is `optional` with per-provider features `features=["openai","anthropic",...]`.
 
 ---
 
@@ -336,3 +336,9 @@ Feature gating: workspace with only `rustavel-router` has no `async-openai` in `
 | 429 | `Throttle` | `per_minute` exceeded; `Retry-After` header |
 | 500 | `JobError::MaxAttemptsExceeded` / `AgentError::ToolNotFound` | Job dead-letter, agent mis-config |
 | 501 | `UnsupportedCapability` / `McpUnavailable` | Provider lacks capability, MCP flag off |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

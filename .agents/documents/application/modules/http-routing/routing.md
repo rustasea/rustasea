@@ -4,7 +4,7 @@
 > **Stories:** US-M1-01 (resource), US-M1-02 (domain), US-M1-03 (introspection) · **BDD:** `@routing`, `@routing-validation`, `@observability-tooling`
 
 ## 1. Feature Overview
-- **Brief Description:** HTTP method helpers (`get`/`post`/`put`/`delete`/`patch`/`options`/`any`) over `axum`, groups (`prefix`/`name`/`middleware`), `resource("users", UserController)` expanding to `index/create/store/show/edit/update/destroy` (7 routes), domain-aware dispatch (domain routes before non-domain), and `cargo rustavel route:list [--json]` emitting `{method,path,name,middleware[],binding_fields[]}` (FSD FS-M1-03; Laravel 13 #20) plus `show:model` (ModelInspector).
+- **Brief Description:** HTTP method helpers (`get`/`post`/`put`/`delete`/`patch`/`options`/`any`) over `axum`, groups (`prefix`/`name`/`middleware`), `resource("users", UserController)` expanding to `index/create/store/show/edit/update/destroy` (7 routes), domain-aware dispatch (domain routes before non-domain), and `cargo rustasea route:list [--json]` emitting `{method,path,name,middleware[],binding_fields[]}` (FSD FS-M1-03; Laravel 13 #20) plus `show:model` (ModelInspector).
 - **Role in Module:** Core of HTTP surface; middleware chain ordering is preserved across groups.
 - **Business Value:** Goravel/Laravel-readable route files; machine-readable auditability.
 
@@ -26,7 +26,7 @@
 - Given `domain("{tenant}.example.com").get("/dashboard")` + `get("/dashboard")`, When `GET example.com/dashboard` (no subdomain), Then non-domain handler.
 
 ### US-M1-03 — Introspect routes including binding fields
-**Sebagai** Rust developer **Saya ingin** `cargo rustavel route:list` with binding fields **Sehingga** coverage without reading source
+**Sebagai** Rust developer **Saya ingin** `cargo rustasea route:list` with binding fields **Sehingga** coverage without reading source
 
 **AC:**
 - Given `get("/users/{user:slug}")` with binding `slug`, When `route:list --json`, Then entry has `binding_fields: ["slug"]`.
@@ -147,3 +147,9 @@ CLI `route:list` human table columns: `METHOD | PATH | NAME | MIDDLEWARE`.
 | BDD | `test-generation` — `@routing-validation` domain precedence |
 | Contract | `test-generation` — `route:list` snapshot |
 | Chaos | `non-functional-testing` — catch-all under load vs thundering herd |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

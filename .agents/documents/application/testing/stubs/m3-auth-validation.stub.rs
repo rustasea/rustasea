@@ -3,7 +3,7 @@
 
 #[cfg(test)]
 mod m3_auth_validation_stubs {
-    #[tokio::test] #[ignore = "stub: rustavel-auth JWT not yet implemented"]
+    #[tokio::test] #[ignore = "stub: rustasea-auth JWT not yet implemented"]
     async fn tc_m3_01_jwt_login_then_parse() { assert!(true, "stub TC-M3-01: login token → parse yields AuthUser"); }
     #[test] #[ignore = "stub: Auth::guard mismatch not yet implemented"]
     fn tc_m3_02_guard_mismatch() { assert!(true, "stub TC-M3-02: GuardMismatch expected jwt actual api"); }

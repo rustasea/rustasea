@@ -1,19 +1,19 @@
-# API: DeveloperPlatform — CLI (`cargo rustavel list` + `make:*` + `Artisan::call`)
+# API: DeveloperPlatform — CLI (`cargo rustasea list` + `make:*` + `Artisan::call`)
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §4` · `requirements/prd FR-500..509` · `requirements/fsd FS-M5-01..04` · `requirements/tdd BC-5` · `design/component-inventory.md`
-> **Crates:** `rustavel-cli` · `rustavel-macros` · `rustavel-testing` · `xtask`
+> **Crates:** `rustasea-cli` · `rustasea-macros` · `rustasea-testing` · `xtask`
 > **Module:** [modules/developer-platform/overview.md](../../modules/developer-platform/overview.md)
 
 ## 1. Standar Global
 
-- **CLI:** `cargo rustavel <command> [args] [--json]` via `xtask` (`cargo-xtask` bin) + `clap` derive + typed `Args`/`Flags`.
+- **CLI:** `cargo rustasea <command> [args] [--json]` via `xtask` (`cargo-xtask` bin) + `clap` derive + typed `Args`/`Flags`.
 - **Listing:** `list [--json] [--all]` emits `{ name, usage, help, hidden }` per command; `#[usage("app:send {user}")]` / `#[help("...")]` / `#[hidden]` control visibility.
 - **Format Tanggal:** CLI `migrate:status` shows executed_at RFC3339.
 
 ## 2. Endpoints (CLI)
 
-### 2.1 `cargo rustavel list [--json] [--all]`
+### 2.1 `cargo rustasea list [--json] [--all]`
 
 - **Deskripsi:** Enumerates registered commands with `usage`/`help`/`hidden`. `hidden` omitted without `--all`.
 - **Kontrol Akses:** None.
@@ -56,11 +56,11 @@ Available commands:
 #### Usage
 
 ```bash
-cargo rustavel list --json | jq .
-cargo rustavel list --json --all | jq '.[] | select(.hidden==true)'
+cargo rustasea list --json | jq .
+cargo rustasea list --json --all | jq '.[] | select(.hidden==true)'
 ```
 
-### 2.2 `cargo rustavel make:*` generators
+### 2.2 `cargo rustasea make:*` generators
 
 | Generator | Invocation | Output path | Notes |
 |-----------|------------|-------------|-------|
@@ -88,13 +88,13 @@ All generated `.rs` files must pass `rustfmt --check` + `clippy -- -D warnings` 
 #### Usage
 
 ```bash
-cargo rustavel make:controller UserController --resource
-cargo rustavel make:model Post -m
-cargo rustavel make:job ProcessPodcast
-cargo rustavel make:event UserCreated
-cargo rustavel make:listener SendWelcomeEmail
-cargo rustavel make:agent SupportAgent   # M6 adjacency
-cargo rustavel make:tool SearchDocs
+cargo rustasea make:controller UserController --resource
+cargo rustasea make:model Post -m
+cargo rustasea make:job ProcessPodcast
+cargo rustasea make:event UserCreated
+cargo rustasea make:listener SendWelcomeEmail
+cargo rustasea make:agent SupportAgent   # M6 adjacency
+cargo rustasea make:tool SearchDocs
 rustfmt --check app/http/controllers/user_controller.rs && cargo clippy -- -D warnings
 ```
 
@@ -124,7 +124,7 @@ let out = Artisan::call("migrate", vec!["--fresh".into(), "--seed".into()]).awai
 ### 2.5 `did you mean?` (strsim)
 
 ```bash
-cargo rustavel make:controll
+cargo rustasea make:controll
 # error: unknown command 'make:controll'. Did you mean make:controller ?
 ```
 
@@ -133,9 +133,9 @@ cargo rustavel make:controll
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel DeveloperPlatform — CLI listing + generators
+  title: RustaSea DeveloperPlatform — CLI listing + generators
   version: 0.1.0
-  description: cargo rustavel list --json contract + make:* outputs; inferred from api-contracts.md §4
+  description: cargo rustasea list --json contract + make:* outputs; inferred from api-contracts.md §4
 x-inferred: true
 servers:
   - url: http://localhost:3000
@@ -218,3 +218,9 @@ security: []
 
 `cargo check` after `make:*` incremental `<10s` — timeout gate; `Shutdownable` on `queue:work` drain is in `async-workloads`.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

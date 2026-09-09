@@ -585,9 +585,9 @@ checksum = "34aa73646ffb006b8f5147f3dc182bd4bcb190227ce861fc4a4844bf8e3cb2c0"
 
 [[package]]
 name = "encoding_rs"
-version = "0.8.40"
+version = "0.8.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a7a45518d2863d18aa47f4a0cf9faec2aa4304cc09df5e41299f276b3ad135e"
+checksum = "7b5ef0006ac9ab233c38522f5ae99cae3625151de8f706cacee1cba4b8e2832a"
 dependencies = [
  "cfg-if",
  "core_detect",
@@ -1149,24 +1149,23 @@ dependencies = [
 
 [[package]]
 name = "multiversion"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7edb7f0ff51249dfda9ab96b5823695e15a052dc15074c9dbf3d118afaf2c201"
+checksum = "b4ca4bea16ffc3f443cf7d866912118196bfef4c6a1556ca00f9f9b00bb43f7c"
 dependencies = [
  "multiversion-macros",
- "target-features",
 ]
 
 [[package]]
 name = "multiversion-macros"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b093064383341eb3271f42e381cb8f10a01459478446953953c75d24bd339fc0"
+checksum = "0d416831a7317ef4b08bee00b69cbbb9c8763da7959a7026244d6266869f9c83"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.119",
- "target-features",
+ "rustversion",
+ "syn 3.0.5",
 ]
 
 [[package]]
@@ -1563,42 +1562,42 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel"
+name = "rustasea"
 version = "0.1.0"
 dependencies = [
- "rustavel-ai",
- "rustavel-auth",
- "rustavel-broadcast",
- "rustavel-cache",
- "rustavel-cli",
- "rustavel-config",
- "rustavel-events",
- "rustavel-foundation",
- "rustavel-http",
- "rustavel-jsonapi",
- "rustavel-macros",
- "rustavel-orm",
- "rustavel-queue",
- "rustavel-router",
- "rustavel-schedule",
- "rustavel-search",
- "rustavel-storage",
- "rustavel-testing",
- "rustavel-validation",
+ "rustasea-ai",
+ "rustasea-auth",
+ "rustasea-broadcast",
+ "rustasea-cache",
+ "rustasea-cli",
+ "rustasea-config",
+ "rustasea-events",
+ "rustasea-foundation",
+ "rustasea-http",
+ "rustasea-jsonapi",
+ "rustasea-macros",
+ "rustasea-orm",
+ "rustasea-queue",
+ "rustasea-router",
+ "rustasea-schedule",
+ "rustasea-search",
+ "rustasea-storage",
+ "rustasea-testing",
+ "rustasea-validation",
  "serde",
  "serde_json",
  "tokio",
 ]
 
 [[package]]
-name = "rustavel-ai"
+name = "rustasea-ai"
 version = "0.1.0"
 dependencies = [
  "async-trait",
  "futures-core",
  "futures-util",
- "rustavel-search",
- "rustavel-storage",
+ "rustasea-search",
+ "rustasea-storage",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -1606,26 +1605,26 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-app"
+name = "rustasea-app"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
- "rustavel",
+ "rustasea",
  "serde",
  "tokio",
 ]
 
 [[package]]
-name = "rustavel-auth"
+name = "rustasea-auth"
 version = "0.1.0"
 dependencies = [
  "argon2",
  "axum",
  "chrono",
  "jsonwebtoken",
- "rustavel-foundation",
- "rustavel-http",
+ "rustasea-foundation",
+ "rustasea-http",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -1635,7 +1634,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-broadcast"
+name = "rustasea-broadcast"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -1650,7 +1649,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-cache"
+name = "rustasea-cache"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -1663,7 +1662,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-cli"
+name = "rustasea-cli"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -1673,11 +1672,11 @@ dependencies = [
  "console",
  "dialoguer",
  "indicatif",
- "rustavel-foundation",
- "rustavel-macros",
- "rustavel-orm",
- "rustavel-queue",
- "rustavel-schedule",
+ "rustasea-foundation",
+ "rustasea-macros",
+ "rustasea-orm",
+ "rustasea-queue",
+ "rustasea-schedule",
  "serde",
  "serde_json",
  "strsim",
@@ -1687,7 +1686,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-config"
+name = "rustasea-config"
 version = "0.1.0"
 dependencies = [
  "config",
@@ -1696,7 +1695,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-events"
+name = "rustasea-events"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -1707,19 +1706,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-foundation"
+name = "rustasea-foundation"
 version = "0.1.0"
 dependencies = [
  "tokio",
 ]
 
 [[package]]
-name = "rustavel-http"
+name = "rustasea-http"
 version = "0.1.0"
 dependencies = [
  "axum",
  "reqwest",
- "rustavel-router",
+ "rustasea-router",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -1729,7 +1728,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-jsonapi"
+name = "rustasea-jsonapi"
 version = "0.1.0"
 dependencies = [
  "http",
@@ -1739,7 +1738,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-macros"
+name = "rustasea-macros"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
@@ -1748,11 +1747,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-orm"
+name = "rustasea-orm"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "rustavel-macros",
+ "rustasea-macros",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -1761,7 +1760,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-queue"
+name = "rustasea-queue"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -1774,11 +1773,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-router"
+name = "rustasea-router"
 version = "0.1.0"
 dependencies = [
  "axum",
- "rustavel-foundation",
+ "rustasea-foundation",
  "serde",
  "tokio",
  "tower",
@@ -1786,12 +1785,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-schedule"
+name = "rustasea-schedule"
 version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
- "rustavel-events",
+ "rustasea-events",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -1799,7 +1798,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-search"
+name = "rustasea-search"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -1809,7 +1808,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-storage"
+name = "rustasea-storage"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -1821,15 +1820,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-testing"
+name = "rustasea-testing"
 version = "0.1.0"
 dependencies = [
  "chrono",
  "dotenvy",
- "rustavel-cache",
- "rustavel-config",
- "rustavel-foundation",
- "rustavel-orm",
+ "rustasea-cache",
+ "rustasea-config",
+ "rustasea-foundation",
+ "rustasea-orm",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -1838,7 +1837,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustavel-validation"
+name = "rustasea-validation"
 version = "0.1.0"
 dependencies = [
  "axum",
@@ -1847,6 +1846,26 @@ dependencies = [
  "tokio",
  "validator",
 ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 [[package]]
 name = "rustix"
@@ -2083,12 +2102,6 @@ dependencies = [
  "quote",
  "syn 2.0.119",
 ]
-
-[[package]]
-name = "target-features"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1bbb9f3c5c463a01705937a24fdabc5047929ac764b2d5b9cf681c1f5041ed5"
 
 [[package]]
 name = "tempfile"
@@ -2830,18 +2843,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.56"
+version = "0.8.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "556764e583adb45a9f8d413c2a147fa7e8d821e48e12b14fd560b607998b75eb"
+checksum = "d35102a9f36d089ccae9e4c6802bc118be4487b80aaffc0ab4e0cf5ce92d2873"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.56"
+version = "0.8.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2ab42fc20575779bd240faa45f94a74256f755c0fa9e89f0ede20d91d0cdfc1"
+checksum = "146c01f5ab44258da43cf276c74a2763db2ff3969c9c652c3f2de07041d0b2bc"
 dependencies = [
  "proc-macro2",
  "quote",

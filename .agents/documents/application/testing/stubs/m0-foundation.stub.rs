@@ -3,21 +3,21 @@
 //! Traces to `test-plan.md` §5 M0 row, `test-cases.md` TC-M0-01..12,
 //! `qa-design.md` S-03 + FS-01, FR-000..008, FS-M0-01..04.
 //!
-//! Each test is `#[ignore = "stub"]` until `rustavel-foundation` + `rustavel-config` land.
+//! Each test is `#[ignore = "stub"]` until `rustasea-foundation` + `rustasea-config` land.
 //! The assertions verify the stub declares its own trace so `cargo test -- --list` inventories coverage.
 
 #[cfg(test)]
 mod m0_foundation_stubs {
     /// TC-M0-01 — DAG-ordered providers before AppState.
     #[test]
-    #[ignore = "stub: crate `rustavel-foundation` not yet implemented (TASK-010 harness)"]
+    #[ignore = "stub: crate `rustasea-foundation` not yet implemented (TASK-010 harness)"]
     fn tc_m0_01_provider_dag_before_boot() {
         assert!(true, "stub TC-M0-01: traces FR-000/FS-M0-01, concern=State, @milestone-m0");
     }
 
     /// TC-M0-02 — Layered config env > file.
     #[test]
-    #[ignore = "stub: crate `rustavel-config` not yet implemented"]
+    #[ignore = "stub: crate `rustasea-config` not yet implemented"]
     fn tc_m0_02_layered_config_env_wins() {
         let file_port = 3000u16;
         let env_port = 4000u16;
@@ -27,14 +27,14 @@ mod m0_foundation_stubs {
 
     /// TC-M0-03 — Invalid TOML diagnostic with file+line.
     #[test]
-    #[ignore = "stub: crate `rustavel-config` not yet implemented"]
+    #[ignore = "stub: crate `rustasea-config` not yet implemented"]
     fn tc_m0_03_invalid_toml_diagnostic() {
         assert!(true, "stub TC-M0-03: file=database.toml line=7, P0, must not panic");
     }
 
     /// TC-M0-04 — Circular dependency Cycle error.
     #[test]
-    #[ignore = "stub: crate `rustavel-foundation` not yet implemented"]
+    #[ignore = "stub: crate `rustasea-foundation` not yet implemented"]
     fn tc_m0_04_cycle_detection() {
         assert!(true, "stub TC-M0-04: BootError::Cycle {A,B} must be returned, not Running");
     }
@@ -74,9 +74,9 @@ mod m0_foundation_stubs {
         assert!(true, "stub TC-M0-09: FR-006 #20 fix, closure self == manager");
     }
 
-    /// TC-M0-10 — Scaffold `cargo rustavel new demo` produces workspace.
+    /// TC-M0-10 — Scaffold `cargo rustasea new demo` produces workspace.
     #[test]
-    #[ignore = "stub: cargo-rustavel xtask not yet implemented (FR-005)"]
+    #[ignore = "stub: cargo-rustasea xtask not yet implemented (FR-005)"]
     fn tc_m0_10_scaffold_new() {
         assert!(true, "stub TC-M0-10: files bootstrap/app.rs, config/, routes/web.rs, .env.example must exist; cargo check passes");
     }

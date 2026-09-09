@@ -3,7 +3,7 @@
 
 #[cfg(test)]
 mod m5_cli_testing_stubs {
-    #[test] #[ignore = "stub: cargo rustavel list --json not yet implemented (FR-500)"]
+    #[test] #[ignore = "stub: cargo rustasea list --json not yet implemented (FR-500)"]
     fn tc_m5_01_list_json_has_migrate_and_controller() { assert!(true, "stub TC-M5-01: make:controller + migrate usage strings"); }
     #[test] #[ignore = "stub: #[usage] not yet implemented"]
     fn tc_m5_02_usage_in_help() { assert!(true, "stub TC-M5-02: app:send {user} in help"); }
@@ -36,5 +36,5 @@ mod m5_cli_testing_stubs {
     #[tokio::test] #[ignore = "stub: container startup timeout not yet implemented"]
     async fn tc_m5_16_container_timeout() { assert!(true, "stub TC-M5-16: TestError::ContainerTimeout"); }
     #[tokio::test] #[ignore = "stub: test teardown not yet implemented"]
-    async fn tc_m5_17_teardown_no_lingering() { assert!(true, "stub TC-M5-17: no rustavel-test-* containers remain"); }
+    async fn tc_m5_17_teardown_no_lingering() { assert!(true, "stub TC-M5-17: no rustasea-test-* containers remain"); }
 }

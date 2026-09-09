@@ -1,4 +1,4 @@
-# Rustavel — Domain Model & Bounded Contexts
+# RustaSea — Domain Model & Bounded Contexts
 
 > **Status:** Draft — P3 (TASK-008)  
 > **Date:** 2026-09-07  
@@ -29,7 +29,7 @@
 
 ## 2. Bounded Contexts (7)
 
-Contexts are scoped to workspace crate groups; each owns its aggregates, invariants, and persistence. Communication between contexts is via domain events (see §4) or explicitly via shared kernel types from `rustavel-foundation`.
+Contexts are scoped to workspace crate groups; each owns its aggregates, invariants, and persistence. Communication between contexts is via domain events (see §4) or explicitly via shared kernel types from `rustasea-foundation`.
 
 ```mermaid
 flowchart TB
@@ -50,13 +50,13 @@ flowchart TB
 
 | # | Bounded Context | Crates | Owns | Depends On | Language Front |
 |---|-----------------|--------|------|------------|----------------|
-| BC-0 | Foundation | `rustavel-foundation`, `rustavel-config`, `rustavel` (umbrella) | `Application`, `Container` (`Bind`/`Singleton`/`Instance`/`Make`), `ServiceProvider` + `Runner`, layered config, graceful shutdown | — (root) | `Application::configure()`, `register`→`boot`, `Manager::extend` |
-| BC-1 | HTTP & Routing | `rustavel-router`, `rustavel-http`, `rustavel-macros` (routing) | Routes, groups, `resource` expansion, domain-aware dispatch, `route:list`, middleware chain (`throttle`/`cors`), typed extractors (`Json`/`Query`/`Path`/`State`), `Http` client | BC-0 | `Route::get`, `#[route]`, `Throttle::per_minute().by_ip()` |
-| BC-2 | Data & ORM | `rustavel-orm`, `rustavel-macros` (Model), `pgvector` ext | `Model` aggregates, query builder, relations (`HasMany`/`BelongsTo`), soft-delete, scopes, transactions, locks, migrations, seeders, factories, vector columns | BC-0 | `User::query().where(...).firstOrFail()`, `whereVectorSimilarTo`, `#[derive(Model)]` |
-| BC-3 | Identity & Access | `rustavel-auth`, `rustavel-validation` | JWT + session `Guard`s, `Auth::extend`, `PreventRequestForgery` + `Sec-Fetch-Site`, rate limiter, strict validation + `ErrorBag`/`Validatable` | BC-1, BC-2 | `Auth::guard("jwt").login`, `#[authorize]`, `#[validate]`, `ErrorBag` |
-| BC-4 | Async Workloads | `rustavel-queue`, `rustavel-cache`, `rustavel-events`, `rustavel-schedule` | Typed `Job<T>`, `Queue::route` registry, queue drivers, `chain`/`batch`/`failed_jobs`, `Store`/`Repository` + `touch` + `Lock`, `Event`/`Listener` + `dispatchAfterResponse`, scheduler + `pause`/`resume`/`onOneServer`/`skipIfStillRunning` + Cloud metrics | BC-0, BC-2 (DB), BC-3 (hardening) | `Queue::route::<Job>`, `Cache::touch`, `Schedule::command(...).daily()` |
-| BC-5 | Developer Platform | `rustavel-cli`, `rustavel-macros`, `rustavel-testing` | `cargo rustavel` CLI (`clap`+`xtask`), `make:*` generators, `Artisan::call`, declarative attributes bundle, `TestCase` + `testcontainers` harness, `Str` factory resets | All BC-0..BC-4, BC-6 (scaffolds) | `cargo rustavel make:model`, `#[tries]`, `TestCase` |
-| BC-6 | Intelligence & Delivery | `rustavel-broadcast`, `rustavel-storage`, `rustavel-search`, `rustavel-ai` | `AiProvider` (12 adapters), `Agent`/`Tool` streaming/broadcast/queue/MCP/sub-agents + deferred loaders, `ShouldBroadcast` + SSE `eventStream`, read-through `Storage` + `path()` confinement, `JsonApiResource` + sparse fieldsets, `Str::toEmbeddings` | BC-1, BC-2, BC-4, BC-5 | `Ai::provider("anthropic").text(...)`, `ShouldBroadcast`, `Storage::get`, `JsonApiResource` |
+| BC-0 | Foundation | `rustasea-foundation`, `rustasea-config`, `rustasea` (umbrella) | `Application`, `Container` (`Bind`/`Singleton`/`Instance`/`Make`), `ServiceProvider` + `Runner`, layered config, graceful shutdown | — (root) | `Application::configure()`, `register`→`boot`, `Manager::extend` |
+| BC-1 | HTTP & Routing | `rustasea-router`, `rustasea-http`, `rustasea-macros` (routing) | Routes, groups, `resource` expansion, domain-aware dispatch, `route:list`, middleware chain (`throttle`/`cors`), typed extractors (`Json`/`Query`/`Path`/`State`), `Http` client | BC-0 | `Route::get`, `#[route]`, `Throttle::per_minute().by_ip()` |
+| BC-2 | Data & ORM | `rustasea-orm`, `rustasea-macros` (Model), `pgvector` ext | `Model` aggregates, query builder, relations (`HasMany`/`BelongsTo`), soft-delete, scopes, transactions, locks, migrations, seeders, factories, vector columns | BC-0 | `User::query().where(...).firstOrFail()`, `whereVectorSimilarTo`, `#[derive(Model)]` |
+| BC-3 | Identity & Access | `rustasea-auth`, `rustasea-validation` | JWT + session `Guard`s, `Auth::extend`, `PreventRequestForgery` + `Sec-Fetch-Site`, rate limiter, strict validation + `ErrorBag`/`Validatable` | BC-1, BC-2 | `Auth::guard("jwt").login`, `#[authorize]`, `#[validate]`, `ErrorBag` |
+| BC-4 | Async Workloads | `rustasea-queue`, `rustasea-cache`, `rustasea-events`, `rustasea-schedule` | Typed `Job<T>`, `Queue::route` registry, queue drivers, `chain`/`batch`/`failed_jobs`, `Store`/`Repository` + `touch` + `Lock`, `Event`/`Listener` + `dispatchAfterResponse`, scheduler + `pause`/`resume`/`onOneServer`/`skipIfStillRunning` + Cloud metrics | BC-0, BC-2 (DB), BC-3 (hardening) | `Queue::route::<Job>`, `Cache::touch`, `Schedule::command(...).daily()` |
+| BC-5 | Developer Platform | `rustasea-cli`, `rustasea-macros`, `rustasea-testing` | `cargo rustasea` CLI (`clap`+`xtask`), `make:*` generators, `Artisan::call`, declarative attributes bundle, `TestCase` + `testcontainers` harness, `Str` factory resets | All BC-0..BC-4, BC-6 (scaffolds) | `cargo rustasea make:model`, `#[tries]`, `TestCase` |
+| BC-6 | Intelligence & Delivery | `rustasea-broadcast`, `rustasea-storage`, `rustasea-search`, `rustasea-ai` | `AiProvider` (12 adapters), `Agent`/`Tool` streaming/broadcast/queue/MCP/sub-agents + deferred loaders, `ShouldBroadcast` + SSE `eventStream`, read-through `Storage` + `path()` confinement, `JsonApiResource` + sparse fieldsets, `Str::toEmbeddings` | BC-1, BC-2, BC-4, BC-5 | `Ai::provider("anthropic").text(...)`, `ShouldBroadcast`, `Storage::get`, `JsonApiResource` |
 
 **Context map relationships:** BC-0 is *Shared Kernel*; BC-5 is *Conformist* scaffolding over every domain; BC-6 depends on BC-4 for streaming/queueing. No cycle.
 
@@ -117,7 +117,7 @@ Aggregates: `CliCommand` (with `Args`/`Flags` + typed derive + `#[usage]`/`#[hel
 
 | Aggregate | Root | Invariants | State |
 |-----------|------|------------|-------|
-| `AiProvider` | `AiRegistry` | Trait `text`/`image`/`audio`/`embeddings`/`reranking`/`files`/`vector_stores`. Per-provider adapter behind feature flag (`features=["openai"]`). Unsupported capability → `UnsupportedCapability {provider,capability}`. Opt-in: workspace with only `rustavel-router` has no `async-openai` in `cargo tree`. | — |
+| `AiProvider` | `AiRegistry` | Trait `text`/`image`/`audio`/`embeddings`/`reranking`/`files`/`vector_stores`. Per-provider adapter behind feature flag (`features=["openai"]`). Unsupported capability → `UnsupportedCapability {provider,capability}`. Opt-in: workspace with only `rustasea-router` has no `async-openai` in `cargo tree`. | — |
 | `Agent` | `Agent` + `Tool` | `Tool { name, schema: JsonSchema, call(args:Json)->Json }`. `Agent::prompt -> Stream<AiChunk>`. Deferred loaders (`SimilaritySearch`/`FileStorage`/`ToolSearch`) inject before tool call. Anonymous agent via `Ai::agent(|a| a.tool(...))`. | `Prompted → ToolCalling → Streaming → Done \| ToolError` |
 | `BroadcastChannel` | `ChannelRegistry` | `ShouldBroadcast::broadcastOn() -> Channel::Private/Public/Presence`. Channel auth checks `Authorize` gate. `eventStream` sets `Content-Type: text/event-stream`. Bounded `mpsc` — overflow → `Lagged`. | `Idle → Subscribed → Streaming → Closed(401/4403 on auth fail)` |
 | `Storage` | `StorageManager` | Disks `s3`/`gcs`/`azure` (`object_store`) or `local` (`tokio::fs`). Read-through `primary`+`fallback` (+ `copy_back`). `path()` checked `resolved.starts_with(disk_root)` → `PathTraversal` on escape. | — |
@@ -142,7 +142,7 @@ All events are `Event` trait objects dispatched via `Dispatcher`. Persistent eve
 Flow example — `schedule:pause`:
 
 ```
-Platform operator -> rustavel-cli: `schedule:pause`
+Platform operator -> rustasea-cli: `schedule:pause`
   -> BC-4 Scheduler: set flag `schedule_paused=true` in Cache/DB
   -> Dispatcher::dispatch(SchedulePaused)
   -> listeners: observability sink, log sink, (future) GUI
@@ -162,7 +162,7 @@ Platform operator -> rustavel-cli: `schedule:pause`
 [BC-4]  Depends on BC-0 (AppState), BC-2 (DB for queue jobs table), BC-3 (hardening policy)
 [BC-5]  Conformist — generators emit code into BC-0..BC-4,BC-6 domains; test harness provisions BC-2+BC-4 backends
 [BC-6]  Depends on BC-1 (WebSocket routes), BC-2 (vector columns), BC-4 (queue streaming), BC-5 (make:agent/tool)
-        Feature isolation ensures `rustavel-ai` absent from core cargo tree
+        Feature isolation ensures `rustasea-ai` absent from core cargo tree
 ```
 
 ---
@@ -172,5 +172,11 @@ Platform operator -> rustavel-cli: `schedule:pause`
 - **Aggregate boundaries follow transaction boundaries:** `Job` + `Queue` share the DB/Redis tx; `Model` owns its `relations` map so `serde` round-trip doesn't leak across contexts.
 - **No `any`:** all cross-context handoffs are typed (`Job<T>`, `Event<T>`, `AiResponse`, `JsonApiDocument`).
 - **Eventual consistency between contexts** via `dispatchAfterResponse` and async listeners — no distributed transactions across Redis/DB boundaries.
-- **Incremental adoption constraint** forces BC boundaries to align with crate boundaries; a consumer of `rustavel-router` alone sees only BC-0+BC-1 types in `cargo tree`.
+- **Incremental adoption constraint** forces BC boundaries to align with crate boundaries; a consumer of `rustasea-router` alone sees only BC-0+BC-1 types in `cargo tree`.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

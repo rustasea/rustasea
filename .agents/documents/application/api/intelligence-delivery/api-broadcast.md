@@ -2,7 +2,7 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §5` · `requirements/prd FR-600..601, FR-610` · `requirements/fsd FS-M6-01` · `requirements/tdd BC-6 broadcast` · `design/domain BC-6`
-> **Crates:** `rustavel-broadcast` · `rustavel-ai` streaming adjacency · **BDD:** `@broadcast`, `@contracts-expansion`
+> **Crates:** `rustasea-broadcast` · `rustasea-ai` streaming adjacency · **BDD:** `@broadcast`, `@contracts-expansion`
 
 ## 1. Standar Global
 
@@ -110,7 +110,7 @@ curl -N http://localhost:3000/events -H 'Accept: text/event-stream' | sed -n 's/
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Broadcast — WebSocket + SSE
+  title: RustaSea Broadcast — WebSocket + SSE
   version: 0.1.0
   description: ShouldBroadcast channels + WS auth + SSE eventStream
 servers:
@@ -205,3 +205,9 @@ components:
 
 Bounded `mpsc(64)` slow-consumer → `Lagged` (no OOM) is chaos-guarded nightly; truncated mid-`event: token` AI stream → WS close frame is success criteria (see `ai-agents.md` chain).
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

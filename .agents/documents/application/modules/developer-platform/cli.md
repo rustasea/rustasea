@@ -4,16 +4,16 @@
 > **Stories:** US-M5-01 (list + prompts + Artisan::call) · **BDD:** `@cli`, `@attributes`
 
 ## 1. Feature Overview
-- **Brief Description:** `cargo rustavel <command> [args] [--json]` via `cargo-xtask` (`cargo-xtask` bin) using `clap` derive with typed `Args`/`Flags` per command, `list [--json] [--all]` enumerating commands with `#[usage]`/`#[help]`/`#[hidden]` (hidden omitted without `--all`), prompts `ask`/`secret`/`confirm`/`choice`/`multiSelect` via `dialoguer` and `table`/`progressBar`/`spinner` via `indicatif`/`comfy-table`, `Shutdownable` on long workers (`queue:work`, `schedule:run`), `Artisan::call(command, args)` in-process invocation (no subprocess), unknown command suggests `did you mean?` via `strsim`.
+- **Brief Description:** `cargo rustasea <command> [args] [--json]` via `cargo-xtask` (`cargo-xtask` bin) using `clap` derive with typed `Args`/`Flags` per command, `list [--json] [--all]` enumerating commands with `#[usage]`/`#[help]`/`#[hidden]` (hidden omitted without `--all`), prompts `ask`/`secret`/`confirm`/`choice`/`multiSelect` via `dialoguer` and `table`/`progressBar`/`spinner` via `indicatif`/`comfy-table`, `Shutdownable` on long workers (`queue:work`, `schedule:run`), `Artisan::call(command, args)` in-process invocation (no subprocess), unknown command suggests `did you mean?` via `strsim`.
 - **Role in Module:** Surface of every framework capability; `list` is the discoverability contract.
 - **Business Value:** Artisan-parity CLI; `list --json` machine-readable for agents/tooling.
 
 ## 2. User Stories
 
-### US-M5-01 — cargo rustavel CLI with typed commands and prompts
-**Sebagai** Rust developer **Saya ingin** `cargo rustavel list` + typed args/flags + prompts + `Artisan::call` **Sehingga** CLI like Artisan
+### US-M5-01 — cargo rustasea CLI with typed commands and prompts
+**Sebagai** Rust developer **Saya ingin** `cargo rustasea list` + typed args/flags + prompts + `Artisan::call` **Sehingga** CLI like Artisan
 
-**AC:** `cargo rustavel list --json` contains `make:controller` + `migrate` with `usage`; `#[usage("app:send {user}")]` on `AppSend` shown in help; `confirm("Proceed?")` → `n` aborts with non-zero; `Artisan::call("migrate", vec![])` migrates in-process; `#[hidden]` command omitted without `--all`; `make:controll` → suggests `make:controller` (outline).
+**AC:** `cargo rustasea list --json` contains `make:controller` + `migrate` with `usage`; `#[usage("app:send {user}")]` on `AppSend` shown in help; `confirm("Proceed?")` → `n` aborts with non-zero; `Artisan::call("migrate", vec![])` migrates in-process; `#[hidden]` command omitted without `--all`; `make:controll` → suggests `make:controller` (outline).
 
 ## 3. Business Flow & Rules
 
@@ -22,15 +22,15 @@
 %%{init: {"theme": "base", "themeVariables": {"background": "#ffffff", "mainBkg": "#ffffff", "primaryColor": "#bbdefb", "secondaryColor": "#fff9c4", "tertiaryColor": "#c8e6c9"}}}%%
 sequenceDiagram
     actor Dev as Developer
-    participant CLI as cargo rustavel (clap+xtask)
+    participant CLI as cargo rustasea (clap+xtask)
     participant Registry as Command registry
     participant Prompts as dialoguer/indicatif
 
-    Dev->>CLI: cargo rustavel list --json
+    Dev->>CLI: cargo rustasea list --json
     CLI->>Registry: enumerate #[usage]/#[help]/#[hidden]
     Registry-->>CLI: {name, usage, hidden}[]
     CLI-->>Dev: JSON entries usage strings
-    Dev->>CLI: cargo rustavel app:send --user=42
+    Dev->>CLI: cargo rustasea app:send --user=42
     CLI->>Prompts: confirm("Proceed?") -> n
     Prompts-->>CLI: aborted non-zero
     Dev->>CLI: Artisan::call("migrate", vec![])
@@ -107,3 +107,9 @@ trait Shutdownable { async fn shutdown(&self, handle: ShutdownHandle) -> Result<
 | BDD | `test-generation` — `list --json` contract |
 | Security | `security-audit` — hidden enum leak |
 | Chaos | `non-functional-testing` — `Shutdownable` drain under `SIGTERM` |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

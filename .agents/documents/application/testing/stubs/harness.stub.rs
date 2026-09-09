@@ -1,5 +1,5 @@
 //! Harness — TestCase + Factory + Testcontainers + Fakes
-//! Documents the shared harness that `rustavel-testing` MUST provide per FS-M5-04 + NFR-*.
+//! Documents the shared harness that `rustasea-testing` MUST provide per FS-M5-04 + NFR-*.
 //! Traces to `test-plan.md` §3 harness conventions, `qa-design.md` §7 fixtures.
 
 /// Contract for every harness test: `TestCase` MUST expose these invariants.
@@ -27,7 +27,7 @@ mod harness_contract {
         assert_eq!(CONTAINER_TIMEOUT_SECS, 30);
     }
 
-    /// Smoke shape — replace body when `rustavel-testing` lands.
+    /// Smoke shape — replace body when `rustasea-testing` lands.
     #[tokio::test]
     #[ignore = "stub: TestCase harness not yet implemented — shape only"]
     async fn test_case_shape_boot_with_testcontainers() {

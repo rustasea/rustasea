@@ -96,7 +96,7 @@ struct ThrottleConfig { per_minute: u32, key_by: KeyBy } // ip|user|key(fn)
 ```
 
 ## 6. Dependencies
-- `validator`, `rustavel-macros` `#[validate]`, `router` `tower::Layer`, `tdd.md BC-3` traits.
+- `validator`, `rustasea-macros` `#[validate]`, `router` `tower::Layer`, `tdd.md BC-3` traits.
 - `database.md` adjacency not needed (validation is stateless).
 
 ## 7. Limitations
@@ -129,3 +129,9 @@ struct ThrottleConfig { per_minute: u32, key_by: KeyBy } // ip|user|key(fn)
 | Contract | `test-generation` — `ErrorBag` 422 schema via `api-contract-test` |
 | Security | `security-audit` — `ErrorBag` info-leak classification |
 | Chaos | `non-functional-testing` — concurrent 429 window, Redis down for `Throttle` |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

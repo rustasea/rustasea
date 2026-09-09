@@ -2,7 +2,7 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §5` · `requirements/prd FR-603, FR-611` · `requirements/fsd FS-M6-02` · `requirements/tdd BC-6 StorageManager` · `design/database §2 storage_objects`
-> **Crates:** `rustavel-storage` · **BDD:** `@storage-readthrough`
+> **Crates:** `rustasea-storage` · **BDD:** `@storage-readthrough`
 
 ## 1. Standar Global
 
@@ -84,7 +84,7 @@ curl -s http://localhost:3000/storage/a/b.txt -H 'Authorization: Bearer '"$JWT"
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Storage — read-through + path confinement
+  title: RustaSea Storage — read-through + path confinement
   version: 0.1.0
   description: Read-through primary+fallback + PathTraversal per api-contracts.md §5
 servers:
@@ -162,3 +162,9 @@ security: []
 
 S3 down mid-readthrough → fallback path observable; corpus stall is nightly chaos.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -63,3 +63,9 @@
 | ASYNC-SEC-004 | Auditor | `X-Forwarded-For` adjacent to schedule Gated `onOneServer` | worker behind proxy spoof | `Lock` not bypassed |
 | ASYNC-SEC-005 | Auditor | `touch` not uniform Redis Cluster | cluster shard fails `EXPIRE` | `EXPIRE` fallback via driver abstraction tested |
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

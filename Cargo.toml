@@ -6,7 +6,7 @@ resolver = "2"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-authors = ["Rustavel Team"]
+authors = ["RustaSea Team"]
 
 # Single source of truth for shared dependencies; crates opt in with `workspace = true`.
 [workspace.dependencies]

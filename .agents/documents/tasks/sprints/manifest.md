@@ -1,4 +1,4 @@
-# Rustavel — Sprint Manifest
+# RustaSea — Sprint Manifest
 
 > **Date:** 2026-09-07 | **Horizon:** Q4 2026 → Q4 2027 (7 sprints = 7 milestones)
 > **Parents:** `../roadmap.md` + `prd.md` + `fsd.md` + `design/architecture.md`
@@ -10,20 +10,20 @@
 
 | Sprint | Milestone | Goal (one-liner) | Window | FRs | Crates | Status |
 |--------|-----------|------------------|--------|-----|--------|--------|
-| **Sprint 01** | **M0** Bootstrap & Core | Bootable skeleton with config, container, providers, shutdown. | 2026-10-01 → 2026-12-31 | FR-000–FR-008 (9) | `rustavel`, `rustavel-foundation`, `rustavel-config`, `rustavel-macros` (scaffold) | Planned |
-| **Sprint 02** | **M1** Routing & HTTP | Expressive HTTP layer with routing, middleware, introspection. | 2026-11-15 → 2027-02-15 | FR-100–FR-109 (10) | `rustavel-router`, `rustavel-http` | Planned |
-| **Sprint 03** | **M2** ORM & Database | Fluent type-safe DB layer with migrations/factories/vector. | 2027-01-01 → 2027-03-31 | FR-200–FR-210 (11) | `rustavel-orm`, `rustavel-macros` (Model) | Planned |
-| **Sprint 04** | **M3** Auth, Middleware & Validation | Hardened auth/validation at Laravel 13 defaults. | 2027-02-15 → 2027-05-15 | FR-300–FR-311 (12) | `rustavel-auth`, `rustavel-validation` | Planned |
-| **Sprint 05** | **M4** Queue, Cache, Scheduling & Events | Observable async workloads. | 2027-04-01 → 2027-06-30 | FR-400–FR-410 (11) | `rustavel-queue`, `rustavel-cache`, `rustavel-events`, `rustavel-schedule` | Planned |
-| **Sprint 06** | **M5** DX, CLI & Testing | Laravel-like DX loop: CLI, generators, testing. | 2027-05-15 → 2027-08-31 | FR-500–FR-509 (10) | `rustavel-cli`, `rustavel-macros`, `rustavel-testing` | Planned |
-| **Sprint 07** | **M6** Advanced (AI/Broadcast/FS/JSON:API) | Differentiate: AI SDK, broadcast/SSE, storage, JSON:API. | 2027-07-01 → 2027-12-31 | FR-600–FR-612 (13) | `rustavel-broadcast`, `rustavel-storage`, `rustavel-search`, `rustavel-ai` | Planned |
+| **Sprint 01** | **M0** Bootstrap & Core | Bootable skeleton with config, container, providers, shutdown. | 2026-10-01 → 2026-12-31 | FR-000–FR-008 (9) | `rustasea`, `rustasea-foundation`, `rustasea-config`, `rustasea-macros` (scaffold) | Planned |
+| **Sprint 02** | **M1** Routing & HTTP | Expressive HTTP layer with routing, middleware, introspection. | 2026-11-15 → 2027-02-15 | FR-100–FR-109 (10) | `rustasea-router`, `rustasea-http` | Planned |
+| **Sprint 03** | **M2** ORM & Database | Fluent type-safe DB layer with migrations/factories/vector. | 2027-01-01 → 2027-03-31 | FR-200–FR-210 (11) | `rustasea-orm`, `rustasea-macros` (Model) | Planned |
+| **Sprint 04** | **M3** Auth, Middleware & Validation | Hardened auth/validation at Laravel 13 defaults. | 2027-02-15 → 2027-05-15 | FR-300–FR-311 (12) | `rustasea-auth`, `rustasea-validation` | Planned |
+| **Sprint 05** | **M4** Queue, Cache, Scheduling & Events | Observable async workloads. | 2027-04-01 → 2027-06-30 | FR-400–FR-410 (11) | `rustasea-queue`, `rustasea-cache`, `rustasea-events`, `rustasea-schedule` | Planned |
+| **Sprint 06** | **M5** DX, CLI & Testing | Laravel-like DX loop: CLI, generators, testing. | 2027-05-15 → 2027-08-31 | FR-500–FR-509 (10) | `rustasea-cli`, `rustasea-macros`, `rustasea-testing` | Planned |
+| **Sprint 07** | **M6** Advanced (AI/Broadcast/FS/JSON:API) | Differentiate: AI SDK, broadcast/SSE, storage, JSON:API. | 2027-07-01 → 2027-12-31 | FR-600–FR-612 (13) | `rustasea-broadcast`, `rustasea-storage`, `rustasea-search`, `rustasea-ai` | Planned |
 
 **Total FRs:** 76 (M0 9 + M1 10 + M2 11 + M3 12 + M4 11 + M5 10 + M6 13) per `prd.md` §8.
 
 ## 2. Derivation Rationale
 
 - **N = 7** (recommended 6–7, one sprint per milestone) — 1:1 mapping keeps milestone success criteria intact as sprint acceptance; avoids splitting a milestone across sprints which would require partial success criteria.
-- Each sprint is sized to its milestone's dev-week estimate (see `../roadmap.md` §6); M6 as a single sprint is the largest (13 FRs, 4 crates, 12-provider trait) — acceptable because its `rustavel-ai` crate is feature-flagged `optional` and can incrementally land provider adapters behind flags without blocking the sprint's core deliverable (Storage/JSON:API/Broadcast).
+- Each sprint is sized to its milestone's dev-week estimate (see `../roadmap.md` §6); M6 as a single sprint is the largest (13 FRs, 4 crates, 12-provider trait) — acceptable because its `rustasea-ai` crate is feature-flagged `optional` and can incrementally land provider adapters behind flags without blocking the sprint's core deliverable (Storage/JSON:API/Broadcast).
 - **Overlap windows** mirror `README.md` Roadmap: M1 starts 6 weeks into M0, M3 starts 6 weeks into M2, etc. Sprints therefore overlap in calendar time but are dependency-ordered: Sprint N+1 may start scaffolding once its dependency's `foundation` sub-crate is stable, but cannot **close** before its dependencies are tagged.
 
 ## 3. Capacity Assumptions (per roadmap §6)
@@ -71,3 +71,9 @@ S01 (M0) ─┬─► S02 (M1) ─┬─► S04 (M3) ─┬─► S05 (M4) ─�
 ---
 
 *Next: `sprint-01.md` through `sprint-07.md` for task-level detail.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

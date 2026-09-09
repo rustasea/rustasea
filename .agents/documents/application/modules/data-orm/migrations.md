@@ -4,7 +4,7 @@
 > **Stories:** US-M2-05 (make:model + migrate + factory reset) · **BDD:** `@orm`, `@observability-tooling` adjacency
 
 ## 1. Feature Overview
-- **Brief Description:** `cargo rustavel make:migration create_users_table --create=users` scaffolds `YYYY_MM_DD_HHMMSS_description.rs` with `up`/`down` (`sqlx::migrate!` or `sea-orm-migration` behind `sea-orm` feature), `cargo rustavel migrate`/`migrate:fresh`/`migrate:fresh --seed`/`migrate:status`, idempotent `migrations{name,batch}` table; seeders `Seeder::run(&mut conn)` idempotent (`ON CONFLICT DO NOTHING`); factories `Factory<T>::create(n)` + `definition()→T` + `sequence` + `state(|u| …)` with `Str` sequences reset per test via `TestCase` hook (#20 `Str` factory resets).
+- **Brief Description:** `cargo rustasea make:migration create_users_table --create=users` scaffolds `YYYY_MM_DD_HHMMSS_description.rs` with `up`/`down` (`sqlx::migrate!` or `sea-orm-migration` behind `sea-orm` feature), `cargo rustasea migrate`/`migrate:fresh`/`migrate:fresh --seed`/`migrate:status`, idempotent `migrations{name,batch}` table; seeders `Seeder::run(&mut conn)` idempotent (`ON CONFLICT DO NOTHING`); factories `Factory<T>::create(n)` + `definition()→T` + `sequence` + `state(|u| …)` with `Str` sequences reset per test via `TestCase` hook (#20 `Str` factory resets).
 - **Role in Module:** Schema authority + test-data factory; reversible `down` unless declared `Irreversible`.
 
 ## 2. User Stories
@@ -21,7 +21,7 @@
 %%{init: {"theme": "base", "themeVariables": {"background": "#ffffff", "mainBkg": "#ffffff", "primaryColor": "#bbdefb", "secondaryColor": "#fff9c4", "tertiaryColor": "#c8e6c9"}}}%%
 sequenceDiagram
     actor Dev as Developer
-    participant CLI as cargo rustavel
+    participant CLI as cargo rustasea
     participant FS as database/migrations/*.rs
     participant DB as DB + migrations table
     participant Factory as Factory<T>
@@ -75,8 +75,8 @@ trait Migration { fn up(&mut self, conn: &mut Conn) -> Result<()>; fn down(&mut 
 trait Seeder { async fn run(&mut self, conn: &mut Conn) -> Result<()>; }
 trait Factory<T> { fn definition() -> T; fn create(n: usize) -> Vec<T>; fn state(f: impl Fn(T)->T) -> Self; }
 // CLI
-// cargo rustavel make:migration create_users_table --create=users
-// cargo rustavel migrate | migrate:fresh [--seed] | migrate:status
+// cargo rustasea make:migration create_users_table --create=users
+// cargo rustasea migrate | migrate:fresh [--seed] | migrate:status
 enum MigrationError { AlreadyApplied, Irreversible { name: String }, ExtensionMissing { extension: &'static str } }
 ```
 
@@ -84,7 +84,7 @@ enum MigrationError { AlreadyApplied, Irreversible { name: String }, ExtensionMi
 - `sqlx::migrate!` (primary) / `sea-orm-migration` optional; `tdd.md BC-2` vector blueprint adjacency.
 
 ## 7. Limitations
-- `cargo rustavel migrate` must run once per test binary via `TestCase` (≈30s `testcontainers` timeout → `TestError::ContainerTimeout`).
+- `cargo rustasea migrate` must run once per test binary via `TestCase` (≈30s `testcontainers` timeout → `TestError::ContainerTimeout`).
 
 ## 8. Compliance
 - `migrate` idempotence (NFR-Rel-02): hash unchanged on re-run.
@@ -111,3 +111,9 @@ enum MigrationError { AlreadyApplied, Irreversible { name: String }, ExtensionMi
 | BDD | `test-generation` `@orm` |
 | Migration | `test-generation/rules/migration-test.md` — up→down→up round-trip, idempotence, bulk `migrate:fresh --seed`, irreversible handling |
 | Chaos | `non-functional-testing` — `migrate` reentrancy + container startup timeout |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

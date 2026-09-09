@@ -1,4 +1,4 @@
-# Rustavel — Database Design
+# RustaSea — Database Design
 
 > **Status:** Draft — P3 (TASK-008)  
 > **Date:** 2026-09-07  
@@ -258,8 +258,8 @@ Relation notes: `users` ↔ `posts` is the canonical `#[derive(Model)]` HasMany 
 
 - `sqlx::migrate!` (primary) or `sea-orm-migration` when `sea-orm` feature is enabled. Migrations live in `database/migrations/`.
 - Naming: `YYYY_MM_DD_HHMMSS_description.rs` (e.g., `2026_09_07_000001_create_users_table.rs`) with `up(&mut conn)` / `down(&mut conn)`. `SEA-ORM` style uses `Migration` trait.
-- `cargo rustavel make:migration create_products_table --create=products` scaffolds a file with `createTable("products")` + vector column helper.
-- Commands: `cargo rustavel migrate`, `cargo rustavel migrate:fresh`, `cargo rustavel migrate:fresh --seed`, `cargo rustavel migrate:status`.
+- `cargo rustasea make:migration create_products_table --create=products` scaffolds a file with `createTable("products")` + vector column helper.
+- Commands: `cargo rustasea migrate`, `cargo rustasea migrate:fresh`, `cargo rustasea migrate:fresh --seed`, `cargo rustasea migrate:status`.
 
 ### Vector extension guard (M2/M6)
 
@@ -298,13 +298,13 @@ Dimension mismatch is caught at query time (DB error `vector dimension mismatch`
 - **Providers:** `Str::toEmbeddings("hello", provider: "openai") -> Vec<f32>` (M6) calls `AiProvider::embeddings`. Embedding dimension is provider/model dependent; mismatch with column DDL is a typed error.
 - **Blueprint:** `Blueprint::vector("embedding", 1536)` adds `VECTOR(1536)`. `Blueprint::dropVectorIndex("embedding")` drops the associated HNSW/IVFFLAT.
 - **MariaDB:** vector column `VECTOR(1536)` behind `mariadb-vector` feature flag; operator mapping differs — isolated to driver abstraction.
-- **Feature gating:** `cargo check -p rustavel-orm --no-default-features` builds without `pgvector`; vector code is `#[cfg(feature="vector")]`.
+- **Feature gating:** `cargo check -p rustasea-orm --no-default-features` builds without `pgvector`; vector code is `#[cfg(feature="vector")]`.
 
 ---
 
 ## 6. Seeds & Factories
 
-- `database/seeders/*.rs` each implement `Seeder::run(&mut conn)`; idempotent (upsert or `INSERT … ON CONFLICT DO NOTHING`). Invoked via `migrate:fresh --seed` or `cargo rustavel db:seed`.
+- `database/seeders/*.rs` each implement `Seeder::run(&mut conn)`; idempotent (upsert or `INSERT … ON CONFLICT DO NOTHING`). Invoked via `migrate:fresh --seed` or `cargo rustasea db:seed`.
 - Factories: `UserFactory::create(n)` + `definition() -> User` with `sequence` counter and `state(|u| …)` overrides. `Str`/sequence counters reset per test via `TestCase` hook (see `architecture.md` Test Harness).
 
 ---
@@ -329,3 +329,9 @@ Application never branches on driver at call-site — `sqlx` pool type is select
 - Every business table has `id UUID PK`, `created_at`/`updated_at`/`deleted_at`, per-convention indexing; verified by `sqlx::migrate` dry-run in CI.
 - `whereVectorSimilarTo` integration test (FR-207) runs against a real Postgres with `pgvector` via `testcontainers`; dimension-mismatch and `ExtensionMissing` diagnostics are asserted.
 - No FK without index; no `FLOAT` for money; no table without `timestamps`/`soft_delete` unless annotated technical (e.g., `migrations`, `cache`).
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

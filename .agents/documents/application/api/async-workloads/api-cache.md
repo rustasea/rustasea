@@ -2,7 +2,7 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §4` · `requirements/prd FR-403..405` · `requirements/fsd FS-M4-04` · `requirements/tdd BC-4 Store/Lock`
-> **Crates:** `rustavel-cache` (`Store` `moka` + `deadpool-redis`) · **BDD:** `@cache-touch`, `@cache`
+> **Crates:** `rustasea-cache` (`Store` `moka` + `deadpool-redis`) · **BDD:** `@cache-touch`, `@cache`
 
 ## 1. Standar Global
 
@@ -111,7 +111,7 @@ let guard2: LockGuard = Cache::lock("billing", Duration::from_secs(10)).block(Du
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Cache — Store + Lock (app-level HTTP examples)
+  title: RustaSea Cache — Store + Lock (app-level HTTP examples)
   version: 0.1.0
   description: Store/Repository Touch + Lock per api-contracts.md §4; isolation: memory vs redis
 servers:
@@ -246,3 +246,9 @@ security: []
 
 `Lock::block` contention + `docker pause redis` → `StoreUnavailable` typed (not panic) is nightly chaos.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -8,7 +8,7 @@
 
 ## Context
 
-Every Rustavel workload is async: `axum` HTTP serving, `sqlx` queries, `deadpool`/`deadpool-redis` pools, queue workers (Redis BRPOP + DB polling), `tokio-cron-scheduler` schedule ticker, WebSocket/SSE streams, `reqwest` HTTP client, and `async-openai` AI adapters. The runtime choice must unify these under one executor, support graceful shutdown (`SIGTERM` drain), and not fragment the crate graph. Rust's async runtimes are `tokio` (de-facto), `async-std`, and `smol`.
+Every RustaSea workload is async: `axum` HTTP serving, `sqlx` queries, `deadpool`/`deadpool-redis` pools, queue workers (Redis BRPOP + DB polling), `tokio-cron-scheduler` schedule ticker, WebSocket/SSE streams, `reqwest` HTTP client, and `async-openai` AI adapters. The runtime choice must unify these under one executor, support graceful shutdown (`SIGTERM` drain), and not fragment the crate graph. Rust's async runtimes are `tokio` (de-facto), `async-std`, and `smol`.
 
 ## Decision
 
@@ -30,7 +30,7 @@ Every Rustavel workload is async: `axum` HTTP serving, `sqlx` queries, `deadpool
 
 ## Consequences
 
-- `rustavel`, `rustavel-foundation`, `rustavel-router` all `#[tokio::main]` or crate-level `async` without re-exporting a runtime shim.
+- `rustasea`, `rustasea-foundation`, `rustasea-router` all `#[tokio::main]` or crate-level `async` without re-exporting a runtime shim.
 - All `Store`/`Queue`/`Guard`/`AiProvider` traits are `async` via `async-trait` / native `async fn in trait` (Rust 1.75+).
 - Deployment is one binary with three `tokio::spawn` task groups sharing one `PgPool`/`RedisPool` (see `architecture.md §7`).
 - MSRV 1.80+ and `tokio` 1.x are linked constraints per `prd.md C-01`.
@@ -46,3 +46,9 @@ Every Rustavel workload is async: `axum` HTTP serving, `sqlx` queries, `deadpool
 - README Tech Stack — `tokio` row: "De-facto async runtime; powers axum, sqlx, deadpool…"
 - ADR-001 — axum choice depends on tokio; ADR-002 — sqlx/deadpool are tokio-native.
 - `tdd.md §4–5` — budgets and deployment topology assuming single runtime.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

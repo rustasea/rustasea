@@ -5,7 +5,7 @@
 
 ## 1. Feature Overview
 - **Brief Description:** `Blueprint::vector("embedding", 1536)` maps to `pgvector` `VECTOR(1536)` (nullable until `Str::toEmbeddings`/`AiProvider::embeddings` fills), `whereVectorSimilarTo("embedding", &query_vec, limit: k)` emits `ORDER BY embedding <=> $1 LIMIT k` (cosine; `<->` L2 / `<#>` inner product selectable), `dropVectorIndex("embedding")` emits `DROP INDEX` for HNSW/IVFFLAT, strict dimension check (`VectorDimensionMismatch{expected,actual}`), extension guard `has_extension("vector")` → `ExtensionMissing` remediation hint. Feature-flagged `vector`; MariaDB behind `mariadb-vector` flag. M6 extends with `Str::toEmbeddings` provider integration + indexing strategies.
-- **Role in Module:** Semantic search primitive enabling `rustavel-search` M6 full.
+- **Role in Module:** Semantic search primitive enabling `rustasea-search` M6 full.
 
 ## 2. User Stories
 
@@ -45,7 +45,7 @@ sequenceDiagram
 ### 3.2 Business Rules
 - `vector(n)` `n` matches embedding provider output (e.g., 1536 `text-embedding-3-small`, 768 smaller models); column nullable until embeddings filled.
 - Distance: `whereVectorSimilarTo` cosine (`<=>`); L2 `<->` / IP `<#>` selectable via API param.
-- `cargo check -p rustavel-orm --no-default-features` builds without `pgvector`; vector code `#[cfg(feature="vector")]`.
+- `cargo check -p rustasea-orm --no-default-features` builds without `pgvector`; vector code `#[cfg(feature="vector")]`.
 - Post-`dropVectorIndex` query still works via sequential scan until reindexed.
 - Dimension mismatch caught at query time mapped to typed error (fixture `testing/fixtures/vector-dim.json`).
 
@@ -85,7 +85,7 @@ enum VectorError { ExtensionMissing { extension: &'static str, hint: String }, V
 ```
 
 ## 6. Dependencies
-- Extension guard in migration (see `database.md §4` code); `rustavel-ai` embeddings in M6 (`intelligence-delivery/ai-agents.md`).
+- Extension guard in migration (see `database.md §4` code); `rustasea-ai` embeddings in M6 (`intelligence-delivery/ai-agents.md`).
 
 ## 7. Limitations
 - SQLite vector unsupported — feature excluded at compile.
@@ -114,3 +114,9 @@ enum VectorError { ExtensionMissing { extension: &'static str, hint: String }, V
 |-------|-------|
 | Contract | `test-generation` — `vector-dim.json` outline |
 | Chaos | `non-functional-testing` — `dropVectorIndex` mid-search seq-scan fallback (TC-M6-25) |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

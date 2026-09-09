@@ -117,3 +117,9 @@ enum CacheError { StoreUnavailable, LockAlreadyHeld, TouchFailed }
 | BDD | `test-generation` `@cache-touch` |
 | Security | `security-audit` — `RegisterSec02` (allow-list deserialization) |
 | Chaos | `non-functional-testing` — `Lock::block` contention + `docker pause redis` |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

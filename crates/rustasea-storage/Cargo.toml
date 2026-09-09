@@ -1,0 +1,14 @@
+[package]
+name = "rustasea-storage"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea storage — read-through disk Storage, path confinement, local disk"
+
+[dependencies]
+async-trait = { workspace = true }
+object_store = "0.14.1"
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }

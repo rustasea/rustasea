@@ -99,3 +99,9 @@ enum JsonApiError { RelationNotLoaded { relation: String } }
 | BDD | `test-generation` — `@jsonapi` with sparse outline |
 | Contract | `test-generation` — `jsonapi.schema.json` + snapshot |
 | Chaos | `non-functional-testing` — include large compound doc size guard |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

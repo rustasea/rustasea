@@ -1,4 +1,4 @@
-# Rustavel — Functional Specification Document (FSD)
+# RustaSea — Functional Specification Document (FSD)
 
 > **Status:** Final — P6 Planning Docs Finalization
 > **Date:** 2026-09-07 · **Finalized:** 2026-09-07  
@@ -30,7 +30,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 ## 3. Feature Specifications
 
-### 3.1 M0 — Bootstrap & Core (`rustavel-foundation`, `rustavel-config`)
+### 3.1 M0 — Bootstrap & Core (`rustasea-foundation`, `rustasea-config`)
 
 #### FS-M0-01 — Application Boot & Provider Lifecycle — *Must*
 
@@ -82,7 +82,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 ---
 
-### 3.2 M1 — Routing & HTTP (`rustavel-router`, `rustavel-http`)
+### 3.2 M1 — Routing & HTTP (`rustasea-router`, `rustasea-http`)
 
 #### FS-M1-01 — HTTP Routing (methods, groups, `resource`) — *Must*
 
@@ -106,7 +106,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 - **PRD FRs:** FR-103, FR-109 (BR-02/BR-06) · **Laravel 13:** #20 · **Size:** S
 - **Inputs:** Registered route table + binding field metadata (e.g., `{user:slug}`)
-- **Processing:** `cargo rustavel route:list [--json]` serializes each route as `{ method, path, name, middleware[], binding_fields[] }`. Binding fields derived from `{param:field}` syntax.
+- **Processing:** `cargo rustasea route:list [--json]` serializes each route as `{ method, path, name, middleware[], binding_fields[] }`. Binding fields derived from `{param:field}` syntax.
 - **Outputs:** Human table (default) + JSON (with `--json`)
 - **NFRs:** NFR-Mai-01 (observability)
 
@@ -138,7 +138,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 ---
 
-### 3.3 M2 — ORM & Database (`rustavel-orm`, `rustavel-macros`)
+### 3.3 M2 — ORM & Database (`rustasea-orm`, `rustasea-macros`)
 
 #### FS-M2-01 — Connection & Driver Abstraction — *Must*
 
@@ -177,7 +177,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 #### FS-M2-05 — Migrations & Seeders — *Must*
 
 - **PRD FRs:** FR-208 (BR-03) · **Size:** M
-- **Inputs:** `cargo rustavel make:migration create_users_table` scaffold; `migrate`/`migrate:fresh`/`migrate:fresh --seed` args
+- **Inputs:** `cargo rustasea make:migration create_users_table` scaffold; `migrate`/`migrate:fresh`/`migrate:fresh --seed` args
 - **Processing:** Versioned files `YYYY_MM_DD_HHMMSS_name.rs` with `up`/`down`. `migrate` runs pending ups in order, records in `migrations` table. `migrate:fresh` drops all then re-ups. Seeders run via `Seeder::run(&mut conn)` idempotently.
 - **Outputs:** Migration table state; `migrate:status` introspection
 - **Errors:** `MigrationError::AlreadyApplied` · `MigrationError::Irreversible { name }`
@@ -193,7 +193,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 ---
 
-### 3.4 M3 — Auth, Middleware & Validation (`rustavel-auth`, `rustavel-validation`)
+### 3.4 M3 — Auth, Middleware & Validation (`rustasea-auth`, `rustasea-validation`)
 
 #### FS-M3-01 — Guards (JWT + Session, `Auth::extend`) — *Must*
 
@@ -233,7 +233,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 - **PRD FRs:** FR-307, FR-308, FR-309 (BR-04) · **Laravel 13:** #19 · **Size:** M
 - **Inputs:** `#[validate] struct CreateUser { #[validate(length(min=3))] name: String, #[validate(email)] email: String, #[validate(contains_strict = "admin")] role: String }`
-- **Processing:** `validator` derive + `rustavel-validation` strict helpers. `in_array`/`contains`/`doesnt_contain` compare with `==` and type check — `"1" != 1`. Failures aggregate into `ErrorBag { field -> Vec<ValidationError> }`. `FormRequest`-equivalent trait `Validatable`.
+- **Processing:** `validator` derive + `rustasea-validation` strict helpers. `in_array`/`contains`/`doesnt_contain` compare with `==` and type check — `"1" != 1`. Failures aggregate into `ErrorBag { field -> Vec<ValidationError> }`. `FormRequest`-equivalent trait `Validatable`.
 - **Outputs:** `422` with `ErrorBag` JSON on failure; `Ok(T)` into handler on success
 - **Errors:** `ValidationError::StrictMismatch { expected, actual }`
 - **Edge cases:** `null` vs missing field — `Option<T>` distinction preserved
@@ -247,7 +247,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 ---
 
-### 3.5 M4 — Queue, Cache, Scheduling & Events (`rustavel-queue`, `rustavel-cache`, `rustavel-events`, `rustavel-schedule`)
+### 3.5 M4 — Queue, Cache, Scheduling & Events (`rustasea-queue`, `rustasea-cache`, `rustasea-events`, `rustasea-schedule`)
 
 #### FS-M4-01 — Typed Job System & Retry (`Job<T>`, `ShouldRetry`, `#[tries]` etc.) — *Must*
 
@@ -295,12 +295,12 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 ---
 
-### 3.6 M5 — DX, CLI & Testing (`rustavel-cli`, `rustavel-macros`, `rustavel-testing`)
+### 3.6 M5 — DX, CLI & Testing (`rustasea-cli`, `rustasea-macros`, `rustasea-testing`)
 
-#### FS-M5-01 — CLI (`cargo rustavel`, `list`, `clap`+`xtask`) — *Must*
+#### FS-M5-01 — CLI (`cargo rustasea`, `list`, `clap`+`xtask`) — *Must*
 
 - **PRD FRs:** FR-500, FR-502, FR-503, FR-505 (BR-06) · **Size:** M
-- **Inputs:** `cargo rustavel <command> [args] [--json]` via `xtask` binary `cargo-xtask`; `#[command]` proc-macro on `struct SendEmailsCommand`
+- **Inputs:** `cargo rustasea <command> [args] [--json]` via `xtask` binary `cargo-xtask`; `#[command]` proc-macro on `struct SendEmailsCommand`
 - **Processing:** `clap` derive for each `Command` with typed `Args`/`Flags`; `list` enumerates registered commands with `#[usage]`/`#[help]`/`#[hidden]`. Prompts `ask`/`secret`/`confirm`/`choice`/`multiSelect` via `dialoguer`; `table`/`progressBar`/`spinner` via `indicatif`/`comfy-table`. `Artisan::call("migrate", args)` invokes command in-process without subprocess.
 - **Outputs:** Exit code `0` on success; `--json` machine output; `Artisan::call` returns `CommandOutput`
 - **Edge cases:** unknown command suggests `did you mean?` via `strsim`
@@ -308,7 +308,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 #### FS-M5-02 — `make:*` Generators — *Must*
 
 - **PRD FRs:** FR-501, FR-502, FR-506 (BR-06) · **Laravel 13:** #7 attrs + #2 agents · **Size:** L (XL split: by generator group)
-- **Inputs:** `cargo rustavel make:controller UserController --resource`; `make:model Post -m`; `make:agent SupportAgent`
+- **Inputs:** `cargo rustasea make:controller UserController --resource`; `make:model Post -m`; `make:agent SupportAgent`
 - **Processing (per generator):**
 
   | Generator | Output path | Template content |
@@ -334,7 +334,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 - **PRD FRs:** FR-506 (BR-06) · **Laravel 13:** #7 · **Size:** M
 - **Inputs:** Attributes on jobs/commands/handlers: `#[tries(3)]`, `#[backoff(10)]`, `#[timeout(30)]`, `#[failOnTimeout]`, `#[withoutBroadcasting]`, `#[middleware(...)]`, `#[authorize(...)]`, `#[usage("...")]`, `#[help("...")]`, `#[hidden]`, `#[repairToolCalls]`
-- **Processing:** `rustavel-macros` proc-macros expand to trait impls / registry entries at compile time; no reflection.
+- **Processing:** `rustasea-macros` proc-macros expand to trait impls / registry entries at compile time; no reflection.
 - **Outputs:** Compile-time configured behavior for decorated items
 - **Edge cases:** conflicting `#[tries]` + `ShouldRetryUntil` explicit impl → attribute wins with warning
 
@@ -349,7 +349,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 ---
 
-### 3.7 M6 — Advanced (`rustavel-broadcast`, `rustavel-storage`, `rustavel-search`, `rustavel-ai`)
+### 3.7 M6 — Advanced (`rustasea-broadcast`, `rustasea-storage`, `rustasea-search`, `rustasea-ai`)
 
 #### FS-M6-01 — Broadcasting (WebSocket + SSE + Channel Auth) — *Must*
 
@@ -391,7 +391,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 - **Processing:** Trait `AiProvider` covers `text`/`image`/`audio`/`embeddings`/`reranking`/`files`/`vector_stores`. Adapters per provider: `openai`, `anthropic`, `gemini`, `azure`, `bedrock`, `groq`, `xai`, `deepseek`, `mistral`, `ollama`, `openrouter`, `openai_compatible`. Each adapter feature-flagged (`features = ["openai"]`). Errors typed per provider but surfaced as `AiError::Provider { name, source }`.
 - **Outputs:** `AiResponse { text, usage, tool_calls }` or streaming `AiChunk` iterable
 - **Errors:** `AiError::UnsupportedCapability { provider, capability }`
-- **NFRs:** NFR-Sca-02 (`rustavel-ai` opt-in; core does not pull AI deps)
+- **NFRs:** NFR-Sca-02 (`rustasea-ai` opt-in; core does not pull AI deps)
 - **Edge cases:** streaming with provider that doesn't support streaming → `UnsupportedCapability`
 
 #### FS-M6-06 — AI Agents (Tools, Streaming, Broadcast, Queue, MCP, Sub-Agents) — *Must*
@@ -491,19 +491,25 @@ Same as `brd.md` §4 + `prd.md` §1. Any out-of-scope item requires an ADR to pr
 
 | FS | PRD FRs | Architecture (crate / design doc) | Tests (BDD tag → QA artifacts) |
 |----|---------|-----------------------------------|--------------------------------|
-| FS-M0-01 | FR-000/003/008 | `rustavel-foundation`: `architecture.md §2-3` (BC-0, DAG, `Application::configure`) · `tdd.md BC-0` | `@foundation` · `application/testing/stubs/m0-foundation.stub.rs` + `test-plan.md` BC-0 |
-| FS-M0-02 | FR-002/006 | `rustavel-container` / `architecture.md §3` + `tdd.md BC-0` + `ADR-005 AppState` | `@container` · same M0 stub |
-| FS-M0-03 | FR-001/007 | `rustavel-config` · `architecture.md §5` (layered config) | `@foundation` (layered config scenario) |
-| FS-M0-04 | FR-004 | `rustavel-foundation` Runner/Shutdown · `capacity.md §2 S-08` | `@foundation` graceful shutdown |
-| FS-M1-01..06 | FR-100..109 | `rustavel-router`/`rustavel-http`/`rustavel-macros` · `architecture.md BC-1` · `tdd.md BC-1` · `ADR-001 axum` · `api-contracts.md §1` | `@routing`, `@routing-validation`, `@observability-tooling`, `@http-client-process` · `contracts/route-list.schema.json` + snapshot |
-| FS-M2-01..06 | FR-200..210 | `rustavel-orm` · `architecture.md BC-2` · `tdd.md BC-2` · `database.md §2-5` · `ADR-002 sqlx/sea-orm` + `ADR-006 vector` | `@orm`, `@query-builder-additions`, `@upsert-delete`, `@collection-serialization`, `@vector-search` · `fixtures/vector-dim.json` + `m2-orm.stub.rs` |
-| FS-M3-01..06 | FR-300..311 | `rustavel-auth`/`rustavel-validation` · `architecture.md BC-3` · `tdd.md BC-3` · `api-contracts.md §2` · `fixtures/csrf-matrix.json` + `allowlist-corpus.json` + `jwt-claims.schema.json` | `@auth`, `@csrf-origin`, `@cache-session-hardening`, `@attributes`, `@throttle` |
-| FS-M4-01..05 | FR-400..410 | `rustavel-queue`/`rustavel-cache`/`rustavel-events`/`rustavel-schedule` · `architecture.md BC-4` · `tdd.md BC-4` · `database.md §2 (jobs/failed_jobs/cache)` · `api-contracts.md §3` · `capacity.md §3` · `contracts/job-payload.schema.json` | `@queue-routing`, `@queue`, `@cache-touch`, `@contracts-expansion`, `@schedule`, `@queue-metrics` + `job-payload` snapshot |
-| FS-M5-01..04 | FR-500..509 | `rustavel-cli`/`rustavel-testing` · `architecture.md BC-5` · `component-inventory.md` · `tdd.md BC-5` · `api-contracts.md §4` | `@cli`, `@generators`, `@testing` · full CLI matrix in `test-cases.md` |
-| FS-M6-01..07 | FR-600..612 | `rustavel-broadcast`/`rustavel-storage`/`rustavel-search`/`rustavel-ai` · `architecture.md BC-6` · `tdd.md BC-6` · `api-contracts.md §5` · `database.md §2 (vector/storage)` · `fixtures/path-traversal.corpus.json` + `contracts/jsonapi.schema.json` + snapshots | `@broadcast`, `@storage-readthrough`, `@jsonapi`, `@ai-sdk`, `@ai-agents`, `@vector-search` · `cross-nfr-contracts.stub.rs` |
+| FS-M0-01 | FR-000/003/008 | `rustasea-foundation`: `architecture.md §2-3` (BC-0, DAG, `Application::configure`) · `tdd.md BC-0` | `@foundation` · `application/testing/stubs/m0-foundation.stub.rs` + `test-plan.md` BC-0 |
+| FS-M0-02 | FR-002/006 | `rustasea-container` / `architecture.md §3` + `tdd.md BC-0` + `ADR-005 AppState` | `@container` · same M0 stub |
+| FS-M0-03 | FR-001/007 | `rustasea-config` · `architecture.md §5` (layered config) | `@foundation` (layered config scenario) |
+| FS-M0-04 | FR-004 | `rustasea-foundation` Runner/Shutdown · `capacity.md §2 S-08` | `@foundation` graceful shutdown |
+| FS-M1-01..06 | FR-100..109 | `rustasea-router`/`rustasea-http`/`rustasea-macros` · `architecture.md BC-1` · `tdd.md BC-1` · `ADR-001 axum` · `api-contracts.md §1` | `@routing`, `@routing-validation`, `@observability-tooling`, `@http-client-process` · `contracts/route-list.schema.json` + snapshot |
+| FS-M2-01..06 | FR-200..210 | `rustasea-orm` · `architecture.md BC-2` · `tdd.md BC-2` · `database.md §2-5` · `ADR-002 sqlx/sea-orm` + `ADR-006 vector` | `@orm`, `@query-builder-additions`, `@upsert-delete`, `@collection-serialization`, `@vector-search` · `fixtures/vector-dim.json` + `m2-orm.stub.rs` |
+| FS-M3-01..06 | FR-300..311 | `rustasea-auth`/`rustasea-validation` · `architecture.md BC-3` · `tdd.md BC-3` · `api-contracts.md §2` · `fixtures/csrf-matrix.json` + `allowlist-corpus.json` + `jwt-claims.schema.json` | `@auth`, `@csrf-origin`, `@cache-session-hardening`, `@attributes`, `@throttle` |
+| FS-M4-01..05 | FR-400..410 | `rustasea-queue`/`rustasea-cache`/`rustasea-events`/`rustasea-schedule` · `architecture.md BC-4` · `tdd.md BC-4` · `database.md §2 (jobs/failed_jobs/cache)` · `api-contracts.md §3` · `capacity.md §3` · `contracts/job-payload.schema.json` | `@queue-routing`, `@queue`, `@cache-touch`, `@contracts-expansion`, `@schedule`, `@queue-metrics` + `job-payload` snapshot |
+| FS-M5-01..04 | FR-500..509 | `rustasea-cli`/`rustasea-testing` · `architecture.md BC-5` · `component-inventory.md` · `tdd.md BC-5` · `api-contracts.md §4` | `@cli`, `@generators`, `@testing` · full CLI matrix in `test-cases.md` |
+| FS-M6-01..07 | FR-600..612 | `rustasea-broadcast`/`rustasea-storage`/`rustasea-search`/`rustasea-ai` · `architecture.md BC-6` · `tdd.md BC-6` · `api-contracts.md §5` · `database.md §2 (vector/storage)` · `fixtures/path-traversal.corpus.json` + `contracts/jsonapi.schema.json` + snapshots | `@broadcast`, `@storage-readthrough`, `@jsonapi`, `@ai-sdk`, `@ai-agents`, `@vector-search` · `cross-nfr-contracts.stub.rs` |
 
 *P6 traceability — every FS → FR → crate/ADR/schema/fixture/BDD tag is enumerated; gaps close via `manifest.md` module index and `qa-design.md`/`test-plan.md`.*
 
 ---
 
 *Finalized P6 · `user-stories.md` (stories per FS with EARS AC) and `bdd-scenarios.md` (Gherkin per @tag). Tests MUST follow `test-generation/rules/bdd-gherkin.md` (business language, atomic scenarios, Scenario Outline + Examples, no technical terms).*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

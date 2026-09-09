@@ -53,3 +53,9 @@
 | HTTP-SEC-003 | Auditor | Contract `RouteEntry` binding_fields injection | path `/users/{user:slug OR 1=1}` | `InvalidPattern` via `RouteError::InvalidPattern` |
 | HTTP-SEC-004 | Client | Empty prefix normalization | `prefix("/api/v1")` empty variation + trailing slash | slash-normalized canonical path invariant |
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -1,4 +1,4 @@
-# Rustavel — Blueprint Audit (P8A: D1–D6)
+# RustaSea — Blueprint Audit (P8A: D1–D6)
 
 > **Task:** TASK-014 | **Date:** 2026-09-07 | **Auditor:** executor
 > **Scope:** `.agents/documents/` entire tree + project root orphan scan
@@ -115,7 +115,7 @@
 | Milestone DAG across `brd.md` §4, `prd.md` §3, `fsd.md` §5, `tdd.md` §5, `architecture.md` §3, `domain.md` §5, `roadmap.md` §2 | ✅ No cycles; `M0 → M1/M2 → M3 → M4 → M5 → M6` consistent everywhere |
 | Tech stack (`tokio`, `axum`, `sqlx`, `deadpool`, `pgvector`, `testcontainers`, etc.) | ✅ Identical in `brd.md` §4, `brief.md`, `architecture.md` §3, `tdd.md` §2, `test-plan.md` §3 |
 | Laravel 13 feature #1–#20 mapping | ✅ 20/20 traced in `prd.md` §8, mirrored in `fsd.md` §6, `user-stories.md` Coverage Checklist, `bdd-scenarios.md` §3, `test-cases.md` Traceability Summary, `allocation-audit.md` §4 |
-| Crate names vs `component-inventory.md` vs `architecture.md` §3 vs `domain.md` BC table | ✅ 22 crates + `xtask` consistent; slug `rustavel-*` kebab-case |
+| Crate names vs `component-inventory.md` vs `architecture.md` §3 vs `domain.md` BC table | ✅ 22 crates + `xtask` consistent; slug `rustasea-*` kebab-case |
 | `vector` feature flag (M2 initial vs M6 full) | ✅ Split FR-207 (M2) / FR-602 (M6) documented in `prd.md` §8, `allocation-audit.md` Note A, `tdd.md` BC-2/BC-6 |
 | Error codes `E####` | ✅ `flows.md` §5.4 + `design-system.md` §4 consistent (20 codes) |
 | NFR targets (Per-01..04, Sec-01.., Rel-01..) | ✅ Same values in `prd.md` §4, `tdd.md` §4, `capacity.md` §2, `test-plan.md` §7 |
@@ -182,7 +182,7 @@
 
 | Check | Evidence | Verdict |
 |---|---|---|
-| 4-concern rule | `test-plan.md` §2.1 + §5 matrix: DB/Service/State/UI per milestone with Rustavel mapping; priority DB > Service > State > UI | PASS |
+| 4-concern rule | `test-plan.md` §2.1 + §5 matrix: DB/Service/State/UI per milestone with RustaSea mapping; priority DB > Service > State > UI | PASS |
 | Pyramid per milestone | `test-plan.md` §4: M0 65/25/5/5 → M6 50/25/15/10, aggregate 62/25/8/5; no cone | PASS |
 | Floor tests per concern | `test-plan.md` §4 table (M0 ≥30 → M6 ≥60) consistent with case counts | PASS |
 | Case catalog | `test-cases.md` 134 cases + decision-table row expansions; techniques EP/BVA/Decision Table/State Transition/Error Guessing per feature | PASS |
@@ -250,11 +250,11 @@
 
 ```mermaid
 flowchart TB
-  UMBRELLA["rustavel (umbrella)"]
-  UMBRELLA --> FND["rustavel-foundation"]
-  UMBRELLA --> CFG["rustavel-config"]
-  UMBRELLA --> MAC["rustavel-macros"]
-  UMBRELLA --> RTR["rustavel-router"]
+  UMBRELLA["rustasea (umbrella)"]
+  UMBRELLA --> FND["rustasea-foundation"]
+  UMBRELLA --> CFG["rustasea-config"]
+  UMBRELLA --> MAC["rustasea-macros"]
+  UMBRELLA --> RTR["rustasea-router"]
   RTR --> FND
   %% ... (one edge per crate, same as text DAG but Mermaid)
 ```
@@ -283,7 +283,7 @@ Use `mermaid-js validate_and_render_mermaid_diagram` before commit per `review-a
 
 1. Fix D2-F01 (Mermaid) — no new task required.
 2. Continue TASK-013 to produce `application/modules/<slug>/overview.md` ×7.
-3. Proceed to Sprint 01 (`rustavel-foundation` + `rustavel-config`) per `tasks/sprints/sprint-01.md`.
+3. Proceed to Sprint 01 (`rustasea-foundation` + `rustasea-config`) per `tasks/sprints/sprint-01.md`.
 
 ---
 
@@ -304,3 +304,9 @@ Use `mermaid-js validate_and_render_mermaid_diagram` before commit per `review-a
 ---
 
 *Audit per `review-audit` Blueprint Audit FSM A0→A2 (A3 task generation not required at blueprint-only stage; A4 fix is D2-F01 single-point; A5 re-audit on next commit). Cross-references: `prd.md` §8, `allocation-audit.md` §1 (76/76), `test-plan.md` §11, `validation.md` §6 (Go conditional).*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

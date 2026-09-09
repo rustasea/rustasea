@@ -16,3 +16,9 @@ Covers `Application::configure()` provider DAG, `Container::Make<T>` (`Bind`/`Si
 ## 3. Links
 
 Specs: [test-boot-container.md](test-boot-container.md) · Module feature docs: [boot](../../modules/foundation/boot.md) · [container](../../modules/foundation/container.md) · [config](../../modules/foundation/config.md)
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

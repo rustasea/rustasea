@@ -136,3 +136,9 @@ CLI `route:list` shows middleware column per route as `["throttle:60,1","cors"]`
 | BDD | `test-generation` `@routing-validation` |
 | Security | `security-audit` — `X-Forwarded-For` spoof, CORS suffix trick |
 | Chaos | `non-functional-testing` — burst beyond throttle window under `oha` |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

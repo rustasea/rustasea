@@ -1,9 +1,9 @@
-# Rustavel — CLI & DX User Flows
+# RustaSea — CLI & DX User Flows
 
-> **Owner:** vheins/rustavel | **Phase:** P4 Design Planning (CLI & DX)  
+> **Owner:** vheins/rustasea | **Phase:** P4 Design Planning (CLI & DX)  
 > **Date:** 2026-09-07 | **Task:** TASK-009 (parent TASK-001)  
 > **Parents:** `requirements/brief.md` + `requirements/brd.md` + `requirements/prd.md` (FR-500 … FR-509, FR-501, FR-103, FR-208, FR-402, FR-408) + `requirements/fsd.md` (FS-M5-01, FS-M5-02, FS-M0-03) + `requirements/user-stories.md` (US-M5-01 … US-M5-04) + `requirements/bdd-scenarios.md`  
-> **Adaptation note:** Rustavel has no browser UI. This document adapts `design-specification` wireframe/user-flow rules to **CLI DX** — every diagram is a terminal interaction flow, not a screen wireframe. Scaffold layout replaces screen layout. Navigation = command hierarchy.
+> **Adaptation note:** RustaSea has no browser UI. This document adapts `design-specification` wireframe/user-flow rules to **CLI DX** — every diagram is a terminal interaction flow, not a screen wireframe. Scaffold layout replaces screen layout. Navigation = command hierarchy.
 
 ---
 
@@ -26,7 +26,7 @@ Every flow below lists **Node Table** and **Edge Table** with consistent IDs, pl
 ### 2.1 Route Tree (CLI command tree)
 
 ```
-cargo rustavel [Public — no running app required]
+cargo rustasea [Public — no running app required]
 ├── new <app>                         [Public]  scaffold new workspace  (FR-005 / FS-M0-01)
 ├── list [--json] [--all]             [Public]  enumerate commands      (FR-500)
 ├── make:*                            [Public]  generators              (FR-501)
@@ -63,7 +63,7 @@ cargo rustavel [Public — no running app required]
 
 ```mermaid
 flowchart TB
-    ROOT["cargo rustavel<br/>[entry — xtask binary]"]
+    ROOT["cargo rustasea<br/>[entry — xtask binary]"]
 
     ROOT --> NEW["new <app><br/>scaffold workspace"]
     ROOT --> LIST["list --json --all<br/>enumerate commands"]
@@ -136,7 +136,7 @@ flowchart TB
 
 | Zone | Directory | Created by | Convention |
 |------|-----------|------------|------------|
-| BOOT | `bootstrap/` | `cargo rustavel new` | `Application::configure()` lives in `app.rs`; providers registered in `providers.rs` — never hand-edit generated workspace `Cargo.toml` members |
+| BOOT | `bootstrap/` | `cargo rustasea new` | `Application::configure()` lives in `app.rs`; providers registered in `providers.rs` — never hand-edit generated workspace `Cargo.toml` members |
 | CONFIG | `config/` | `new` | TOML files typed via `serde`; env overlay at runtime; missing file = defaults (non-fatal) — see FR-001 |
 | ROUTES | `routes/web.rs` | `new` | Route definitions; domain routes before non-domain (FR-102) |
 | DB | `database/` | `make:migration` / `make:seeder` | `YYYY_MM_DD_HHMMSS_name.rs` with `up`/`down`; `migrations` table tracks state |
@@ -158,13 +158,13 @@ flowchart TB
 
 ## 4. Journey Flows
 
-### 4.1 F-01 — New Application (`cargo rustavel new <app>`)
+### 4.1 F-01 — New Application (`cargo rustasea new <app>`)
 
-**User goal:** Scaffold a bootable Rustavel workspace that `cargo run` can boot in <2s.
+**User goal:** Scaffold a bootable RustaSea workspace that `cargo run` can boot in <2s.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> ValidateName : cargo rustavel new &lt;app&gt;
+    [*] --> ValidateName : cargo rustasea new &lt;app&gt;
     ValidateName --> ExistsCheck : name valid
     ValidateName --> ERR_InvalidName : empty / reserved / non-kebab-or-snake
     ExistsCheck --> Generate : path not exists
@@ -183,7 +183,7 @@ stateDiagram-v2
 
 | ID | Type | Label | Description |
 |----|------|-------|-------------|
-| N1 | input | `cargo rustavel new <app>` | Shell invocation with app name arg |
+| N1 | input | `cargo rustasea new <app>` | Shell invocation with app name arg |
 | N2 | decision | ValidateName | Check `<app>` is non-empty, not reserved (`test`, `target`), kebab/snake allowed |
 | N3 | decision | ExistsCheck | `fs::exists("./<app>")` — must be absent |
 | N4 | action | Generate | Write `Cargo.toml`, `bootstrap/`, `config/`, `routes/web.rs`, `database/`, `storage/`, `.env.example`, `app/` dirs (see scaffold map) |
@@ -209,13 +209,13 @@ stateDiagram-v2
 
 ---
 
-### 4.2 F-02 — Code Generation (`cargo rustavel make:*`)
+### 4.2 F-02 — Code Generation (`cargo rustasea make:*`)
 
 **User goal:** Generate `rustfmt`+`clippy`-clean scaffolding for any domain concept in one command; generator must not overwrite without `--force`.
 
 ```mermaid
 flowchart TB
-    START(["cargo rustavel make:<kind> <Name> [--flags]"])
+    START(["cargo rustasea make:<kind> <Name> [--flags]"])
     START --> PARSE{{"Parse kind + Name<br/>kind ∈ 12 generators<br/>Name PascalCase?"}}
     PARSE -- "unknown kind" --> ERR_KIND["stderr: unknown generator 'make:foo'<br/>did you mean 'make:tool'?<br/>exit 1"]
     PARSE -- "invalid Name" --> ERR_NAME["stderr: invalid name 'foo_bar'<br/>hint: use PascalCase e.g. UserController<br/>exit 1"]
@@ -266,7 +266,7 @@ flowchart TB
 | `ERR_NAME` | Validate `Name` matches `^[A-Z][A-Za-z0-9]*$` (PascalCase); for `make:migration` allow `snake_case`; hint on failure |
 | `ERR_EXISTS` | `GeneratorError::AlreadyExists { path }`; abort without overwrite; `--force` bypasses this gate |
 
-**Navigation triggers:** Every generator's *telescope* step = `cargo rustavel <tab>` completion shows generator list; `make:<kind> "?"` prints usage line from `#[usage]` attribute.
+**Navigation triggers:** Every generator's *telescope* step = `cargo rustasea <tab>` completion shows generator list; `make:<kind> "?"` prints usage line from `#[usage]` attribute.
 
 ---
 
@@ -274,8 +274,8 @@ flowchart TB
 
 ```mermaid
 stateDiagram-v2
-    [*] --> ListPending : cargo rustavel migrate
-    [*] --> FreshConfirm : cargo rustavel migrate:fresh
+    [*] --> ListPending : cargo rustasea migrate
+    [*] --> FreshConfirm : cargo rustasea migrate:fresh
     ListPending --> RunUps : pending > 0
     ListPending --> Noop : pending = 0
     RunUps --> Record : each up() succeeds
@@ -297,7 +297,7 @@ stateDiagram-v2
 
 | ID | Type | Label | Description |
 |----|------|-------|-------------|
-| N1 | screen | `migrate` | `cargo rustavel migrate` — discover pending files vs `migrations` table |
+| N1 | screen | `migrate` | `cargo rustasea migrate` — discover pending files vs `migrations` table |
 | N2 | decision | ListPending | Compare filesystem `YYYY_MM_DD*` vs DB `migrations` table |
 | N3 | screen | Noop | `stdout: Nothing to migrate. (0 pending)` — exit 0 (idempotent, NFR-Rel-02) |
 | N4 | action | RunUps | Execute `up(&mut conn)` per pending file in timestamp order inside a transaction |
@@ -322,7 +322,7 @@ stateDiagram-v2
 
 ```mermaid
 flowchart TB
-    RSTART(["cargo rustavel route:list [--json]"])
+    RSTART(["cargo rustasea route:list [--json]"])
     RSTART --> RLOAD["Load AppState + route table<br/>requires successful boot"]
     RLOAD -- boot fail --> RERR_BOOT["stderr: boot failed — <BootError><br/>exit 1"]
     RLOAD -- ok --> RFORMAT{{"--json ?"}}
@@ -331,7 +331,7 @@ flowchart TB
     RJSON --> REND["exit 0"]
     RTABLE --> REND
 
-    MSTART(["cargo rustavel show:model <Name> [--json]"])
+    MSTART(["cargo rustasea show:model <Name> [--json]"])
     MSTART --> MLOAD["Resolve #[derive(Model)] metadata<br/>via ModelInspector"]
     MLOAD -- not found --> MERR["stderr: Model 'Foo' not found<br/>hint: check app/models/foo.rs<br/>exit 1"]
     MLOAD -- ok --> MFORMAT{{"--json ?"}}
@@ -349,7 +349,7 @@ flowchart TB
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Booted : cargo rustavel queue:work --queue=podcasts
+    [*] --> Booted : cargo rustasea queue:work --queue=podcasts
     Booted --> Poll : boot + Queue::route registry loaded
     Poll --> Reserved : job available → Reserved
     Poll --> Poll : empty → sleep poll_interval
@@ -365,8 +365,8 @@ stateDiagram-v2
     Stopped --> [*]
 
     state DeadLetter {
-        [*] --> Listed : cargo rustavel queue:failed [--json]
-        Listed --> Retried : cargo rustavel queue:retry <id>
+        [*] --> Listed : cargo rustasea queue:failed [--json]
+        Listed --> Retried : cargo rustasea queue:retry <id>
         Retried --> Poll : re-enqueued as Pending
     }
 ```
@@ -393,9 +393,9 @@ stateDiagram-v2
     SkipPaused --> Running
     SkipLock --> Running
     SkipRunning --> Running
-    Running --> Paused : cargo rustavel schedule:pause → sets flag + emits SchedulePaused
+    Running --> Paused : cargo rustasea schedule:pause → sets flag + emits SchedulePaused
     Paused --> PausedTick : tick → always SkipPaused
-    Paused --> Running : cargo rustavel schedule:resume → clears flag + emits ScheduleResumed
+    Paused --> Running : cargo rustasea schedule:resume → clears flag + emits ScheduleResumed
     PausedTick --> Paused
 ```
 
@@ -489,3 +489,9 @@ error[E<CODE>]: <title>
 ---
 
 *Generated for TASK-009 · P4 Design Planning — CLI & DX design. Adapted from `design-specification` wireframe/user-flow rules to CLI/framework DX context (no browser wireframes — CLI flows + scaffold layouts per BRD instruction).*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

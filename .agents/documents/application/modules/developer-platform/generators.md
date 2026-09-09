@@ -4,7 +4,7 @@
 > **Stories:** US-M5-02 (make:* rustfmt/clippy clean), US-M5-03 (declarative attributes) · **BDD:** `@generators`, `@attributes`
 
 ## 1. Feature Overview
-- **Brief Description:** `cargo rustavel make:controller UserController [--resource]` → `app/http/controllers/user_controller.rs` (with `index`/`store`/`show`/`update`/`destroy` if `--resource`), `make:model Post -m` → `app/models/post.rs` with `#[derive(Model)]` + `Factory` + migration if `-m`, `make:provider/provider`/`command`/`job`/`event`/`listener`/`observer`/`test`/`seeder`/`agent`/`tool`, each template `rustfmt`+`clippy -- -D warnings` clean (NFR-Usa-03), `GeneratorError::AlreadyExists { path }` without `--force`, declarative attributes `#[tries(3)]`/`#[backoff(10)]`/`#[timeout(30)]`/`#[failOnTimeout]`/`#[withoutBroadcasting]`/`#[middleware]`/`#[authorize]`/`#[usage]`/`#[help]`/`#[hidden]`/`#[repairToolCalls]` (FSD FS-M5-03).
+- **Brief Description:** `cargo rustasea make:controller UserController [--resource]` → `app/http/controllers/user_controller.rs` (with `index`/`store`/`show`/`update`/`destroy` if `--resource`), `make:model Post -m` → `app/models/post.rs` with `#[derive(Model)]` + `Factory` + migration if `-m`, `make:provider/provider`/`command`/`job`/`event`/`listener`/`observer`/`test`/`seeder`/`agent`/`tool`, each template `rustfmt`+`clippy -- -D warnings` clean (NFR-Usa-03), `GeneratorError::AlreadyExists { path }` without `--force`, declarative attributes `#[tries(3)]`/`#[backoff(10)]`/`#[timeout(30)]`/`#[failOnTimeout]`/`#[withoutBroadcasting]`/`#[middleware]`/`#[authorize]`/`#[usage]`/`#[help]`/`#[hidden]`/`#[repairToolCalls]` (FSD FS-M5-03).
 - **Role in Module:** Scaffolds every domain (BC-0..BC-4, BC-6) — the only writer into `app/` besides the developer.
 
 ## 2. User Stories
@@ -26,10 +26,10 @@
 %%{init: {"theme": "base", "themeVariables": {"background": "#ffffff", "mainBkg": "#ffffff", "primaryColor": "#bbdefb", "secondaryColor": "#fff9c4", "tertiaryColor": "#c8e6c9"}}}%%
 sequenceDiagram
     actor Dev as Developer
-    participant CLI as cargo rustavel make:*
+    participant CLI as cargo rustasea make:*
     participant FS as filesystem app/*
     participant Fmt as rustfmt + clippy
-    participant Macro as rustavel-macros attrs
+    participant Macro as rustasea-macros attrs
 
     Dev->>CLI: make:controller UserController --resource
     CLI->>FS: write app/http/controllers/user_controller.rs (index/store/...)
@@ -72,11 +72,11 @@ erDiagram
 
 ```rust
 // CLI (per generator)
-// cargo rustavel make:controller UserController [--resource]
-// cargo rustavel make:model Post -m  [--force]
+// cargo rustasea make:controller UserController [--resource]
+// cargo rustasea make:model Post -m  [--force]
 // + make:provider/command/job/event/listener/observer/test/seeder/agent/tool
 enum GeneratorError { AlreadyExists { path: String } }
-// Attributes expanded from rustavel-macros
+// Attributes expanded from rustasea-macros
 // #[tries(3)] #[backoff(10)] #[timeout(30)] #[failOnTimeout] #[withoutBroadcasting]
 // #[middleware("auth:jwt")] #[authorize("update", User)] #[usage("...")] #[help("...")] #[hidden] #[repairToolCalls]
 ```
@@ -112,3 +112,9 @@ enum GeneratorError { AlreadyExists { path: String } }
 | BDD | `test-generation` — `make:*` outline matrix |
 | Contract | `test-generation` — `ModelInspector` snapshot adjacency |
 | Chaos | `non-functional-testing` — `cargo check` <10s incremental |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

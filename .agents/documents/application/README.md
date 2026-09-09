@@ -1,4 +1,4 @@
-# Rustavel — Application Documentation
+# RustaSea — Application Documentation
 
 > **Status:** P8 Complete — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `requirements/{brd,prd,fsd,tdd,bdd-scenarios,user-stories}.md` · `design/{architecture,domain,database,api-contracts,component-inventory,flows}.md` · `design/decisions/ADR-00*.md` · `tasks/sprints/{manifest,sprint-0*.md}`
@@ -41,13 +41,13 @@ This tree is the **application-level deep documentation** produced at P8. It tur
 
 | # | Module slug | Crate(s) | Milestone | BR | Overview |
 |---|-------------|----------|-----------|----|----------|
-| 1 | `foundation` | `rustavel-foundation`, `rustavel-config`, `rustavel-container`, `rustavel` umbrella | M0 | BR-01 | [modules/foundation/overview.md](modules/foundation/overview.md) |
-| 2 | `http-routing` | `rustavel-router`, `rustavel-http`, `rustavel-macros` (route/middleware) | M1 | BR-02 | [modules/http-routing/overview.md](modules/http-routing/overview.md) |
-| 3 | `data-orm` | `rustavel-orm`, `rustavel-macros` (Model) | M2 | BR-03 | [modules/data-orm/overview.md](modules/data-orm/overview.md) |
-| 4 | `identity-access` | `rustavel-auth`, `rustavel-validation` | M3 | BR-04 | [modules/identity-access/overview.md](modules/identity-access/overview.md) |
-| 5 | `async-workloads` | `rustavel-queue`, `rustavel-cache`, `rustavel-events`, `rustavel-schedule` | M4 | BR-05 | [modules/async-workloads/overview.md](modules/async-workloads/overview.md) |
-| 6 | `developer-platform` | `rustavel-cli`, `rustavel-macros`, `rustavel-testing`, `xtask` | M5 | BR-06 | [modules/developer-platform/overview.md](modules/developer-platform/overview.md) |
-| 7 | `intelligence-delivery` | `rustavel-broadcast`, `rustavel-storage`, `rustavel-search`, `rustavel-ai`, `rustavel-jsonapi` | M6 | BR-07 | [modules/intelligence-delivery/overview.md](modules/intelligence-delivery/overview.md) |
+| 1 | `foundation` | `rustasea-foundation`, `rustasea-config`, `rustasea-container`, `rustasea` umbrella | M0 | BR-01 | [modules/foundation/overview.md](modules/foundation/overview.md) |
+| 2 | `http-routing` | `rustasea-router`, `rustasea-http`, `rustasea-macros` (route/middleware) | M1 | BR-02 | [modules/http-routing/overview.md](modules/http-routing/overview.md) |
+| 3 | `data-orm` | `rustasea-orm`, `rustasea-macros` (Model) | M2 | BR-03 | [modules/data-orm/overview.md](modules/data-orm/overview.md) |
+| 4 | `identity-access` | `rustasea-auth`, `rustasea-validation` | M3 | BR-04 | [modules/identity-access/overview.md](modules/identity-access/overview.md) |
+| 5 | `async-workloads` | `rustasea-queue`, `rustasea-cache`, `rustasea-events`, `rustasea-schedule` | M4 | BR-05 | [modules/async-workloads/overview.md](modules/async-workloads/overview.md) |
+| 6 | `developer-platform` | `rustasea-cli`, `rustasea-macros`, `rustasea-testing`, `xtask` | M5 | BR-06 | [modules/developer-platform/overview.md](modules/developer-platform/overview.md) |
+| 7 | `intelligence-delivery` | `rustasea-broadcast`, `rustasea-storage`, `rustasea-search`, `rustasea-ai`, `rustasea-jsonapi` | M6 | BR-07 | [modules/intelligence-delivery/overview.md](modules/intelligence-delivery/overview.md) |
 
 **Crate coverage:** every workspace crate appears in exactly one module row; see [modules/manifest.md](modules/manifest.md) for the FR→FS→FR→Module→API→Test trace.
 
@@ -66,7 +66,7 @@ All HTTP endpoints use `Content-Type: application/vnd.api+json` (JSON:API 1.1) u
 | async-workloads | [api/async-workloads/api-queue.md](api/async-workloads/api-queue.md) | `dispatch`/`chain`/`batch`/`queue:work`/`queue:retry`, metrics | Bearer |
 | async-workloads | [api/async-workloads/api-cache.md](api/async-workloads/api-cache.md) | `get`/`put`/`touch`/`remember`, `Lock::get`/`block` | — |
 | async-workloads | [api/async-workloads/api-events-schedule.md](api/async-workloads/api-events-schedule.md) | `dispatch`/`dispatchAfterResponse`, `schedule:run`/`pause`/`resume` | — |
-| developer-platform | [api/developer-platform/api-cli.md](api/developer-platform/api-cli.md) | `cargo rustavel list`, `make:*`, `Artisan::call` | — |
+| developer-platform | [api/developer-platform/api-cli.md](api/developer-platform/api-cli.md) | `cargo rustasea list`, `make:*`, `Artisan::call` | — |
 | intelligence-delivery | [api/intelligence-delivery/api-broadcast.md](api/intelligence-delivery/api-broadcast.md) | `ws://…/broadcasting/auth`, `GET /events` (SSE) + `ShouldBroadcast` | Bearer (private) |
 | intelligence-delivery | [api/intelligence-delivery/api-storage.md](api/intelligence-delivery/api-storage.md) | `GET /storage/{path}` read-through + `PathTraversal` | Bearer |
 | intelligence-delivery | [api/intelligence-delivery/api-jsonapi.md](api/intelligence-delivery/api-jsonapi.md) | JSON:API `data/included/links/meta`, sparse fieldsets | Bearer |
@@ -115,3 +115,9 @@ Cross-links at the bottom of every module/feature/API/testing doc point back to 
 - **Language:** English throughout; code fences tagged (`rust`, `json`, `yaml`, `mermaid`, `bash`).
 - **Mermaid:** every `overview.md` has 1 diagram; every feature doc has 2–3 (sequence + ERD + optional flow). Validated via `mermaid-js validate_and_render_mermaid_diagram`.
 - **Traceability:** `User Story → FS (fsd.md) → FR (prd.md) → Module/Crate → API → BDD tag → QA/TC` is enumerated in `modules/manifest.md` and mirrored in each feature doc's Cross-References table.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

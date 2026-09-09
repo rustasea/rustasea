@@ -1,9 +1,9 @@
-# Rustavel — Design System (Scaffold & Framework DX Tokens)
+# RustaSea — Design System (Scaffold & Framework DX Tokens)
 
-> **Owner:** vheins/rustavel | **Phase:** P4 Design Planning (CLI & DX)  
+> **Owner:** vheins/rustasea | **Phase:** P4 Design Planning (CLI & DX)  
 > **Date:** 2026-09-07 | **Task:** TASK-009 (parent TASK-001)  
 > **Parents:** `requirements/brief.md` + `requirements/brd.md` + `requirements/prd.md` (C-04, NFR-Usa-02/03, FR-501, FR-103) + `requirements/fsd.md` (FS-M5-02, FS-M0-03) + `docs/laravel-13-research.md`  
-> **Adaptation note:** Rustavel has no browser UI. This design system defines **scaffold tokens** (file naming, directory layout, generated code style) and **CLI DX tokens** (colours, spacing, typography for terminal output, error codes). It adapts `design-specification` design-system rules — the "brand" is the framework's developer experience. There is no Figma/MCP tool setup — `cargo` + `xtask` is the design tool.
+> **Adaptation note:** RustaSea has no browser UI. This design system defines **scaffold tokens** (file naming, directory layout, generated code style) and **CLI DX tokens** (colours, spacing, typography for terminal output, error codes). It adapts `design-specification` design-system rules — the "brand" is the framework's developer experience. There is no Figma/MCP tool setup — `cargo` + `xtask` is the design tool.
 
 ---
 
@@ -11,7 +11,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Brand name** | Rustavel |
+| **Brand name** | RustaSea |
 | **Primary concept** | Laravel ergonomics × Rust safety — the DX *is* the brand |
 | **Style direction** | Minimal, convention-over-configuration, zero-cost ergonomics — same values as the brief. Scaffold must feel "Laravel `artisan make:*`" to an ex-Laravel developer, and feel "idiomatic Rust" to a Rustacean on first `cargo run`. |
 | **Target framework** | Rust workspace (edition 2021, MSRV 1.80+) — `tokio` + `axum` + `sqlx` via `cargo xtask` + `clap` (derive) |
@@ -27,9 +27,9 @@ These tokens govern **every generated file and directory name**. Violating them 
 
 | Token | Value | Usage | Example |
 |-------|-------|-------|---------|
-| `scaffold.crate.prefix` | `rustavel-` | Workspace crate names | `rustavel-router`, `rustavel-orm` |
-| `scaffold.crate.umbrella` | `rustavel` | Re-export crate (like `laravel/framework`) | `use rustavel::prelude::*` |
-| `scaffold.xtask.bin` | `xtask` | CLI entry binary (`cargo xtask` + `cargo rustavel` alias) | `cargo rustavel list` dispatches to `xtask` |
+| `scaffold.crate.prefix` | `rustasea-` | Workspace crate names | `rustasea-router`, `rustasea-orm` |
+| `scaffold.crate.umbrella` | `rustasea` | Re-export crate (like `laravel/framework`) | `use rustasea::prelude::*` |
+| `scaffold.xtask.bin` | `xtask` | CLI entry binary (`cargo xtask` + `cargo rustasea` alias) | `cargo rustasea list` dispatches to `xtask` |
 | `scaffold.dir.bootstrap` | `bootstrap/` | App wiring | `bootstrap/app.rs`, `bootstrap/providers.rs`, `bootstrap/commands.rs` |
 | `scaffold.dir.config` | `config/` | Layered config (TOML) | `config/app.toml`, `config/database.toml` |
 | `scaffold.dir.routes` | `routes/` | Route definitions | `routes/web.rs` |
@@ -51,13 +51,13 @@ These tokens govern **every generated file and directory name**. Violating them 
 | `scaffold.dir.tests` | `tests/feature/` | Integration tests | `tests/feature/user_test.rs` |
 | `scaffold.file.cargo` | `Cargo.toml` | Workspace manifest — `[workspace] members = ["crates/*"]` | — |
 | `scaffold.file.env_example` | `.env.example` | Env template | Committed; `.env` is git-ignored |
-| `scaffold.file.rustavel_toml` | `rustavel.toml` | Optional framework config | Feature flags, generator defaults |
+| `scaffold.file.rustasea_toml` | `rustasea.toml` | Optional framework config | Feature flags, generator defaults |
 
 ### 2.2 File & Symbol Naming Conventions
 
 | Token | Rule | Regex / Pattern | Rationale |
 |-------|------|-----------------|-----------|
-| `naming.crate` | kebab-case, `rustavel-` prefix | `^rustavel-[a-z0-9-]+$` | Cargo convention; workspace discoverability |
+| `naming.crate` | kebab-case, `rustasea-` prefix | `^rustasea-[a-z0-9-]+$` | Cargo convention; workspace discoverability |
 | `naming.file.rust` | snake_case, `.rs` ext | `^[a-z0-9_]+\.rs$` | `rustc` module resolution; `snake_case` is idiomatic |
 | `naming.file.migration` | `YYYY_MM_DD_HHMMSS_snake_name.rs` | `^\d{4}_\d{2}_\d{2}_\d{6}_[a-z0-9_]+\.rs$` | Chronological ordering; lexicographic sort = execution order |
 | `naming.struct` | PascalCase | `^[A-Z][A-Za-z0-9]*$` | Rust type convention; `UserController`, `SendEmail` |
@@ -109,7 +109,7 @@ These tokens define the **typographic rules for generated Rust code** — not br
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `spacing.scaffold.indent` | `4` (spaces per dir level in file trees) | `cargo rustavel list --verbose` file trees; `new` success output |
+| `spacing.scaffold.indent` | `4` (spaces per dir level in file trees) | `cargo rustasea list --verbose` file trees; `new` success output |
 | `spacing.cli.gap` | `2` (spaces between table columns) | `route:list` table column gap |
 | `spacing.cli.section` | `1 blank line` between sections | `list` groups (`make:*` vs `migrate` vs `queue:*`) separated by blank line |
 | `spacing.code.blank_between_items` | `1 blank line` | Generated code: blank line between `impl` blocks, between `use` groups |
@@ -155,7 +155,7 @@ Every framework diagnostic carries a stable `E####` code per `NFR-Usa-02` and `f
 | `E0201` | `RouteConflict` | Duplicate `name("users.index")` at router build | `rename one route` |
 | `E0202` | `InvalidPattern` | Route path fails `^/[a-z0-9/_\-{}:]*$` | `check path syntax` |
 | `E0203` | `AmbiguousDomain` | Two domain routes match same host+path | `order domain routes explicitly` |
-| `E0301` | `MissingTable` | Query against un-migrated table | `run cargo rustavel migrate` |
+| `E0301` | `MissingTable` | Query against un-migrated table | `run cargo rustasea migrate` |
 | `E0302` | `UpsertEmptyUniqueBy` | `upsert(rows, unique_by: [])` | `provide at least one unique column` |
 | `E0303` | `VectorDimensionMismatch` | `whereVectorSimilarTo` dim mismatch | `expected 1536, got 768` |
 | `E0304` | `PgVectorExtensionMissing` | Migration with `vector` column but `CREATE EXTENSION vector` failed | `install pgvector or disable vector feature` |
@@ -230,3 +230,9 @@ Generated code must pass `rustfmt --check` and `clippy -- -D warnings` — see `
 ---
 
 *Generated for TASK-009 · P4 Design Planning. Adapted from `design-specification` design-system rules to CLI/framework DX — scaffold & naming tokens are the "palette" for a framework with no browser UI.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

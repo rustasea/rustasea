@@ -1,4 +1,4 @@
-# Rustavel — Allocation Audit (FR → Sprint Coverage Proof)
+# RustaSea — Allocation Audit (FR → Sprint Coverage Proof)
 
 > **Date:** 2026-09-07 | **Task:** TASK-012
 > **Parents:** `../roadmap.md` · `manifest.md` · `prd.md` §8 · `sprint-01.md` … `sprint-07.md`
@@ -23,7 +23,7 @@ Every Laravel 13 feature (#1–#20 per `README.md` §Laravel 13 Feature Map) app
 | FR-002 | Container `Bind`/`Singleton`/`Instance` + `Make<T>` (`Option<T>`) | 01 | M0 | — | S01-T02 |
 | FR-003 | Provider DAG `register`→`boot` + `Runner` | 01 | M0 | — | S01-T01 |
 | FR-004 | Graceful shutdown `SIGTERM`/`SIGINT` drain | 01 | M0 | — | S01-T04 |
-| FR-005 | `cargo rustavel new <app>` scaffold | 01 | M0 | — | S01-T05 |
+| FR-005 | `cargo rustasea new <app>` scaffold | 01 | M0 | — | S01-T05 |
 | FR-006 | `Manager::extend` closure binding (#20) | 01 | M0 | — | S01-T02 |
 | FR-007 | Typed config diagnostics (`file`+`line`) | 01 | M0 | — | S01-T03 |
 | FR-008 | `AppState: Arc` singleton (no `static mut`) | 01 | M0 | — | S01-T01 |
@@ -76,7 +76,7 @@ Every Laravel 13 feature (#1–#20 per `README.md` §Laravel 13 Feature Map) app
 | FR-409 | Cloud queue metrics (#8) | 05 | M4 | — | S05-T03 |
 | FR-410 | `withScheduling` deferred | 05 | M4 | — | S05-T06 |
 | **M5 — DX, CLI & Testing (10)** | | **Sprint 06** | M5 | | |
-| FR-500 | `cargo rustavel` CLI `clap`+`xtask` + `list` | 06 | M5 | — | S06-T01 |
+| FR-500 | `cargo rustasea` CLI `clap`+`xtask` + `list` | 06 | M5 | — | S06-T01 |
 | FR-501 | `make:*` generators 12 variants | 06 | M5 | — | S06-T02 |
 | FR-502 | Typed args/flags + `#[usage]`/`#[help]`/`#[hidden]` (#7) | 06 | M5 | — | S06-T01/04 |
 | FR-503 | Prompts `ask`/`secret`/`confirm`/`choice`/`multiSelect` + `table`/`progressBar`/`spinner` | 06 | M5 | — | S06-T03 |
@@ -178,3 +178,9 @@ ls .agents/documents/tasks/roadmap.md .agents/documents/tasks/sprints/manifest.m
 ---
 
 *Any FR addition, removal, or reallocation requires updating `prd.md` §8, `roadmap.md` §4, the affected `sprint-0N.md`, and this audit — then re-running the counting proof above.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

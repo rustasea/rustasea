@@ -1,6 +1,6 @@
-# Rustavel — QA Design
+# RustaSea — QA Design
 
-> **Owner:** vheins/rustavel | **Phase:** Implementation P5 | **Task:** TASK-010 | **Date:** 2026-09-07
+> **Owner:** vheins/rustasea | **Phase:** Implementation P5 | **Task:** TASK-010 | **Date:** 2026-09-07
 > **Parents:** `test-plan.md` · `test-cases.md` · `bdd-scenarios.md` · `fsd.md` · `prd.md` (NFR-*)
 > **Conventions:** QA scenario buckets per `test-planning/rules/test-scenarios.md` — Positive (happy paths), Negative (validation/rejection), Monkey (chaos/adversarial), Security. Boundary taxonomy per `test-planning/rules/boundary-taxonomy.md` (8 categories). Smoke suite per `test-execution/rules/smoke-test.md`.
 
@@ -111,11 +111,11 @@ Priorities from `test-plan.md` §9.2. Regression command is scoped — **never**
 
 | Priority | Crate Scope | Command (representative) | When |
 |----------|-------------|--------------------------|------|
-| **P0** blocker | touching crate + dependents | `cargo test -p rustavel-foundation -p rustavel-auth -p rustavel-queue --test feature` | Every PR |
-| **P1** major | feature crate only | `cargo test -p rustavel-router --test route_list -- --nocapture` | Every PR touching that crate |
-| **P2** edge | matrix slice | `cargo test -p rustavel-orm --features pgvector,mysql --test chunk_upsert` | Nightly + PR if matrix touched |
-| **P3** cosmetic | paginator/views | `cargo test -p rustavel-testing --test paginator` | Weekly |
-| **P4** AI extras | `rustavel-ai` extras | `cargo test -p rustavel-ai --features all-providers --test reranking` | Weekly + pre-tag |
+| **P0** blocker | touching crate + dependents | `cargo test -p rustasea-foundation -p rustasea-auth -p rustasea-queue --test feature` | Every PR |
+| **P1** major | feature crate only | `cargo test -p rustasea-router --test route_list -- --nocapture` | Every PR touching that crate |
+| **P2** edge | matrix slice | `cargo test -p rustasea-orm --features pgvector,mysql --test chunk_upsert` | Nightly + PR if matrix touched |
+| **P3** cosmetic | paginator/views | `cargo test -p rustasea-testing --test paginator` | Weekly |
+| **P4** AI extras | `rustasea-ai` extras | `cargo test -p rustasea-ai --features all-providers --test reranking` | Weekly + pre-tag |
 
 Bug naming follows `BUG-{ID}` taxonomy (see `test-cases.md` when a failure is triaged). Parallel strategy: unit shards by module, integration shards by driver (`postgres` | `mysql` | `sqlite` + `pgvector`), max parallelism bounded by `testcontainers` ports.
 
@@ -134,9 +134,9 @@ Total budget **<30 s**, no external containers.
 | # | Check | Assertion | Tool |
 |---|-------|-----------|------|
 | S-01 | `cargo fmt --check` + `cargo clippy -- -D warnings` | Green on staged crates | `cargo xtask check --scope <crate>` |
-| S-02 | `cargo check --workspace` / scoped `cargo check -p <crate>` | Clean with standalone crate | `cargo check -p rustavel-router` (incremental-adoption probe NFR-Sca-02) |
-| S-03 | `Application::configure().boot()` on in-memory config + `Str` factory smoke | Boots in `<2s` (assert `Instant::now <2s`) | `cargo test -p rustavel-foundation --test smoke_boot` |
-| S-04 | Route table build + typed extractor compile probe | `Route::get("/users", [UserController,"index"])` compiles & reports `200` over `oneshot` | `cargo test -p rustavel-router --test smoke_routing -- --ignored smoke` tag |
+| S-02 | `cargo check --workspace` / scoped `cargo check -p <crate>` | Clean with standalone crate | `cargo check -p rustasea-router` (incremental-adoption probe NFR-Sca-02) |
+| S-03 | `Application::configure().boot()` on in-memory config + `Str` factory smoke | Boots in `<2s` (assert `Instant::now <2s`) | `cargo test -p rustasea-foundation --test smoke_boot` |
+| S-04 | Route table build + typed extractor compile probe | `Route::get("/users", [UserController,"index"])` compiles & reports `200` over `oneshot` | `cargo test -p rustasea-router --test smoke_routing -- --ignored smoke` tag |
 | S-05 | `cargo insta` snapshot drift | No pending snapshots for `route:list --json` | `cargo insta test --accept` parity check |
 
 ### 4.2 Full Smoke (runs after fast smoke — `<5 min`, needs `testcontainers`)
@@ -144,10 +144,10 @@ Total budget **<30 s**, no external containers.
 | # | Check | Assertion | Tool |
 |---|-------|-----------|------|
 | FS-01 | Postgres+Redis reachable via `testcontainers` | Container health checks pass, `migrate` once | `TestCase` harness |
-| FS-02 | ORM round-trip + migration | `UserFactory::create(1).whereVectorSimilarTo` smoke with SQLite, `serde` relation round-trip | `cargo test -p rustavel-orm --test smoke_orm` |
-| FS-03 | Auth + CSRF | `login/parse/logout` cycle + `POST /form cross-site evil→403` | `cargo test -p rustavel-auth --test smoke_security` |
-| FS-04 | Queue route + `touch` | `Queue::route::<ProcessPodcast>(queue:"podcasts")` smoke + `Cache::touch→get` TTL probe | `cargo test -p rustavel-queue -p rustavel-cache --test smoke_queue_cache` |
-| FS-05 | CLI scaffold | `cargo rustavel new smoke-app --dry-run` + `route:list --json` valid | `xtask` helper |
+| FS-02 | ORM round-trip + migration | `UserFactory::create(1).whereVectorSimilarTo` smoke with SQLite, `serde` relation round-trip | `cargo test -p rustasea-orm --test smoke_orm` |
+| FS-03 | Auth + CSRF | `login/parse/logout` cycle + `POST /form cross-site evil→403` | `cargo test -p rustasea-auth --test smoke_security` |
+| FS-04 | Queue route + `touch` | `Queue::route::<ProcessPodcast>(queue:"podcasts")` smoke + `Cache::touch→get` TTL probe | `cargo test -p rustasea-queue -p rustasea-cache --test smoke_queue_cache` |
+| FS-05 | CLI scaffold | `cargo rustasea new smoke-app --dry-run` + `route:list --json` valid | `xtask` helper |
 
 Environment: fast smoke runs in CI containers without Docker; full smoke requires Docker socket. Nightly expands full smoke to all drivers (`postgres`+`mysql`+`sqlite`, `redis`).
 
@@ -184,12 +184,12 @@ Nightly-only, not per-PR (per `test-plan.md` §9.1 ordering). Uses killable `tes
 
 | Chaos Scenario | Injected Fault | Expected | Crate |
 |----------------|----------------|----------|-------|
-| Redis unavailable mid-queue | `docker pause redis` / `SIGKILL` | `CacheError::StoreUnavailable`, queue jobs re-queued on retry, metrics report typed error not panic | `rustavel-queue`, `rustavel-cache` |
-| Postgres lost mid-transaction | Kill PG, concurrent `transaction(select_for_update)` | Transaction `QueryError::PoolClosed` / retryable error, second transaction not left dangling | `rustavel-orm` |
-| `schedule:pause` during tick | Issue `pause` while tick loop in `sleep(60s)` window | Running job completes, next tick suppressed, no duplicate `SchedulePaused` | `rustavel-schedule` |
-| SSE/WebSocket lag | Bounded `mpsc(64)` with slow consumer | `Lagged` / backpressure signal, no process OOM | `rustavel-broadcast`, `rustavel-ai` streaming |
-| AI streaming truncated | Drop WS mid-`event: token` stream | Client sees close frame, no partial `AiResponse` deserialized as success | `rustavel-ai` |
-| Vector index dropped mid-search | `dropVectorIndex` while `whereVectorSimilarTo` query active | Query falls back to seq scan, still returns (TC-M6-25) | `rustavel-search` |
+| Redis unavailable mid-queue | `docker pause redis` / `SIGKILL` | `CacheError::StoreUnavailable`, queue jobs re-queued on retry, metrics report typed error not panic | `rustasea-queue`, `rustasea-cache` |
+| Postgres lost mid-transaction | Kill PG, concurrent `transaction(select_for_update)` | Transaction `QueryError::PoolClosed` / retryable error, second transaction not left dangling | `rustasea-orm` |
+| `schedule:pause` during tick | Issue `pause` while tick loop in `sleep(60s)` window | Running job completes, next tick suppressed, no duplicate `SchedulePaused` | `rustasea-schedule` |
+| SSE/WebSocket lag | Bounded `mpsc(64)` with slow consumer | `Lagged` / backpressure signal, no process OOM | `rustasea-broadcast`, `rustasea-ai` streaming |
+| AI streaming truncated | Drop WS mid-`event: token` stream | Client sees close frame, no partial `AiResponse` deserialized as success | `rustasea-ai` |
+| Vector index dropped mid-search | `dropVectorIndex` while `whereVectorSimilarTo` query active | Query falls back to seq scan, still returns (TC-M6-25) | `rustasea-search` |
 
 ---
 
@@ -214,7 +214,7 @@ Every migration file (`database/migrations/YYYY_MM_DD_HHMMSS_name.rs`) participa
 - **Bulk test:** `migrate:fresh --seed` followed by `get` of each seeded row's PK — confirms `Seeder::run` + migrations together.
 - **Irreversible handling:** marking a migration irreversible MUST cause `down` to emit `MigrationError::Irreversible{name}` (tested).
 
-Corpus lives in `crates/rustavel-orm/tests/migration_roundtrip.rs` (delegated to crate's own test tree — QA design asserts the harness shape; see stub `application/testing/stubs/orm-migration.ts`).
+Corpus lives in `crates/rustasea-orm/tests/migration_roundtrip.rs` (delegated to crate's own test tree — QA design asserts the harness shape; see stub `application/testing/stubs/orm-migration.ts`).
 
 ### 6.3 Property & Snapshot Tests
 
@@ -228,7 +228,7 @@ Corpus lives in `crates/rustavel-orm/tests/migration_roundtrip.rs` (delegated to
 | Construct | Spec | Isolation |
 |-----------|------|-----------|
 | `Factory::create(n)` + traits `states` + `sequences` | Per-model `Factory` impl (`definition()→T`, `sequence: AtomicU64`), `state("admin")` sub-factory | Reset `Str` sequences per test via `TestCase` hook; parallel tests not leaking |
-| `TestCase` harness | `.env.testing` overlay (`dotenvy` + process env > file), isolated Postgres/Redis via `testcontainers`, `migrate` once per binary, 30 s container timeout | Distinct random ports per binary, teardown kills `rustavel-test-*` |
+| `TestCase` harness | `.env.testing` overlay (`dotenvy` + process env > file), isolated Postgres/Redis via `testcontainers`, `migrate` once per binary, 30 s container timeout | Distinct random ports per binary, teardown kills `rustasea-test-*` |
 | Mocks/Fakes taxonomy | Prefer **fakes**: `object_store` in-mem (`InMemory`), `reqwest` `wiremock`/`httpmock`, Redis `FakeRedis`, `pgvector` fake distance for unit; use **mocks** only for `AiProvider` per-provider adapter boundary; **stubs** for `throw(predicate)` policies; **spies** for `SchedulePaused`/`QueueBusy` event capture | Fakes share the 4-concern boundary — not re-asserting real store semantics |
 | `object_store` disk fixtures | Primary `s3` + fallback `local` as `InMemory` with path-confinement prefix enforcement | No real S3 required for red |
 
@@ -247,3 +247,9 @@ QA verdict `PASS` requires: P0 smoke green, all P0 cases green per scoped crate,
 ---
 
 *Next: `application/testing/*` stubs per module (executable harnesses tracing to every row above) → `TASK-010` close.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -111,7 +111,7 @@ Errors: `BootError::Cycle` / `MissingDependency`, `ConfigError::Parse { file, li
 - `shutdown_timeout` default 10s; long requests exceeding it exit 1 after logging outstanding count.
 
 ## 8. Compliance & Audit
-`cargo rustavel new demo` → `demo/bootstrap/app.rs` exists and `cargo check` passes (FR-005). `cargo check -p rustavel-foundation` has no `sqlx`/`async-openai` (NFR-Sca-02).
+`cargo rustasea new demo` → `demo/bootstrap/app.rs` exists and `cargo check` passes (FR-005). `cargo check -p rustasea-foundation` has no `sqlx`/`async-openai` (NFR-Sca-02).
 
 ## 9. UI Layout
 CLI scaffold output tree (see `architecture.md §2` skeleton). No browser UI.
@@ -124,7 +124,7 @@ CLI scaffold output tree (see `architecture.md §2` skeleton). No browser UI.
 | F-M0-BOOT-02 | DAG validator | Todo | `depends_on` cycle detection + `BootError::Cycle` |
 | F-M0-BOOT-03 | Runner | Todo | `Runner` trait + HTTP/Queue/Schedule runners |
 | F-M0-BOOT-04 | Shutdown | Todo | `tokio::signal` + drain with timeout |
-| F-M0-BOOT-05 | Scaffold | Todo | `cargo rustavel new <app>` producing `bootstrap/app.rs` etc. |
+| F-M0-BOOT-05 | Scaffold | Todo | `cargo rustasea new <app>` producing `bootstrap/app.rs` etc. |
 | F-M0-BOOT-06 | Tests | Todo | DAG + shutdown drain + scaffold harness |
 
 ## 11. Cross-References
@@ -140,6 +140,12 @@ CLI scaffold output tree (see `architecture.md §2` skeleton). No browser UI.
 | API | `technical-documentation` Part A | `api-bootstrap` OpenAPI trait-contract note |
 | QA | `test-planning` | `qa-design §1.2` boot rows |
 | BDD | `test-generation` | `@foundation` Feature: Application boot… |
-| Contract | `test-generation` | `cargo rustavel new` scaffold probe |
+| Contract | `test-generation` | `cargo rustasea new` scaffold probe |
 | Security | `security-audit` | config file error leaks no secret |
 | Chaos | `non-functional-testing` | drain timeout expiry path |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

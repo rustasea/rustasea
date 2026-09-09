@@ -4,7 +4,7 @@
 > **Stories:** US-M5-04 (TestCase + testcontainers + Str reset) · **BDD:** `@testing`, `@observability-tooling` adjacency
 
 ## 1. Feature Overview
-- **Brief Description:** `trait TestCase { fn setup(&mut self) -> AppState }` provisioning isolated Postgres (random port via `testcontainers` `Postgres` image) + Redis (`deadpool-redis`) per test binary, `sqlx::test` + `migrate` once per binary with 30s container timeout (`TestError::ContainerTimeout`), per-package `.env.testing` overlay (`dotenvy` + process env > file), `Str` factory `Factory::create(n)` + `Factory::state` + `sequence: AtomicU64` + `definition()→T` reset per test via `TestCase` hook (so `user1@example.com` not `user11`), teardown kills `rustavel-test-*` containers, paginator `bootstrap-3` view for `paginate(15)` HTML, isolation verified with parallel `--test-threads` distinct random ports.
+- **Brief Description:** `trait TestCase { fn setup(&mut self) -> AppState }` provisioning isolated Postgres (random port via `testcontainers` `Postgres` image) + Redis (`deadpool-redis`) per test binary, `sqlx::test` + `migrate` once per binary with 30s container timeout (`TestError::ContainerTimeout`), per-package `.env.testing` overlay (`dotenvy` + process env > file), `Str` factory `Factory::create(n)` + `Factory::state` + `sequence: AtomicU64` + `definition()→T` reset per test via `TestCase` hook (so `user1@example.com` not `user11`), teardown kills `rustasea-test-*` containers, paginator `bootstrap-3` view for `paginate(15)` HTML, isolation verified with parallel `--test-threads` distinct random ports.
 - **Role in Module:** Deterministic `cargo test` under parallelism; executable trace for every story.
 - **Business Value:** No `Str` leak between tests; per-worker PG ports via `testcontainers`.
 
@@ -13,7 +13,7 @@
 ### US-M5-04 — Test harness with isolation and factory resets
 **Sebagai** Rust developer **Saya ingin** `TestCase` + `testcontainers` + `Str` reset **Sehingga** `cargo test` deterministic in parallel
 
-**AC:** Tests `test_a`/`test_b` both `impl TestCase` with `cargo test -- --test-threads=2` → distinct random PG ports (no collision); `Factory::sequence` 10 in `test_a` then `test_b create(1)` → `user1@example.com` not `user11`; `cargo test` completes → no `rustavel-test-*` container remains running (teardown); paginator `bootstrap-3` via `paginate(15)` produces bootstrap-3 HTML.
+**AC:** Tests `test_a`/`test_b` both `impl TestCase` with `cargo test -- --test-threads=2` → distinct random PG ports (no collision); `Factory::sequence` 10 in `test_a` then `test_b create(1)` → `user1@example.com` not `user11`; `cargo test` completes → no `rustasea-test-*` container remains running (teardown); paginator `bootstrap-3` via `paginate(15)` produces bootstrap-3 HTML.
 
 ## 3. Business Flow & Rules
 
@@ -35,7 +35,7 @@ sequenceDiagram
     TestCase->>Factory: reset Str sequences via hook
     Cargo->>Factory: test_a create(5) -> seq 1..5
     Cargo->>Factory: (parallel) test_b create(1) -> seq 1 (reset), distinct port
-    Cargo-->>Containers: teardown kills rustavel-test-*
+    Cargo-->>Containers: teardown kills rustasea-test-*
 ```
 
 ### 3.2 Business Rules
@@ -69,7 +69,7 @@ trait TestCase: Send {
 }
 // Env: per-package .env.testing overlay
 // Factory: Factory::create(n), definition()->T, sequence: AtomicU64, state("admin")
-// Teardown: kills containers named rustavel-test-*
+// Teardown: kills containers named rustasea-test-*
 // Artisan::call adjacency: Artisan::call("migrate", vec![]) in-process, used by TestCase
 enum TestError { ContainerTimeout, PaginatorMissing }
 ```
@@ -101,3 +101,9 @@ enum TestError { ContainerTimeout, PaginatorMissing }
 |-------|-------|
 | QA | `test-planning` — state transition harness smoke ( §1.2 rows @testing) |
 | Chaos | `non-functional-testing` — container pause/restart mid-suite |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -1,6 +1,6 @@
 //! Web route handlers — real dispatch targets for `/`, `/health`, `/welcome`.
 //!
-//! Lives at the README-canonical `routes/web.rs`. `rustavel::Router` (M0) is
+//! Lives at the README-canonical `routes/web.rs`. `rustasea::Router` (M0) is
 //! currently a registration DSL whose `into_axum_router` wires stub handlers;
 //! until controller binding ships, the app keeps a single explicit handler
 //! map here that mirrors the DSL route table registered in `src/main.rs`.
@@ -10,7 +10,7 @@ use std::sync::Arc;
 use axum::extract::State;
 use axum::response::{Html, Response};
 
-use rustavel::http::AppState;
+use rustasea::http::AppState;
 
 /// Welcome page markup, rendered from `resources/views/welcome.html`.
 const WELCOME_HTML: &str = include_str!("../resources/views/welcome.html");
@@ -42,9 +42,9 @@ struct Health {
 
 /// GET /health — JSON liveness probe with HTTP status.
 async fn health(State(state): State<Arc<AppState>>) -> Response {
-    rustavel::http::JsonResponse::ok(Health {
+    rustasea::http::JsonResponse::ok(Health {
         status: "ok",
-        service: "rustavel",
+        service: "rustasea",
         env: state.env.clone(),
     })
 }

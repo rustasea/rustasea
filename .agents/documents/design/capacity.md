@@ -1,4 +1,4 @@
-# Rustavel — Capacity & SLA Design
+# RustaSea — Capacity & SLA Design
 
 > **Status:** Draft — P3 (TASK-008)  
 > **Date:** 2026-09-07  
@@ -122,12 +122,12 @@ Graceful scaling: `SIGTERM` drain satisfies rolling deploys / K8s `preStop` with
 
 *Metrics (exposed for Prometheus / OTLP when configured):*
 
-- `rustavel_queue_pending_size{connection,queue}` / `delayed` / `reserved` (`gauge`)
-- `rustavel_queue_oldest_pending_age_seconds{connection,queue}` (`gauge`; derived from `creationTimeOfOldestPendingJob`)
-- `rustavel_cache_hit_ratio{store}` / `rustavel_cache_touch_total{store}` / `rustavel_lock_contention_total`
-- `rustavel_schedule_tick_total` / `rustavel_schedule_skipped_total{reason: StillRunning|Paused|OnOneServer}`
+- `rustasea_queue_pending_size{connection,queue}` / `delayed` / `reserved` (`gauge`)
+- `rustasea_queue_oldest_pending_age_seconds{connection,queue}` (`gauge`; derived from `creationTimeOfOldestPendingJob`)
+- `rustasea_cache_hit_ratio{store}` / `rustasea_cache_touch_total{store}` / `rustasea_lock_contention_total`
+- `rustasea_schedule_tick_total` / `rustasea_schedule_skipped_total{reason: StillRunning|Paused|OnOneServer}`
 - `http_request_duration_seconds{method,path,status}` (`histogram` for S-02)
-- `rustavel_db_pool_available` / `rustavel_redis_pool_available`
+- `rustasea_db_pool_available` / `rustasea_redis_pool_available`
 
 Health endpoints: `GET /health` (liveness, always 200 when process alive), `GET /ready` (readiness: pool `acquire` probe + `SELECT 1` + `PING` to Redis).
 
@@ -136,5 +136,11 @@ Health endpoints: `GET /health` (liveness, always 200 when process alive), `GET 
 ## 7. Open Items
 
 - Load profile for `whereVectorSimilarTo` under mixed read/write must be re-benched after M2 HNSW vs IVFFLAT decision (see `database.md §4`).
-- AI provider token/rate budgets require per-provider `RPM`/`TPM` config once `rustavel-ai` adapters land (M6).
+- AI provider token/rate budgets require per-provider `RPM`/`TPM` config once `rustasea-ai` adapters land (M6).
 - Cost model (infra $) deferred — framework is OSS MIT/Apache-2.0; operator infra is caller-owned.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

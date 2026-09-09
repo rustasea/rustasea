@@ -19,3 +19,9 @@ Covers WebSocket `ShouldBroadcast` channels (`Private` `403`/`4403`, SSE `text/e
 - Specs: [test-advanced.md](test-advanced.md)
 - API: [api-broadcast](../../api/intelligence-delivery/api-broadcast.md) · [api-storage](../../api/intelligence-delivery/api-storage.md) · [api-jsonapi](../../api/intelligence-delivery/api-jsonapi.md) · [api-ai](../../api/intelligence-delivery/api-ai.md)
 - Module: [broadcast](../../modules/intelligence-delivery/broadcast.md) · [storage](../../modules/intelligence-delivery/storage.md) · [jsonapi](../../modules/intelligence-delivery/jsonapi.md) · [ai-sdk](../../modules/intelligence-delivery/ai-sdk.md) · [ai-agents](../../modules/intelligence-delivery/ai-agents.md)
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

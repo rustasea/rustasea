@@ -2,7 +2,7 @@
 
 > **Status:** P8 Final — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `requirements/{prd §M1,fsd §3.2,tdd BC-1,bdd-scenarios §2.2,user-stories US-M1-01..06}.md` · `design/{architecture BC-1,domain BC-1,api-contracts §1}` · `decisions/ADR-001 axum` · `modules/manifest.md` · `sprints/sprint-02.md`
-> **Crates:** `rustavel-router` · `rustavel-http` · `rustavel-macros` (#[route], #[middleware])
+> **Crates:** `rustasea-router` · `rustasea-http` · `rustasea-macros` (#[route], #[middleware])
 > **Milestone:** M1 | **BR:** BR-02 | **FR:** FR-100..109 | **FSD:** FS-M1-01..06 | **BC:** BC-1 | **Stories:** US-M1-01..06
 
 ## Header & Navigation
@@ -55,7 +55,7 @@ flowchart TB
 ## 4. Global Dependencies
 
 - **Deps:** `foundation` (AppState), `axum 0.7`, `tower`, `tower-http`, `reqwest`, `serde/serde_json`, `validator` (via validation adjacency), `syn/quote` for proc-macros.
-- **Not yet:** DB/ORM (M2), guards (M3). `queue/cache` not imported — `cargo check -p rustavel-router` has no `sqlx`/`async-openai` (NFR-Sca-02).
+- **Not yet:** DB/ORM (M2), guards (M3). `queue/cache` not imported — `cargo check -p rustasea-router` has no `sqlx`/`async-openai` (NFR-Sca-02).
 
 ## 5. Skill Reference
 
@@ -73,3 +73,9 @@ flowchart TB
 - HTTP p95 <50ms no-DB (`oha`; NFR-Per-02).
 - Observability: `route:list --json` emits `{method,path,name,middleware[],binding_fields[]}` (FSD FS-M1-03; NFR-Mai-01).
 - Seven routes in `resource` (not 6); throttling 60 inclusive (61st is 429 with `Retry-After`).
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

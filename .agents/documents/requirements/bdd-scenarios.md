@@ -1,4 +1,4 @@
-# Rustavel — BDD Scenarios (Gherkin)
+# RustaSea — BDD Scenarios (Gherkin)
 
 > **Status:** Draft — P2 Requirements Phase  
 > **Date:** 2026-09-07  
@@ -17,7 +17,7 @@ These phrases recur across scenarios and are defined once. Automation maps them 
 | Step phrase | Business meaning |
 |-------------|------------------|
 | `the application is running` | `Application::configure().boot()` completed; `AppState` available |
-| `the Rust developer has scaffolded a new application` | `cargo rustavel new <app>` produced a bootable workspace |
+| `the Rust developer has scaffolded a new application` | `cargo rustasea new <app>` produced a bootable workspace |
 | `the system has a user "Ada"` | A persisted `User` exists with name Ada |
 | `a privileged user` vs `a guest` | Authenticated with authorized role vs unauthenticated |
 | `the queue for "<name>"` | A named logical queue (driver-agnostic) |
@@ -860,7 +860,7 @@ Feature: Isolated test harness with factory isolation
 
   Scenario: Teardown leaves no lingering containers
     When the test suite completes
-    Then no test container named "rustavel-test-*" remains running
+    Then no test container named "rustasea-test-*" remains running
 ```
 
 ---
@@ -1143,3 +1143,9 @@ Feature: Extended vector search and embedding management
 ---
 
 *Next: architecture design briefs in `design/architecture/*-tech-design.md` and task decomposition in `tasks/plan/*.md` per `product-planning` chain.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

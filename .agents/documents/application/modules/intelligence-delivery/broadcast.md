@@ -79,7 +79,7 @@ fn event_stream<S>(stream: S) -> Response // Content-Type: text/event-stream (s.
 ```
 
 ## 6. Dependencies
-- `foundation` (AppState), `http-routing` WS routes, `events` `ShouldBroadcast`, `rustavel-broadcast` crate, `tokio-tungstenite`, `serde`.
+- `foundation` (AppState), `http-routing` WS routes, `events` `ShouldBroadcast`, `rustasea-broadcast` crate, `tokio-tungstenite`, `serde`.
 
 ## 7. Limitations
 - Slow consumer via bounded `mpsc(64)` → `Lagged` signal (chaos-supervised).
@@ -108,3 +108,9 @@ fn event_stream<S>(stream: S) -> Response // Content-Type: text/event-stream (s.
 | QA | `test-planning` — state `Subscribed→Closed 4403` |
 | BDD | `test-generation` — WS authorized/unauthorized + SSE |
 | Chaos | `non-functional-testing` — mpsc Lagged backpressure, truncated mid-token stream |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -1,4 +1,4 @@
-# Rustavel — User Stories
+# RustaSea — User Stories
 
 > **Status:** Draft — P2 Requirements Phase  
 > **Date:** 2026-09-07  
@@ -89,7 +89,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
 **Acceptance Criteria:**
 
 - **Happy — CRUD via `resource`:**
-  > *Given* `Route::resource("users", UserController)` is registered, *When* `cargo rustavel route:list --json` is inspected, *Then* seven routes (`index` … `destroy`) exist with paths `/users` and `/users/{id}` appropriately.
+  > *Given* `Route::resource("users", UserController)` is registered, *When* `cargo rustasea route:list --json` is inspected, *Then* seven routes (`index` … `destroy`) exist with paths `/users` and `/users/{id}` appropriately.
 
 - **Happy — Group prefix:**
   > *Given* a group with `prefix("/api/v1")` containing `get("/users")`, *When* that route is inspected, *Then* its canonical path is `/api/v1/users`.
@@ -120,7 +120,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
 ### US-M1-03 — Introspect routes including binding fields
 
 - **Role:** Rust developer  
-- **Story:** *As a Rust developer, I want `cargo rustavel route:list` to show each route's method, path, name, middleware, and binding fields so that I can audit route coverage without reading source.*  
+- **Story:** *As a Rust developer, I want `cargo rustasea route:list` to show each route's method, path, name, middleware, and binding fields so that I can audit route coverage without reading source.*  
 - **Priority:** Must  
 - **FRs:** FR-103, FR-109 (BR-02/BR-06 — FS-M1-03)  
 - **Laravel 13:** #20 route binding fields
@@ -128,7 +128,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
 **Acceptance Criteria:**
 
 - **Happy — JSON with binding_fields:**
-  > *Given* a route `get("/users/{user:slug}", ...)` with binding `slug`, *When* `cargo rustavel route:list --json` runs, *Then* the JSON entry includes `binding_fields: ["slug"]` for that route.
+  > *Given* a route `get("/users/{user:slug}", ...)` with binding `slug`, *When* `cargo rustasea route:list --json` runs, *Then* the JSON entry includes `binding_fields: ["slug"]` for that route.
 
 - **NFR — Machine-readable:**
   > *Given* `--json` flag is passed, *When* output is piped to `jq`, *Then* valid JSON array is produced with `middleware` as an array per route.
@@ -289,7 +289,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
 **Acceptance Criteria:**
 
 - **Happy — `make:model` + migrate:**
-  > *Given* `cargo rustavel make:model Post -m` was run, *When* `cargo rustavel migrate` executes against SQLite, *Then* a `posts` table exists.
+  > *Given* `cargo rustasea make:model Post -m` was run, *When* `cargo rustasea migrate` executes against SQLite, *Then* a `posts` table exists.
 
 - **Happy — factory with reset:**
   > *Given* `UserFactory::create(5)` in test A, *When* test B calls `UserFactory::create(1)`, *Then* generated email sequence restarts at index 1 (no leak from test A).
@@ -468,7 +468,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
   > *Given* `batch([Job{1}, Job{2}, Job{3}])`, *When* dispatched, *Then* all three are enqueued and the batch `BatchId` is returned.
 
 - **Happy — retry from failed:**
-  > *Given* a failed job id `abc`, *When* `cargo rustavel queue:retry abc` runs, *Then* the job is re-queued and `failed_jobs` entry cleared after success.
+  > *Given* a failed job id `abc`, *When* `cargo rustasea queue:retry abc` runs, *Then* the job is re-queued and `failed_jobs` entry cleared after success.
 
 ---
 
@@ -525,10 +525,10 @@ Shared preconditions that appear across many stories (authenticated user, projec
 **Acceptance Criteria:**
 
 - **Happy — pause halts firing:**
-  > *Given* scheduler running `email:send` every minute, *When* `cargo rustavel schedule:pause` succeeds, *Then* `SchedulePaused` event is emitted and the next tick does not dispatch the job.
+  > *Given* scheduler running `email:send` every minute, *When* `cargo rustasea schedule:pause` succeeds, *Then* `SchedulePaused` event is emitted and the next tick does not dispatch the job.
 
 - **Happy — resume restarts:**
-  > *Given* scheduler in `Paused` state, *When* `cargo rustavel schedule:resume` runs, *Then* `ScheduleResumed` event is emitted and subsequent tick dispatches again.
+  > *Given* scheduler in `Paused` state, *When* `cargo rustasea schedule:resume` runs, *Then* `ScheduleResumed` event is emitted and subsequent tick dispatches again.
 
 - **Happy — `skipIfStillRunning`:**
   > *Given* job `NightlyImport` takes 80s and schedule `everyMinute` with `skipIfStillRunning`, *When* the 60s tick arrives while previous run still active, *Then* that tick is skipped.
@@ -564,10 +564,10 @@ Shared preconditions that appear across many stories (authenticated user, projec
 
 ## M5 — DX, CLI & Testing
 
-### US-M5-01 — `cargo rustavel` CLI with typed commands and prompts
+### US-M5-01 — `cargo rustasea` CLI with typed commands and prompts
 
 - **Role:** Rust developer  
-- **Story:** *As a Rust developer, I want `cargo rustavel list` plus typed command args/flags, prompts (`ask`/`confirm`/`choice`), and `table`/`progressBar` so that CLI ergonomics match Artisan.*  
+- **Story:** *As a Rust developer, I want `cargo rustasea list` plus typed command args/flags, prompts (`ask`/`confirm`/`choice`), and `table`/`progressBar` so that CLI ergonomics match Artisan.*  
 - **Priority:** Must  
 - **FRs:** FR-500, FR-502, FR-503, FR-505 (BR-06 — FS-M5-01)  
 - **Laravel 13:** #7 `#[Usage]`/`#[Help]`/`#[Hidden]`
@@ -575,7 +575,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
 **Acceptance Criteria:**
 
 - **Happy — `list` shows commands:**
-  > *Given* `cargo rustavel list --json` is run, *When* output is parsed, *Then* JSON contains entries for `make:controller` and `migrate` with `usage` strings.
+  > *Given* `cargo rustasea list --json` is run, *When* output is parsed, *Then* JSON contains entries for `make:controller` and `migrate` with `usage` strings.
 
 - **Happy — `#[usage]`/`#[help]`:**
   > *Given* command `AppSend` annotated `#[usage("app:send {user}")]`, *When* `list` prints help, *Then* usage line shows `app:send {user}`.
@@ -594,7 +594,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
 ### US-M5-02 — `make:*` generators produce `rustfmt`/`clippy`-clean code
 
 - **Role:** Rust developer  
-- **Story:** *As a Rust developer, I want `cargo rustavel make:*` for `controller`/`model`/`provider`/`command`/`job`/`event`/`listener`/`observer`/`test`/`seeder`/`agent`/`tool` to generate `rustfmt`+`clippy`-clean code so that scaffolding is usable without edits.*  
+- **Story:** *As a Rust developer, I want `cargo rustasea make:*` for `controller`/`model`/`provider`/`command`/`job`/`event`/`listener`/`observer`/`test`/`seeder`/`agent`/`tool` to generate `rustfmt`+`clippy`-clean code so that scaffolding is usable without edits.*  
 - **Priority:** Must  
 - **FRs:** FR-501, FR-502, FR-506 (BR-06 — FS-M5-02)  
 - **Laravel 13:** #7 + #2 `make:agent`/`make:tool`
@@ -602,10 +602,10 @@ Shared preconditions that appear across many stories (authenticated user, projec
 **Acceptance Criteria:**
 
 - **Happy — `make:controller`:**
-  > *Given* `cargo rustavel make:controller UserController` is run in a fresh scaffold, *When* `app/http/controllers/user_controller.rs` is checked with `rustfmt --check` and `clippy -- -D warnings`, *Then* both pass.
+  > *Given* `cargo rustasea make:controller UserController` is run in a fresh scaffold, *When* `app/http/controllers/user_controller.rs` is checked with `rustfmt --check` and `clippy -- -D warnings`, *Then* both pass.
 
 - **Happy — `make:model -m`:**
-  > *Given* `cargo rustavel make:model Post -m`, *When* outputs listed, *Then* `app/models/post.rs` with `#[derive(Model)]` and `database/migrations/*_create_posts_table.rs` both exist.
+  > *Given* `cargo rustasea make:model Post -m`, *When* outputs listed, *Then* `app/models/post.rs` with `#[derive(Model)]` and `database/migrations/*_create_posts_table.rs` both exist.
 
 - **Error — Already exists:**
   > *Given* `app/models/post.rs` already exists, *When* `make:model Post` without `--force` runs, *Then* `GeneratorError::AlreadyExists { path }` is returned.
@@ -647,7 +647,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
   > *Given* `Factory::sequence` reached 10 in test `test_a`, *When* test `test_b` creates `UserFactory::create(1)`, *Then* email is `user1@example.com` (not `user11`).
 
 - **NFR — teardown is clean:**
-  > *Given* `cargo test` completes, *When* Docker containers are listed, *Then* no `rustavel-test-*` container remains running.
+  > *Given* `cargo test` completes, *When* Docker containers are listed, *Then* no `rustasea-test-*` container remains running.
 
 ---
 
@@ -748,7 +748,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
   > *Given* provider `ollama` without `reranking` capability, *When* `Ai::provider("ollama").rerank(docs)` is called, *Then* `AiError::UnsupportedCapability { provider: "ollama", capability: "rerank" }`.
 
 - **NFR — opt-in feature flag:**
-  > *Given* workspace with `rustavel` features excluding `ai`, *When* `cargo check` runs on `rustavel-router` only, *Then* no `async-openai` crate is in the dep graph.
+  > *Given* workspace with `rustasea` features excluding `ai`, *When* `cargo check` runs on `rustasea-router` only, *Then* no `async-openai` crate is in the dep graph.
 
 ---
 
@@ -766,7 +766,7 @@ Shared preconditions that appear across many stories (authenticated user, projec
   > *Given* `SupportAgent` with `Tool SearchDocs` registered and prompt `"summarize ticket 42"`, *When* `agent.stream(prompt).await` is called, *Then* `SearchDocs::call` is invoked, and chunks `event: token` stream over WebSocket to the subscriber in order.
 
 - **Happy — `make:agent` / `make:tool`:**
-  > *Given* `cargo rustavel make:agent SupportAgent`, *When* `app/ai/agents/support_agent.rs` is inspected, *Then* it defines `struct SupportAgent` implementing `Agent` and is `rustfmt`-clean.
+  > *Given* `cargo rustasea make:agent SupportAgent`, *When* `app/ai/agents/support_agent.rs` is inspected, *Then* it defines `struct SupportAgent` implementing `Agent` and is `rustfmt`-clean.
 
 - **Happy — sub-agents + middleware:**
   > *Given* `ParentAgent { sub_agents: [KnowledgeAgent], middleware: [Logging] }`, *When* `ParentAgent` prompt triggers `KnowledgeAgent` as a tool, *Then* `Logging` middleware observes both parent and sub-agent calls.
@@ -836,3 +836,9 @@ Shared preconditions that appear across many stories (authenticated user, projec
 ---
 
 *Next: `bdd-scenarios.md` provides the Gherkin Feature/Senario realization of every story above, per `test-generation/rules/bdd-gherkin.md`.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

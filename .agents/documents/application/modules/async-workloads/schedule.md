@@ -26,7 +26,7 @@
 %%{init: {"theme": "base", "themeVariables": {"background": "#ffffff", "mainBkg": "#ffffff", "primaryColor": "#bbdefb", "secondaryColor": "#fff9c4", "tertiaryColor": "#c8e6c9"}}}%%
 sequenceDiagram
     actor Op as Platform operator
-    participant CLI as cargo rustavel
+    participant CLI as cargo rustasea
     participant State as schedule_state/cache flag
     participant Ticker as schedule:run tick loop (60s)
     participant Queue as Queue dispatch
@@ -89,10 +89,10 @@ impl Schedule {
 }
 struct ScheduleBuilder { /* chainable modifiers */ }
 // CLI
-// cargo rustavel schedule:list
-// cargo rustavel schedule:run    // tick every 60s; respects paused flag
-// cargo rustavel schedule:pause  // emits SchedulePaused
-// cargo rustavel schedule:resume // emits ScheduleResumed
+// cargo rustasea schedule:list
+// cargo rustasea schedule:run    // tick every 60s; respects paused flag
+// cargo rustasea schedule:pause  // emits SchedulePaused
+// cargo rustasea schedule:resume // emits ScheduleResumed
 impl QueueRegistry {
     async fn pending_size(&self, conn: &str, queue: &str) -> Result<usize, QueueError>;
     async fn delayed_size(&self, conn: &str, queue: &str) -> Result<usize, QueueError>;
@@ -133,3 +133,9 @@ impl QueueRegistry {
 | BDD | `test-generation` — `@schedule` pause idempotence outline |
 | Contract | `test-generation` — metrics typed assertion (42 pending, RFC3339 oldest) |
 | Chaos | `non-functional-testing` — `schedule:pause` during tick `sleep(60s)` window |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

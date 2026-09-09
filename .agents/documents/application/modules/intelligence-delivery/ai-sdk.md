@@ -4,7 +4,7 @@
 > **Stories:** US-M6-05 (provider-agnostic trait over 12) · **BDD:** `@ai-sdk`
 
 ## 1. Feature Overview
-- **Brief Description:** Provider-agnostic `trait AiProvider { text/image/audio/embeddings/reranking/files/vector_stores -> AiResponse/AiImage/etc. }` with adapters per provider (`openai`, `anthropic`, `gemini`, `azure`, `bedrock`, `groq`, `xai`, `deepseek`, `mistral`, `ollama`, `openrouter`, `openai_compatible`) each feature-flagged `features=["openai"]` / `rustavel-ai optional` (so `cargo check -p rustavel-router` pulls no `async-openai` — NFR-Sca-02 degraded-mode AI), `Ai::provider("openai").text(prompt).send().await -> AiResponse{ text, usage, tool_calls }`, unsupported capability → `AiError::UnsupportedCapability{provider,capability}` (`ollama` reranking / `groq` files), `reranking`/`files` handling per provider spec.
+- **Brief Description:** Provider-agnostic `trait AiProvider { text/image/audio/embeddings/reranking/files/vector_stores -> AiResponse/AiImage/etc. }` with adapters per provider (`openai`, `anthropic`, `gemini`, `azure`, `bedrock`, `groq`, `xai`, `deepseek`, `mistral`, `ollama`, `openrouter`, `openai_compatible`) each feature-flagged `features=["openai"]` / `rustasea-ai optional` (so `cargo check -p rustasea-router` pulls no `async-openai` — NFR-Sca-02 degraded-mode AI), `Ai::provider("openai").text(prompt).send().await -> AiResponse{ text, usage, tool_calls }`, unsupported capability → `AiError::UnsupportedCapability{provider,capability}` (`ollama` reranking / `groq` files), `reranking`/`files` handling per provider spec.
 - **Role in Module:** Capability traits × adapters matrix; switching provider is one config change.
 - **Business Value:** Laravel 13 #1 parity; per-provider semver isolation.
 
@@ -84,7 +84,7 @@ enum AiError { UnsupportedCapability { provider: String, capability: String }, P
 // Adapters: openai, anthropic, gemini, azure, bedrock, groq, xai, deepseek, mistral, ollama, openrouter, openai_compatible
 ```
 
-- Feature gating `Cargo.toml`: `rustavel-ai = { optional=true, features=["openai",...] }`.
+- Feature gating `Cargo.toml`: `rustasea-ai = { optional=true, features=["openai",...] }`.
 
 ## 6. Dependencies
 - `async-openai` + per-provider SDKs, `foundation` feature flags, `tdd.md BC-6`.
@@ -93,7 +93,7 @@ enum AiError { UnsupportedCapability { provider: String, capability: String }, P
 - Provider drift mitigated via per-adapter feature-flag + semver per adapter (R-02).
 
 ## 8. Compliance
-- Degraded-mode AI: `rustavel-router` alone → no AI deps in `cargo tree --depth 1` (NFR-Sca-02).
+- Degraded-mode AI: `rustasea-router` alone → no AI deps in `cargo tree --depth 1` (NFR-Sca-02).
 
 ## 9. Implementation Tasks
 
@@ -101,7 +101,7 @@ enum AiError { UnsupportedCapability { provider: String, capability: String }, P
 |----|-----------|--------|-------------|
 | F-M6-AI-01 | AiProvider trait | Todo | 7 methods + UnsupportedCapability |
 | F-M6-AI-02 | 12 adapters | Todo | per-provider feature flags + text/embeddings/… |
-| F-M6-AI-03 | Degraded-mode | Todo | `rustavel-ai` optional; `cargo tree` probe |
+| F-M6-AI-03 | Degraded-mode | Todo | `rustasea-ai` optional; `cargo tree` probe |
 | F-M6-AI-04 | Tests | Todo | switch provider preserves shape, unsupported capability outline, flag gate |
 
 ## 10. Cross-References
@@ -116,3 +116,9 @@ enum AiError { UnsupportedCapability { provider: String, capability: String }, P
 | BDD | `test-generation` — 12-provider outline |
 | Contract | `test-generation` — `AiResponse` shape stability |
 | Chaos | `non-functional-testing` — provider 500 injection + fallback |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

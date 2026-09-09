@@ -3,7 +3,7 @@
 > **Milestone:** M2 · **Window:** 2027-01-01 → 2027-03-31 · **Status:** Planned
 > **Parents:** `../roadmap.md` · `prd.md` FR-200–FR-210 · `fsd.md` FS-M2-01–FS-M2-06 · `design/architecture.md` + `design/database.md` + `design/domain.md`
 > **Depends On:** M0 (S01), M1 (S02)
-> **Crates:** `rustavel-orm`, `rustavel-macros` (`#[derive(Model)]`) — `pgvector` behind `vector` feature
+> **Crates:** `rustasea-orm`, `rustasea-macros` (`#[derive(Model)]`) — `pgvector` behind `vector` feature
 
 ---
 
@@ -30,12 +30,12 @@ Fluent, type-safe database layer with migrations, seeders, factories, and initia
 
 | # | Task | FR | FSD | Deliverable | Est. | Acceptance |
 |---|------|----|-----|-------------|------|------------|
-| S03-T01 | Connection & driver abstraction + pool + transactions | FR-200, FR-205 (transaction part) | FS-M2-01 | `crates/rustavel-orm/src/{connection,pool,transaction}.rs` | M | Postgres vs SQLite driver-specific SQL; `db.transaction(\|tx\| ...)` atomic; pool `min/max/idle_timeout` from `config.database`; NFR-Sca-01 bench hint (100 concurrent) |
-| S03-T02 | `#[derive(Model)]` + relations + soft delete + serde round-trip | FR-201, FR-206 | FS-M2-02 | `crates/rustavel-macros/src/model.rs` + `crates/rustavel-orm/src/model.rs` | L | `User` with `has_many posts`, `User::with("posts").find(1)` eager-loads; `deleted_at` partial index; soft-deleted `find` returns `None`; `serde_json` round-trip preserves `relations`; relation cycle depth ≤3 |
-| S03-T03 | Query builder — fluent chain, paginate/cursor, locks, scopes, raw | FR-202, FR-203, FR-205 | FS-M2-03 | `crates/rustavel-orm/src/builder.rs` | L | `chunkBy("id",500)` yields 500 without OOM; `firstOrFail` → `NotFound`; `forUpdate` blocks concurrent writer; `toSql`/`toRawSql` green; `scope` composable |
-| S03-T04 | Upsert & delete strictness (MySQL DELETE JOIN) | FR-204 | FS-M2-04 | `crates/rustavel-orm/src/{upsert,delete}.rs` | S | `upsert(rows, unique_by: [])` → `Err(EmptyUniqueBy)`; empty rows → `Ok({0,0})`; MySQL `DELETE JOIN` compiles; previously-silent ignore now throws |
-| S03-T05 | Migrations & seeders (`make:migration`, `migrate`, `migrate:fresh`) | FR-208 | FS-M2-05 | `crates/rustavel-orm/src/migration.rs` + `database/migrations/` | M | `make:migration create_users_table` scaffolds `YYYY_MM_DD_HHMMSS_name.rs` with `up`/`down`; `migrate` idempotent; `migrate:fresh --seed` reversible; NFR-Rel-02 |
-| S03-T06 | Factories + vector extension (`whereVectorSimilarTo`, `vector` column) | FR-207, FR-209, FR-210 | FS-M2-06 | `crates/rustavel-orm/src/{factory,vector}.rs` + Blueprint `vector` | M | `UserFactory::create(5)`; `whereVectorSimilarTo("vector",&emb,limit:10)` returns top-10 by cosine; dimension mismatch → `VectorDimensionMismatch`; missing extension → `PgVectorError::ExtensionMissing`; `FetchMode` (FR-210 Could) behind flag |
+| S03-T01 | Connection & driver abstraction + pool + transactions | FR-200, FR-205 (transaction part) | FS-M2-01 | `crates/rustasea-orm/src/{connection,pool,transaction}.rs` | M | Postgres vs SQLite driver-specific SQL; `db.transaction(\|tx\| ...)` atomic; pool `min/max/idle_timeout` from `config.database`; NFR-Sca-01 bench hint (100 concurrent) |
+| S03-T02 | `#[derive(Model)]` + relations + soft delete + serde round-trip | FR-201, FR-206 | FS-M2-02 | `crates/rustasea-macros/src/model.rs` + `crates/rustasea-orm/src/model.rs` | L | `User` with `has_many posts`, `User::with("posts").find(1)` eager-loads; `deleted_at` partial index; soft-deleted `find` returns `None`; `serde_json` round-trip preserves `relations`; relation cycle depth ≤3 |
+| S03-T03 | Query builder — fluent chain, paginate/cursor, locks, scopes, raw | FR-202, FR-203, FR-205 | FS-M2-03 | `crates/rustasea-orm/src/builder.rs` | L | `chunkBy("id",500)` yields 500 without OOM; `firstOrFail` → `NotFound`; `forUpdate` blocks concurrent writer; `toSql`/`toRawSql` green; `scope` composable |
+| S03-T04 | Upsert & delete strictness (MySQL DELETE JOIN) | FR-204 | FS-M2-04 | `crates/rustasea-orm/src/{upsert,delete}.rs` | S | `upsert(rows, unique_by: [])` → `Err(EmptyUniqueBy)`; empty rows → `Ok({0,0})`; MySQL `DELETE JOIN` compiles; previously-silent ignore now throws |
+| S03-T05 | Migrations & seeders (`make:migration`, `migrate`, `migrate:fresh`) | FR-208 | FS-M2-05 | `crates/rustasea-orm/src/migration.rs` + `database/migrations/` | M | `make:migration create_users_table` scaffolds `YYYY_MM_DD_HHMMSS_name.rs` with `up`/`down`; `migrate` idempotent; `migrate:fresh --seed` reversible; NFR-Rel-02 |
+| S03-T06 | Factories + vector extension (`whereVectorSimilarTo`, `vector` column) | FR-207, FR-209, FR-210 | FS-M2-06 | `crates/rustasea-orm/src/{factory,vector}.rs` + Blueprint `vector` | M | `UserFactory::create(5)`; `whereVectorSimilarTo("vector",&emb,limit:10)` returns top-10 by cosine; dimension mismatch → `VectorDimensionMismatch`; missing extension → `PgVectorError::ExtensionMissing`; `FetchMode` (FR-210 Could) behind flag |
 
 ## 4. Dependencies
 
@@ -44,7 +44,7 @@ Fluent, type-safe database layer with migrations, seeders, factories, and initia
 
 ## 5. Deliverables
 
-- Crate `rustavel-orm` + `#[derive(Model)]` macro; `database/migrations/` + `database/seeders/`.
+- Crate `rustasea-orm` + `#[derive(Model)]` macro; `database/migrations/` + `database/seeders/`.
 - Generators `make:model`/`make:migration`/`make:seeder` (runtime in S03; CLI wiring finalized in S06).
 - Tag `v0.3.0`; `vector` feature documented with managed-DB workaround.
 
@@ -54,9 +54,15 @@ Fluent, type-safe database layer with migrations, seeders, factories, and initia
 - [ ] `chunkBy("id", 500)` over 10k rows without OOM; `paginate`/`cursor` correct.
 - [ ] `upsert` with empty `uniqueBy` throws; `migrate` re-run is no-op; `migrate:fresh` reversible.
 - [ ] R-01 resolved: `sqlx` primary committed, `sea-orm` shim behind flag; ADR-002 updated if needed.
-- [ ] `cargo check -p rustavel-orm` does not pull `async-openai`; `cargo tree` audit green.
+- [ ] `cargo check -p rustasea-orm` does not pull `async-openai`; `cargo tree` audit green.
 
 ## 7. Risks
 
 - R-01 ORM duality (score 15) — mitigation is the spike → ADR pre-close.
 - R-06 `pgvector` extension missing on managed Postgres — guard `has_extension("vector")` + feature-flag fallback.
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

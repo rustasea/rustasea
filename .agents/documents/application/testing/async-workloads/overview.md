@@ -20,3 +20,9 @@ Covers typed `Job<T>` + `Queue::route` `OnceLock` + drivers `sync`/`database`/`r
 - Specs: [test-queue-cache.md](test-queue-cache.md)
 - API: [api-queue](../../api/async-workloads/api-queue.md) · [api-cache](../../api/async-workloads/api-cache.md) · [api-events-schedule](../../api/async-workloads/api-events-schedule.md)
 - Module: [queue](../../modules/async-workloads/queue.md) · [cache](../../modules/async-workloads/cache.md) · [events](../../modules/async-workloads/events.md) · [schedule](../../modules/async-workloads/schedule.md)
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

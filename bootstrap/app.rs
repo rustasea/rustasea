@@ -6,7 +6,7 @@
 //! over. `src/main.rs` calls [`configure`]; providers/routes/schedule/events
 //! registries land in `bootstrap/providers.rs` + `bootstrap/commands.rs`.
 
-use rustavel::Application;
+use rustasea::Application;
 
 /// Placeholder provider scoped to the app scaffold.
 ///
@@ -14,7 +14,7 @@ use rustavel::Application;
 /// it only demonstrates provider participation in the boot DAG.
 struct AppServiceProvider;
 
-impl rustavel::ServiceProvider for AppServiceProvider {
+impl rustasea::ServiceProvider for AppServiceProvider {
     fn register(&self, _app: &mut Application) {}
 
     fn boot(&self, _app: &Application) {}

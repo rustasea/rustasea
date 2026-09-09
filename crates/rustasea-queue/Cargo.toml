@@ -1,0 +1,15 @@
+[package]
+name = "rustasea-queue"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Typed Job trait, central Queue::route registry, sync/database/redis drivers, chain/batch and Cloud queue metrics."
+
+[dependencies]
+tokio = { workspace = true, features = ["time", "sync"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+uuid = { workspace = true, features = ["v4"] }
+chrono = { workspace = true, features = ["serde"] }
+thiserror = { workspace = true }
+async-trait = { workspace = true }

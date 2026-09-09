@@ -1,0 +1,12 @@
+[package]
+name = "rustasea-jsonapi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea JSON:API — JsonApiResource, sparse fieldsets, inclusion, links, vnd.api+json"
+
+[dependencies]
+http = "1"
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }

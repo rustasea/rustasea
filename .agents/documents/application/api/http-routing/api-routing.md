@@ -2,7 +2,7 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §1` · `requirements/prd FR-100..106, FR-102..103, FR-109` · `requirements/fsd FS-M1-01..05` · `requirements/tdd BC-1` · `architecture.md BC-1` · ADR-001
-> **Crates:** `rustavel-router` · `rustavel-http` · `rustavel-macros`
+> **Crates:** `rustasea-router` · `rustasea-http` · `rustasea-macros`
 > **Module:** [modules/http-routing/overview.md](../../modules/http-routing/overview.md) · [routing](../../modules/http-routing/routing.md) · [middleware](../../modules/http-routing/middleware.md) · **Testing:** [testing/http-routing/overview.md](../../testing/http-routing/overview.md)
 
 ## 1. Standar Global
@@ -157,7 +157,7 @@ curl -s -X POST http://localhost:3000/users \
 # -> 422 with errors.email
 ```
 
-### 2.4 Introspection — `cargo rustavel route:list [--json]` (not a wire endpoint)
+### 2.4 Introspection — `cargo rustasea route:list [--json]` (not a wire endpoint)
 
 This spec documents the **machine output contract** (snapshot-guarded) — `api-contracts.md §1` defines the shape.
 
@@ -182,7 +182,7 @@ Validated via `contracts/route-list.schema.json` + `cargo insta` snapshot `__sna
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel HttpRouting
+  title: RustaSea HttpRouting
   version: 0.1.0
   description: M1 routes — inferred from design/api-contracts.md §1
 servers:
@@ -360,3 +360,9 @@ components:
 
 `throttle` row deleted mid-429 window → window reset (NFR-Rel) is tested via `cargo test` burst; SSE adjacency is in [api-broadcast](../../api/intelligence-delivery/api-broadcast.md).
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -1,7 +1,7 @@
-# Rustavel — Idea Validation Report (P1)
+# RustaSea — Idea Validation Report (P1)
 
-> **Owner:** vheins/rustavel | **Phase:** Discovery — P1 | **Task:** TASK-006 | **Date:** 2026-09-07
-> **Inputs:** `README.md` (vision, milestones M0–M6, tech stack, Laravel 13 feature map), `docs/laravel-13-research.md` (20 Laravel 13 features, breaking changes, Rustavel implications)
+> **Owner:** vheins/rustasea | **Phase:** Discovery — P1 | **Task:** TASK-006 | **Date:** 2026-09-07
+> **Inputs:** `README.md` (vision, milestones M0–M6, tech stack, Laravel 13 feature map), `docs/laravel-13-research.md` (20 Laravel 13 features, breaking changes, RustaSea implications)
 > **Skill:** `idea-validation` (S0→S1→S2→G0) — all four rules applied in sequence
 
 ---
@@ -68,13 +68,13 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 
 ### Core Hypothesis (falsifiable)
 
-> **If** we ship a Laravel-idiomatic Rust framework with convention-over-configuration, typed container/providers, `axum`-backed routing, `sqlx`/`sea-orm` ORM with `#[derive(Model)]`, `cargo rustavel make:*` generators, and typed `Job<T>`/`Event<T>`, **then** teams like Mira's will adopt it for at least one production service within 90 days **because** it eliminates 3–5 days of per-service boilerplate while preserving Rust's safety/performance.
+> **If** we ship a Laravel-idiomatic Rust framework with convention-over-configuration, typed container/providers, `axum`-backed routing, `sqlx`/`sea-orm` ORM with `#[derive(Model)]`, `cargo rustasea make:*` generators, and typed `Job<T>`/`Event<T>`, **then** teams like Mira's will adopt it for at least one production service within 90 days **because** it eliminates 3–5 days of per-service boilerplate while preserving Rust's safety/performance.
 
 ### Success Metrics (M0–M2 window)
 
 | Metric | Target | Threshold (pivot trigger) | Method |
 |--------|--------|---------------------------|--------|
-| M0 boot success | `cargo run` boots, loads `config/*.toml` + `.env`, resolves singleton, graceful `SIGTERM` | No boot in <5 min from `cargo rustavel new` → UX failure | `cargo test` + manual QA |
+| M0 boot success | `cargo run` boots, loads `config/*.toml` + `.env`, resolves singleton, graceful `SIGTERM` | No boot in <5 min from `cargo rustasea new` → UX failure | `cargo test` + manual QA |
 | M1 route parity | `Route::get` equivalent + `route:list` + domain-route precedence correct | Domain catch-all shadows non-domain → correctness bug | Integration tests |
 | M2 ORM round-trip | `User` model → migrate → `Factory::create` → `whereVectorSimilarTo` + `serde` collection round-trip | Relations lost on `serde` serialize → M2 fails (cf. Laravel 13 #13) | `sqlx::test` + `testcontainers` |
 | Adoption signal | 50 stars / 5 external contributors OR 1 production user by M2 | <10 stars and zero external PRs after 60 days of public M0–M1 → demand risk | GitHub analytics |
@@ -98,17 +98,17 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 |-------|------------|----------|-------|
 | **TAM** | All web backend development where Rust is a viable choice (performance-sensitive APIs, platforms, infra services) | ~1.5M active Rust developers (2025–2026 surveys) × ~30% doing web/backend = **~450k addressable devs** | Rust Survey, GitHub language stats, Stack Overflow — proxy; no direct TAM revenue |
 | **SAM** | Subset that values both performance **and** framework ergonomics (would choose a batteries-included framework over raw crates) | ~25–35% of TAM = **~110k–160k devs**; teams of 2–50 eng that previously used Laravel/Rails/Django or Goravel | Goravel traction + Laravel's "most loved framework" signal + `axum`/`actix` download ratios |
-| **SOM (3yr)** | Rustavel's realistic capture if M0–M2 ship with strong DX | **0.5–1.5% of SAM = ~600–2,000 active projects** | Analog: Goravel reached ~1.8k stars in Go (larger TAM) without Rust's safety advantage; Loco/Rocket are <5k stars each |
+| **SOM (3yr)** | RustaSea's realistic capture if M0–M2 ship with strong DX | **0.5–1.5% of SAM = ~600–2,000 active projects** | Analog: Goravel reached ~1.8k stars in Go (larger TAM) without Rust's safety advantage; Loco/Rocket are <5k stars each |
 
 **Monetization note:** Framework is MIT/Apache-2.0 (README license). Direct revenue is not the near-term metric — adoption, ecosystem, and hiring signal are. Future options (paid Cloud, support, hosted vector/AI) mirror Laravel Cloud (research #8) but are explicitly post-M6.
 
 ### 3.2 Competitor Matrix (7)
 
-| Competitor | Language | Positioning | Core Strengths | Pricing / License | Weakness vs. Rustavel Thesis |
+| Competitor | Language | Positioning | Core Strengths | Pricing / License | Weakness vs. RustaSea Thesis |
 |------------|----------|-------------|---------------|-------------------|------------------------------|
-| **Laravel 13** | PHP 8.3+ | Batteries-included DX king; 20 features in 13.0.0 (AI SDK, vector, JSON:API, queue routing, declarative attributes) | Unmatched ergonomics, ecosystem, hiring pool; AI-native headline (research #1–#10) | MIT | Dynamic typing, runtime errors, GC, concurrency limits — the ceiling Rustavel escapes |
-| **Goravel** (v1.18) | Go | Laravel port for Go; closest prior art | Proves service providers, container, ORM facades, Artisan CLI translate to compiled language; 1.8k+ stars | MIT | `any`/`interface{}` payloads, global facades, `gin` router, stringly-typed config — all fixed by Rustavel's typed design (README §Goravel Inspiration) |
-| **Axum** | Rust | Modular HTTP framework on `tokio`/`tower` | `tower` middleware, extractor ergonomics, `tokio` alignment; Rustavel's chosen base (README Tech Stack) | MIT/Apache-2.0 | Deliberately unopinionated — no ORM, auth, queue, CLI, or conventions; requires assembly |
+| **Laravel 13** | PHP 8.3+ | Batteries-included DX king; 20 features in 13.0.0 (AI SDK, vector, JSON:API, queue routing, declarative attributes) | Unmatched ergonomics, ecosystem, hiring pool; AI-native headline (research #1–#10) | MIT | Dynamic typing, runtime errors, GC, concurrency limits — the ceiling RustaSea escapes |
+| **Goravel** (v1.18) | Go | Laravel port for Go; closest prior art | Proves service providers, container, ORM facades, Artisan CLI translate to compiled language; 1.8k+ stars | MIT | `any`/`interface{}` payloads, global facades, `gin` router, stringly-typed config — all fixed by RustaSea's typed design (README §Goravel Inspiration) |
+| **Axum** | Rust | Modular HTTP framework on `tokio`/`tower` | `tower` middleware, extractor ergonomics, `tokio` alignment; RustaSea's chosen base (README Tech Stack) | MIT/Apache-2.0 | Deliberately unopinionated — no ORM, auth, queue, CLI, or conventions; requires assembly |
 | **Actix Web** | Rust | High-performance actor-based HTTP | Benchmark leader, mature | MIT/Apache-2.0 | Actor model diverges from Laravel mental model; steeper learning curve; Tower ecosystem gap |
 | **Rocket** | Rust | Ergonomic, codegen-heavy web framework | Attribute macros, batteries-included feel (closest to Laravel DX in Rust) | MIT/Apache-2.0 | Historically tied to nightly, slower `tokio` alignment; smaller ecosystem than `axum`; no ORM/queue story |
 | **Loco** | Rust | Rails-like Rust framework (ActiveRecord-inspired) | Most direct "Rails for Rust" attempt; conventions, background jobs, ORM via `sea-orm` | MIT | Opinionated Rails mapping (not Laravel/Goravel); younger, smaller community; no AI/vector headline |
@@ -118,19 +118,19 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 
 ### 3.3 Feature Gap Analysis
 
-| Gap | Who Leaves It Underserved | Rustavel Opportunity |
+| Gap | Who Leaves It Underserved | RustaSea Opportunity |
 |-----|---------------------------|----------------------|
 | Laravel-grade DX on a compiled, memory-safe runtime | `axum`/`actix` leave DX to the user; Loco targets Rails idioms | Typed Laravel idioms: container, providers (`Register→Boot` + DAG), `make:*`, `route:list`, `Job<T>` |
 | Strongly-typed jobs/events/queue routing | Goravel uses `any`; raw Rust uses `serde_json::Value` | `Queue::route::<Job>(queue:)` + typed `Job`/`Event` traits (README M4, Laravel 13 #4) |
 | Vector/semantic search as framework primitive | Bolt-on per project; Laravel 13 made it headline #6 | `whereVectorSimilarTo` + `vector` column + `toEmbeddings` from M2 via `pgvector` |
 | Declarative attributes over config | Laravel 13 expanded to `#[Middleware]`/`#[Tries]`/`#[Authorize]` etc. (#7) | Rust proc-macros are idiomatic: `#[middleware]`, `#[tries]`, `#[validate]`, `#[authorize]` |
-| JSON:API + real-time + AI SDK in one stack | Fragmented across crates; no unified story | M6: `JsonApiResource` (sparse fieldsets), WebSocket/SSE, `rustavel-ai` over 12 providers |
+| JSON:API + real-time + AI SDK in one stack | Fragmented across crates; no unified story | M6: `JsonApiResource` (sparse fieldsets), WebSocket/SSE, `rustasea-ai` over 12 providers |
 
 ### 3.4 Value Proposition & Positioning
 
 **Positioning statement:**
 
-> For backend teams that outgrew Laravel/Rails on performance but not on productivity, **Rustavel** is the Rust framework with Laravel ergonomics that boots a production-ready service in minutes — unlike raw `axum`/`actix` (which require weeks of assembly) and unlike Goravel/Go (which reintroduces `any` and global facades), Rustavel leverages Rust's type system to make ergonomics safer.
+> For backend teams that outgrew Laravel/Rails on performance but not on productivity, **RustaSea** is the Rust framework with Laravel ergonomics that boots a production-ready service in minutes — unlike raw `axum`/`actix` (which require weeks of assembly) and unlike Goravel/Go (which reintroduces `any` and global facades), RustaSea leverages Rust's type system to make ergonomics safer.
 
 **Primary value prop:** Zero-cost ergonomics — expressive, Laravel-familiar APIs that compile away where possible.
 
@@ -143,7 +143,7 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 
 **Elevator pitch (1 sentence):**
 
-> Rustavel proves you can have Laravel's velocity and Rust's safety in the same framework.
+> RustaSea proves you can have Laravel's velocity and Rust's safety in the same framework.
 
 ---
 
@@ -163,16 +163,16 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 - ORM choice is hedged: `sqlx` primary (compile-time checked) + `sea-orm` optional — mitigates ActiveRecord vs. query-builder trade-off.
 - Proc-macros (`syn`/`quote`/`proc-macro2`) are well-trodden but increase compile times — monitor with `cargo build --timings`.
 - `pgvector` behind feature flag avoids forcing Postgres on all users.
-- Laravel 13 research cautions on contract churn (`Cache::touch`, `Queue::pendingSize`, `Dispatcher::dispatchAfterResponse`) — Rustavel traits should version-gate additive methods or use default impls.
+- Laravel 13 research cautions on contract churn (`Cache::touch`, `Queue::pendingSize`, `Dispatcher::dispatchAfterResponse`) — RustaSea traits should version-gate additive methods or use default impls.
 
 ### 4.2 Risk Matrix (Top 5)
 
 | # | Risk | Likelihood | Impact | Mitigation |
 |---|------|------------|--------|------------|
-| 1 | Trait/lifetime ergonomics make container or routing feel worse than raw `axum` | M | H | M0 spike + dogfood `cargo rustavel new` internally; abort to library crates if DX regresses |
+| 1 | Trait/lifetime ergonomics make container or routing feel worse than raw `axum` | M | H | M0 spike + dogfood `cargo rustasea new` internally; abort to library crates if DX regresses |
 | 2 | ORM parity with Laravel 13 #13–#15 (collection `serde`, `upsert` strict `uniqueBy`, `whereBinary` etc.) is underestimated | M | M | Scope M2 to `sqlx` subset first; `insertOrIgnoreReturning` etc. behind follow-up tickets |
 | 3 | No external adoption despite good DX (demand risk) | M | H | Ship M0 publicly early; measure stars/PRs; invest in docs/examples over more features |
-| 4 | Compile-time cost of proc-macros hurts iteration speed | L | M | Feature-gate macros; keep `rustavel-macros` crate isolated; benchmark `cargo check` |
+| 4 | Compile-time cost of proc-macros hurts iteration speed | L | M | Feature-gate macros; keep `rustasea-macros` crate isolated; benchmark `cargo check` |
 | 5 | Vector/AI scope creep pulls focus from M0–M2 core | M | M | Enforce milestone gates: M6 work cannot start before M2 success criteria pass |
 
 ### 4.3 MoSCoW — MVP (M0–M2) Scope
@@ -183,12 +183,12 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 | `axum` router + `tower` middleware, route groups/prefix/naming/resource, domain-route precedence, `route:list` | **Must** | M | M1 success criteria; Laravel 13 #19 domain priority is a correctness requirement |
 | Typed request extractors, `Json`/`View` responses, HTTP client (`reqwest` wrapper) | **Must** | S | Minimal HTTP ergonomics to be useful |
 | Query builder (`sqlx`/`sea-orm`), `where`/`orWhere`, `find`/`first`/`firstOrFail`, `create`/`save`/`update`/`delete`, `paginate`/`cursor`, transactions, `#[derive(Model)]` with `deleted_at` | **Must** | L | M2 core; collection `serde` round-trip (Laravel 13 #13) included |
-| Migrations + `cargo rustavel make:migration` / `migrate` | **Must** | M | Without migrations the ORM is not shippable |
+| Migrations + `cargo rustasea make:migration` / `migrate` | **Must** | M | Without migrations the ORM is not shippable |
 | `whereVectorSimilarTo` + `vector` column via `pgvector` (feature-flag) | **Should** | M | Laravel 13 #6 headline; defer full embedding pipeline to M6, ship column + query primitive in M2 |
 | Seeders / factories / `Factory::create` | **Should** | S | Testing story starts in M2, completes in M5 |
 | Auth / validation / CSRF (M3) | **Won't** (in MVP) | — | Explicitly deferred to M3; MVP is M0–M2 only |
 | Queue / Cache / Schedule / Events (M4) | **Won't** (in MVP) | — | Deferred to M4 |
-| CLI `make:*` generators beyond migration/model, `TestCase` harness, AI SDK (M5–M6) | **Won't** (in MVP) | — | Deferred; `cargo rustavel new` scaffold is the only M0 generator |
+| CLI `make:*` generators beyond migration/model, `TestCase` harness, AI SDK (M5–M6) | **Won't** (in MVP) | — | Deferred; `cargo rustasea new` scaffold is the only M0 generator |
 
 ### 4.4 Prioritization (RICE) — MVP Features
 
@@ -212,9 +212,9 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 
 ### 4.6 Build Order
 
-1. **M0** — `rustavel-foundation` + `rustavel-config` + `rustavel` umbrella + `cargo rustavel new` scaffold
-2. **M1** — `rustavel-router` + `rustavel-http` + `#[route]` macro + `route:list`
-3. **M2** — `rustavel-orm` (sqlx primary) + `rustavel-macros::Model` + migrations + `pgvector` feature flag
+1. **M0** — `rustasea-foundation` + `rustasea-config` + `rustasea` umbrella + `cargo rustasea new` scaffold
+2. **M1** — `rustasea-router` + `rustasea-http` + `#[route]` macro + `route:list`
+3. **M2** — `rustasea-orm` (sqlx primary) + `rustasea-macros::Model` + migrations + `pgvector` feature flag
 4. **M3–M6** — only after M0–M2 success criteria pass (gated)
 
 ### Gate Check — Feasibility & Prioritization
@@ -235,7 +235,7 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 |---|------------|------|-------------------|------------------|
 | 1 | Teams want Laravel ergonomics on Rust (not just raw `axum`) | **High** | 10 interviews with Laravel→Rust/Go teams + Goravel adoption as proxy | <30% of interviewees rank "framework DX" as top-3 pain → assumption fails |
 | 2 | `axum` + `tower` + `sqlx` + `tokio` can support Laravel-idiomatic APIs without `unsafe` or painful lifetimes | **High** | M0 spike (2-week prototype of container + provider DAG + `#[route]`) | Spike cannot achieve `Route::get` ergonomics with typed extractors and compiles cleanly → pivot to library crates |
-| 3 | Developers will accept Rust's learning curve if DX matches Laravel velocity | **Medium** | Landing page + `cargo rustavel new` try-out; measure time-to-first-route | Median time-to-first-route >30 min or >50% abandon during setup → onboarding failure |
+| 3 | Developers will accept Rust's learning curve if DX matches Laravel velocity | **Medium** | Landing page + `cargo rustasea new` try-out; measure time-to-first-route | Median time-to-first-route >30 min or >50% abandon during setup → onboarding failure |
 | 4 | Vector/semantic search as a day-one primitive is a differentiator (Laravel 13 #6) | **Medium** | Feature-flag `whereVectorSimilarTo` demo with `pgvector` in M2 | Zero interest / no usage in early feedback → demote to M6-only |
 | 5 | `pgvector` + Postgres is acceptable as the default vector backend | **Low** | M2 supports Postgres + MySQL + SQLite; vector is opt-in | Users demand non-Postgres vector and refuse feature flag → add abstraction |
 | 6 | MIT/Apache-2.0 OSS will attract contributors without paid incentives | **Medium** | Public M0–M1 release + RFC process (README Contributing) | No external PRs/issues in 60 days → invest in docs/examples before more code |
@@ -249,7 +249,7 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 
 ### Decision: **GO — Conditional**
 
-Rustavel is **approved to proceed through M0–M2 (MVP)** under the following conditions. This is not an unconditional green light to M6.
+RustaSea is **approved to proceed through M0–M2 (MVP)** under the following conditions. This is not an unconditional green light to M6.
 
 ### Rationale
 
@@ -258,8 +258,8 @@ Rustavel is **approved to proceed through M0–M2 (MVP)** under the following co
 
 ### Conditions (Gates)
 
-1. **M0 spike gate:** 2-week prototype of container + `ServiceProvider` lifecycle + `#[route]` must demonstrate Laravel-like ergonomics without `unsafe` and with acceptable `cargo check` times. Fail → re-scope to focused crates (e.g., `rustavel-router` + `rustavel-orm` as standalone libraries).
-2. **Public M0 gate:** Publish M0 as `0.1.0` with `cargo rustavel new` and measure adoption signal (stars, issues, try-outs) before committing M2 headcount.
+1. **M0 spike gate:** 2-week prototype of container + `ServiceProvider` lifecycle + `#[route]` must demonstrate Laravel-like ergonomics without `unsafe` and with acceptable `cargo check` times. Fail → re-scope to focused crates (e.g., `rustasea-router` + `rustasea-orm` as standalone libraries).
+2. **Public M0 gate:** Publish M0 as `0.1.0` with `cargo rustasea new` and measure adoption signal (stars, issues, try-outs) before committing M2 headcount.
 3. **M2 exit gate:** `whereVectorSimilarTo` stays feature-flagged; full AI SDK (M6) does not start until M2 `serde` collection round-trip and migration story are green — prevents M6 scope creep from starving core.
 4. **Re-validate at M2:** Re-run competitor check (Loco, Rocket, Axum releases) and Laravel 14 delta before approving M3–M6 funding.
 
@@ -297,3 +297,9 @@ Rustavel is **approved to proceed through M0–M2 (MVP)** under the following co
 ---
 
 *Generated via `idea-validation` skill — problem-analysis → hypothesis-target → market-research → feasibility-prioritization. Gates checked per-rule.*
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

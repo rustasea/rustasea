@@ -109,3 +109,9 @@ impl ShutdownHandle { async fn drain(self, timeout: Duration) -> Result<(), Shut
 |-------|-------|
 | QA | `test-planning` — boundary `D` (date/time) |
 | Chaos | `non-functional-testing` — config file deleted mid-boot |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

@@ -123,3 +123,9 @@ enum ModelError { MissingPrimaryKey, RelationNotFound { name: String } }
 | BDD | `test-generation` `@collection-serialization` |
 | Contract | `test-generation` — serde snapshot + `cargo insta` |
 | Chaos | `non-functional-testing` — concurrent `with("posts")` under load |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

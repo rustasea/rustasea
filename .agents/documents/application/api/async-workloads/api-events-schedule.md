@@ -2,7 +2,7 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §4` · `requirements/prd FR-406..410` · `requirements/fsd FS-M4-03..05` · `requirements/tdd BC-4 Event/Dispatcher/Schedule` · `design/domain BC-4 + §4 Events E-01..04`
-> **Crates:** `rustavel-events` · `rustavel-schedule` (+ `rustavel-queue` adjacency for `QUEUE=true`)
+> **Crates:** `rustasea-events` · `rustasea-schedule` (+ `rustasea-queue` adjacency for `QUEUE=true`)
 
 ## 1. Standar Global
 
@@ -54,20 +54,20 @@ async fn page_handler(State(state): State<AppState>) -> impl IntoResponse {
 #### `schedule:list` / `schedule:run`
 
 ```bash
-cargo rustavel schedule:list
+cargo rustasea schedule:list
 # emails:send  daily at 08:00  onOneServer
 
-cargo rustavel schedule:run        # tick every 60s; respects schedule_paused flag
+cargo rustasea schedule:run        # tick every 60s; respects schedule_paused flag
 # when schedule_paused=true -> no dispatch; when paused during running job -> job completes, next tick suppressed
 ```
 
 #### `schedule:pause` / `schedule:resume`
 
 ```bash
-cargo rustavel schedule:pause
+cargo rustasea schedule:pause
 # -> sets schedule_paused=true (cache or DB singleton row id=1); emits SchedulePaused
 
-cargo rustavel schedule:resume
+cargo rustasea schedule:resume
 # -> clears flag; emits ScheduleResumed; subsequent tick dispatches again
 ```
 
@@ -92,7 +92,7 @@ cargo rustavel schedule:resume
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Schedule + Events
+  title: RustaSea Schedule + Events
   version: 0.1.0
   description: Schedule pause/resume + event dispatch; inferred from api-contracts.md §4
 servers:
@@ -210,3 +210,9 @@ components:
 
 Per `chaos-engineering`: `schedule:pause` during tick `sleep(60s)` window — running job completes, next tick suppressed, exactly-one `SchedulePaused` emission. See [testing/async-workloads/overview.md](../../testing/async-workloads/overview.md) § Chaos.
 
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

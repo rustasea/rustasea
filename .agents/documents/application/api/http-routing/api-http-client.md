@@ -2,15 +2,15 @@
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
 > **Parents:** `design/api-contracts.md §1` · `requirements/prd FR-107..108` · `requirements/fsd FS-M1-06`
-> **Crates:** `rustavel-http` · **Module:** [modules/http-routing/http-client.md](../../modules/http-routing/http-client.md)
+> **Crates:** `rustasea-http` · **Module:** [modules/http-routing/http-client.md](../../modules/http-routing/http-client.md)
 
-> **Note:** Client-side contract — not an HTTP endpoint served by Rustavel. Documented here for `test-generation` contract trace.
+> **Note:** Client-side contract — not an HTTP endpoint served by RustaSea. Documented here for `test-generation` contract trace.
 
 ## 1. Standar Global
 
 - **Library:** `reqwest` under hood; `Http::get(url).header(k,v).timeout(Duration::from_secs(5)).throw(|resp| resp.status().is_server_error()).send().await -> Result<Response, HttpError>`.
 - **Timeout kinds:** `Timeout{ kind: Connect|Total|Idle }` distinct (#18). `throw` that itself errors → `HttpError::ThrowCallback`.
-- **Process idle-timeout:** `cargo rustavel` internal tooling `FakeInvokedProcess::stop`/`ensureNotTimedOut` adjacency (FS-M1-06).
+- **Process idle-timeout:** `cargo rustasea` internal tooling `FakeInvokedProcess::stop`/`ensureNotTimedOut` adjacency (FS-M1-06).
 
 ## 2. Endpoints (client builder)
 
@@ -70,7 +70,7 @@ let resp = Http::get("https://example.com/api")
 ```yaml
 openapi: 3.0.3
 info:
-  title: Rustavel Http Client — outbound contract
+  title: RustaSea Http Client — outbound contract
   version: 0.1.0
   description: Client builder contract wrapping reqwest; throw predicate + timeout kinds are contract.
 x-inferred: true
@@ -96,3 +96,9 @@ Contract exercised via `wiremock`/`httpmock` predicates in [testing/http-routing
 - [x] Error responses have realistic examples (Status/Timeout Idle/ThrowCallback differentiated).
 - [x] YAML valid with `security`.
 - [x] Parameter constraints captured (timeout `Duration`, predicate correctness).
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).

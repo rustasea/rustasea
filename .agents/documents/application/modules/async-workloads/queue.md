@@ -151,3 +151,9 @@ enum QueueError { DuplicateRoute{ type_name: &'static str }, UnknownConnection, 
 | Contract | `test-generation` — `job-payload.schema.json` |
 | Security | `security-audit` — `RegisterSec02` allow-list on payload deser |
 | Chaos | `non-functional-testing` — Redis/DB loss mid-queue, `JobAttempted` carry-field rename invariant |
+
+---
+
+> **Archive note (rebrand 2026-09-09):** project renamed from Rustavel to **RustaSea**.
+> This document is archived as-is under the historical `Rustavel` name for traceability;
+> current branding is RustaSea (`rustasea` crates, `RustaSea` prose).
