@@ -33,6 +33,10 @@ pub use artisan::{Artisan, Command, CommandMeta, CommandOutput, Io};
 pub use error::{exit_code, CliError, CliResult};
 pub use registry::{CommandRegistry, Registered};
 
+/// Re-export for generated commands — app crates depend on the `rustavel`
+/// umbrella only, so `make:command` output imports `async_trait` from here.
+pub use async_trait;
+
 #[cfg(feature = "cli")]
 pub use generator::{Generator, GeneratorError};
 #[cfg(feature = "cli")]

@@ -20,10 +20,6 @@ pub struct Cli {
     /// Command to execute, e.g. `make:controller`.
     #[command(subcommand)]
     pub command: CliCommand,
-
-    /// Forwarded verbatim to the selected command.
-    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-    pub args: Vec<String>,
 }
 
 /// Top-level subcommands resolved by clap.
@@ -38,7 +34,48 @@ pub enum CliCommand {
         #[arg(long)]
         all: bool,
     },
-    /// Invoke a registered command by name with raw arguments.
+    /// Invoke a registered command by name with raw arguments
+    /// (e.g. `make:controller UserController --resource`).
     #[command(external_subcommand)]
     Run(Vec<String>),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The named `list` subcommand parses with its flags.
+    #[test]
+    fn list_parses_with_flags() {
+        let cli = Cli::parse_from(["cargo artisan", "list", "--json", "--all"]);
+        match cli.command {
+            CliCommand::List { json, all } => {
+                assert!(json);
+                assert!(all);
+            }
+            other => panic!("expected List, got {other:?}"),
+        }
+    }
+
+    /// Unknown commands fall through to the external subcommand with raw args,
+    /// including hyphen-prefixed flags (e.g. `--force`).
+    #[test]
+    fn external_subcommand_captures_raw_args() {
+        let cli = Cli::parse_from([
+            "cargo artisan",
+            "make:controller",
+            "UserController",
+            "--resource",
+            "--force",
+        ]);
+        match cli.command {
+            CliCommand::Run(args) => {
+                assert_eq!(
+                    args,
+                    vec!["make:controller", "UserController", "--resource", "--force"]
+                );
+            }
+            other => panic!("expected Run, got {other:?}"),
+        }
+    }
 }

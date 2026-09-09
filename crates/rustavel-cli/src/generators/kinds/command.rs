@@ -1,4 +1,9 @@
 //! `make:command` template — app/console/commands/<snake>.rs.
+//!
+//! The scaffold implements the `rustavel::cli::Command` trait. A generated
+//! app crate depends on `rustavel` only (README M5 layout), so the
+//! `#[async_trait]` expansion is imported from the umbrella crate's re-export
+//! (`rustavel::cli::async_trait`) instead of the raw `async_trait` crate.
 
 use std::path::Path;
 
@@ -14,9 +19,9 @@ pub fn scaffold(root: &Path, opts: &MakeOptions) -> CliResult<Generated> {
     let source = format!(
         r#"//! Console command scaffold — {name}.
 
-use rustavel::cli::{{Command, Io}};
+use rustavel::cli::async_trait::async_trait;
 use rustavel::cli::error::CliResult;
-use async_trait::async_trait;
+use rustavel::cli::{{Command, Io}};
 
 /// Signature shown in `cargo artisan list`.
 pub const SIGNATURE: &str = "{signature}";
@@ -44,7 +49,7 @@ impl Command for {name} {{
     /// Execute the command.
     async fn run(&self, args: Vec<String>, io: &mut Io) -> CliResult<()> {{
         let _ = args;
-        io.line(format!("Running {signature}…"));
+        io.line(format!("Running {signature}"));
         Ok(())
     }}
 }}

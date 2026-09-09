@@ -21,9 +21,9 @@ pub fn scaffold(root: &Path, opts: &MakeOptions) -> CliResult<Generated> {
 //! The model maps to the `{table}` table. Customize fields, casts and
 //! relations; `Model` supplies the ORM contract.
 
-use rustavel::orm::Model;
 use rustavel::orm::factory::SequenceFactory;
 use rustavel::orm::model::{{SoftDeletes, Timestamps}};
+use rustavel::orm::Model;
 
 /// Row type for the `{table}` table.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -49,8 +49,9 @@ impl Model for {name} {{
 
     /// Assign a fresh client-generated UUID (v7).
     fn assign_id(&mut self) -> uuid::Uuid {{
-        self.id = uuid::Uuid::now_v7();
-        self.id
+        let id = uuid::Uuid::now_v7();
+        self.id = id;
+        id
     }}
 }}
 

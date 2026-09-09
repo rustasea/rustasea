@@ -1,4 +1,8 @@
 //! `make:test` template — tests/feature/<snake>.rs (TestCase harness).
+//!
+//! Path and filename follow the sprint-06 M5 acceptance: `make:test
+//! UserTest` writes `tests/feature/user_test.rs` (snake_case of the class
+//! name), matching the README `tests/feature/` layout.
 
 use std::path::Path;
 
@@ -41,7 +45,7 @@ mod tests {{
     #[test]
     fn smoke() {{
         let mut test = {name}::default();
-        test.setup();
+        test.harness_setup();
         rustavel::testing::reset_factory_sequences();
     }}
 }}

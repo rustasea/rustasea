@@ -1,7 +1,10 @@
 //! `make:controller` template — app/http/controllers/<snake>.rs.
 //!
 //! Plain scaffolding yields a `handle` skeleton; `--resource` adds the seven
-//! REST methods (index/create/store/show/edit/update/destroy).
+//! REST methods (index/create/store/show/edit/update/destroy). Handlers return
+//! `rustavel::http::JsonResponse`, the umbrella's JSON response helper —
+//! the `http` module does not re-export axum's `Json`/`IntoResponse`, so
+//! generated files must not reference those paths.
 
 use std::path::Path;
 
@@ -29,23 +32,16 @@ fn plain_source(name: &str) -> String {
 //! Register routes against these handlers in `routes/web.rs`; add `--resource`
 //! on `make:controller` to scaffold the full REST method set.
 
-use rustavel::http::{{IntoResponse, Json}};
-use rustavel::http::Request;
+use rustavel::http::JsonResponse;
 
 /// Handles {kind} HTTP requests.
 pub struct {name};
 
 impl {name} {{
     /// Respond to the primary route for this controller.
-    pub async fn handle(request: Request) -> Json<serde_json::Value> {{
-        let _ = request;
-        Json(serde_json::json!({{ "controller": "{kind}" }}))
+    pub async fn handle() -> axum::response::Response {{
+        JsonResponse::ok(serde_json::json!({{ "controller": "{kind}" }}))
     }}
-}}
-
-/// Fallback response used when a handler is still a stub.
-pub fn ok() -> impl IntoResponse {{
-    Json(serde_json::json!({{ "status": "ok" }}))
 }}
 "#,
         kind = slug(name),
@@ -60,46 +56,45 @@ fn resource_source(name: &str) -> String {
 //!
 //! Full REST method set produced by `make:controller {name} --resource`.
 
-use rustavel::http::{{IntoResponse, Json}};
-use rustavel::http::Request;
+use rustavel::http::JsonResponse;
 
 /// Handles {kind} resource HTTP requests.
 pub struct {name};
 
 impl {name} {{
     /// GET /{kind} — list rows.
-    pub async fn index(_request: Request) -> impl IntoResponse {{
-        Json(serde_json::json!({{ "rows": [] }}))
+    pub async fn index() -> axum::response::Response {{
+        JsonResponse::ok(serde_json::json!({{ "rows": [] }}))
     }}
 
-    /// GET /{kind}/new — render the create form.
-    pub async fn create(_request: Request) -> impl IntoResponse {{
-        Json(serde_json::json!({{ "form": "create" }}))
+    /// GET /{kind}/create — render the create form.
+    pub async fn create() -> axum::response::Response {{
+        JsonResponse::ok(serde_json::json!({{ "form": "create" }}))
     }}
 
     /// POST /{kind} — persist a new row.
-    pub async fn store(_request: Request) -> impl IntoResponse {{
-        Json(serde_json::json!({{ "stored": true }}))
+    pub async fn store() -> axum::response::Response {{
+        JsonResponse::ok(serde_json::json!({{ "stored": true }}))
     }}
 
     /// GET /{kind}/{{id}} — show one row.
-    pub async fn show(_request: Request) -> impl IntoResponse {{
-        Json(serde_json::json!({{ "row": null }}))
+    pub async fn show() -> axum::response::Response {{
+        JsonResponse::ok(serde_json::json!({{ "row": null }}))
     }}
 
     /// GET /{kind}/{{id}}/edit — render the edit form.
-    pub async fn edit(_request: Request) -> impl IntoResponse {{
-        Json(serde_json::json!({{ "form": "edit" }}))
+    pub async fn edit() -> axum::response::Response {{
+        JsonResponse::ok(serde_json::json!({{ "form": "edit" }}))
     }}
 
     /// PUT/PATCH /{kind}/{{id}} — persist changes.
-    pub async fn update(_request: Request) -> impl IntoResponse {{
-        Json(serde_json::json!({{ "updated": true }}))
+    pub async fn update() -> axum::response::Response {{
+        JsonResponse::ok(serde_json::json!({{ "updated": true }}))
     }}
 
     /// DELETE /{kind}/{{id}} — remove a row (soft delete when applicable).
-    pub async fn destroy(_request: Request) -> impl IntoResponse {{
-        Json(serde_json::json!({{ "deleted": true }}))
+    pub async fn destroy() -> axum::response::Response {{
+        JsonResponse::ok(serde_json::json!({{ "deleted": true }}))
     }}
 }}
 "#,
