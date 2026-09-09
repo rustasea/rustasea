@@ -56,6 +56,21 @@ impl SessionPolicy {
         Ok(())
     }
 
+    /// Verify a cache prefix uses the hyphenated `-cache-` marker.
+    ///
+    /// Separate from [`SessionPolicy::validate_prefix`] because cache keys
+    /// and session keys use different markers (FS-M3-03, TC-M3-07). A prefix
+    /// with the underscore variant (`_cache_`) is rejected, matching the
+    /// Laravel-13 hyphenation rule (#12).
+    pub fn validate_cache_prefix(prefix: &str) -> Result<()> {
+        if !prefix.contains("-cache-") {
+            return Err(AuthError::Disabled(format!(
+                "cache prefix {prefix:?} must contain -cache-"
+            )));
+        }
+        Ok(())
+    }
+
     /// Gate a type name against the allow-list before deserialization.
     pub fn allow(
         &self,
@@ -68,6 +83,25 @@ impl SessionPolicy {
                 type_name: type_name.to_string(),
             })
         }
+    }
+}
+
+/// Allow-list contract for safe deserialization (FR-304, TC-M3-06).
+///
+/// Any store that deserializes values from untrusted bytes (sessions,
+/// caches) must gate the concrete type name against an explicit allow-list
+/// *before* `from_str`, so a poisoned cache entry can never decode into an
+/// attacker-chosen gadget type. Session and cache policies share this trait;
+/// both surface `SerializationError::NotAllowed { type_name }` on a miss.
+pub trait DeserializationAllowList {
+    /// Reject deserializing `type_name` unless it is allow-listed.
+    fn allow(&self, type_name: &str) -> std::result::Result<(), crate::error::SerializationError>;
+}
+
+impl DeserializationAllowList for SessionPolicy {
+    /// Delegates to [`SessionPolicy::allow`].
+    fn allow(&self, type_name: &str) -> std::result::Result<(), crate::error::SerializationError> {
+        SessionPolicy::allow(self, type_name)
     }
 }
 
@@ -266,6 +300,28 @@ mod tests {
             ..SessionPolicy::default()
         };
         assert!(policy.validate_prefix().is_err());
+    }
+
+    /// Cache prefixes must use the hyphenated `-cache-` marker (TC-M3-07).
+    #[test]
+    fn cache_prefix_validation_rejects_underscores() {
+        assert!(SessionPolicy::validate_cache_prefix("rustavel-cache-").is_ok());
+        let err = SessionPolicy::validate_cache_prefix("rustavel_cache_").expect_err("rejected");
+        assert!(matches!(err, AuthError::Disabled(_)));
+    }
+
+    /// The allow-list trait rejects unlisted types like the inherent method.
+    #[test]
+    fn deserialization_allow_list_trait_gates_types() {
+        use crate::session::DeserializationAllowList;
+        let policy = SessionPolicy::with_classes(vec!["App::UserDto".into()]);
+        assert!(policy.allow("App::UserDto").is_ok());
+        assert_eq!(
+            <SessionPolicy as DeserializationAllowList>::allow(&policy, "App::AdminDto"),
+            Err(crate::error::SerializationError::NotAllowed {
+                type_name: "App::AdminDto".into()
+            })
+        );
     }
 
     /// Unlisted types are rejected by the allow-list gate.

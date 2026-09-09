@@ -43,6 +43,17 @@ fn invalid_payload_aggregates_errors_per_field() {
     assert!(bag.get("name").iter().any(|e| e.code == "min"));
     assert!(bag.get("email").iter().any(|e| e.code == "email"));
     assert!(bag.get("role").iter().any(|e| e.code == "contains_strict"));
+    // Field-level rules carry human messages that serialize into the 422 body.
+    let body = bag.into_json_body();
+    assert_eq!(body["message"], "The given data was invalid.");
+    assert!(body["errors"]["name"][0]
+        .as_str()
+        .expect("message is a string")
+        .contains("at least 3"));
+    assert!(body["errors"]["email"][0]
+        .as_str()
+        .expect("message is a string")
+        .contains("valid email"));
 }
 
 /// The macro supports single name-value rules (`contains_strict="admin"`).

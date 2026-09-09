@@ -28,7 +28,8 @@ pub use error::{AuthError, CsrfError, SerializationError, ThrottleError};
 pub use guard::{Auth, AuthManager, AuthUser, Credentials, Guard, GuardRegistrar, Token};
 pub use jwt::{JwtClaims, JwtConfig, JwtGuard};
 pub use session::{
-    EmailVerification, MemoryEmailVerification, SessionGuard, SessionPolicy, SessionUser,
+    DeserializationAllowList, EmailVerification, MemoryEmailVerification, SessionGuard,
+    SessionPolicy, SessionUser,
 };
 pub use throttle::layer::{ThrottleLayer, ThrottleService};
 pub use throttle::limiter::MemoryRateLimiter;

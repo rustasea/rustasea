@@ -23,6 +23,10 @@ pub enum KeyBy {
 }
 
 /// Rate-limit definition — `limit.per_minute(10).by_ip()`.
+///
+/// Snake_case builders are canonical (FS-M3-04); camelCase aliases
+/// (`perMinute().byIp()`) mirror the README/FSD title and delegate here, so
+/// both spellings produce identical limits.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Limit {
     /// Maximum requests per window.
@@ -43,6 +47,11 @@ impl Limit {
         }
     }
 
+    /// CamelCase alias of [`Limit::per_minute`] (README `perMinute()` form).
+    pub fn perMinute(n: u32) -> Self {
+        Self::per_minute(n)
+    }
+
     /// Start a per-second limit with `n` attempts.
     pub fn per_second(n: u32) -> Self {
         Self {
@@ -52,10 +61,20 @@ impl Limit {
         }
     }
 
+    /// CamelCase alias of [`Limit::per_second`].
+    pub fn perSecond(n: u32) -> Self {
+        Self::per_second(n)
+    }
+
     /// Bucket by peer IP.
     pub fn by_ip(mut self) -> Self {
         self.key_by = KeyBy::Ip;
         self
+    }
+
+    /// CamelCase alias of [`Limit::by_ip`] (README `byIp()` form).
+    pub fn byIp(self) -> Self {
+        self.by_ip()
     }
 
     /// Bucket by authenticated user id.
@@ -64,10 +83,20 @@ impl Limit {
         self
     }
 
+    /// CamelCase alias of [`Limit::by_user`].
+    pub fn byUser(self) -> Self {
+        self.by_user()
+    }
+
     /// Bucket by a fixed key.
     pub fn by_key(mut self, key: impl Into<String>) -> Self {
         self.key_by = KeyBy::Key(key.into());
         self
+    }
+
+    /// CamelCase alias of [`Limit::by_key`].
+    pub fn byKey(self, key: impl Into<String>) -> Self {
+        self.by_key(key)
     }
 }
 
@@ -191,5 +220,26 @@ mod tests {
             Limit::per_minute(5).by_key("k").key_by,
             KeyBy::Key("k".into())
         );
+    }
+
+    /// CamelCase aliases produce identical limits to the snake_case builders.
+    #[test]
+    fn camel_case_aliases_match_snake_case_builders() {
+        assert_eq!(Limit::perMinute(60), Limit::per_minute(60));
+        assert_eq!(Limit::perSecond(3), Limit::per_second(3));
+        assert_eq!(Limit::perMinute(60).byIp(), Limit::per_minute(60).by_ip());
+        assert_eq!(
+            Limit::perMinute(60).byUser(),
+            Limit::per_minute(60).by_user()
+        );
+        assert_eq!(
+            Limit::perMinute(60).byKey("k"),
+            Limit::per_minute(60).by_key("k")
+        );
+        // Fluent perMinute(60).byIp() -> 60 attempts / 60 s keyed by IP.
+        let limit = Limit::perMinute(60).byIp();
+        assert_eq!(limit.max_attempts, 60);
+        assert_eq!(limit.decay_secs, 60);
+        assert_eq!(limit.key_by, KeyBy::Ip);
     }
 }

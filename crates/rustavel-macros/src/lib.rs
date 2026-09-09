@@ -61,31 +61,78 @@ pub fn route(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Attribute macro for middleware handlers.
 ///
 /// Grammar: `#[middleware("auth:jwt", "throttle:60,1")]` — a comma-separated
-/// list of string middleware specs. The expanded function is unchanged; the
-/// specs are collected by the router at build time (FS-M3-06).
+/// list of string middleware specs. The function is re-emitted unchanged and
+/// a doc-hidden const `__RUSTAVEL_MIDDLEWARE_<Fn>` records the middleware
+/// name list the router reads when wiring `tower::Layer` chains at build time
+/// (FS-M3-06):
+///
+/// ```rust,ignore
+/// #[middleware("auth:jwt")]
+/// async fn profile() -> &'static str { "profile" }
+/// ```
 #[proc_macro_attribute]
 pub fn middleware(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
-    let _attr = attr;
-    let expanded = quote! {
-        #input
-    };
-    expanded.into()
+    let ident = input.sig.ident.clone();
+    match attrs::parse_string_list(attr.into(), "middleware") {
+        Ok(specs) => {
+            let const_name = syn::Ident::new(
+                &format!("__RUSTAVEL_MIDDLEWARE_{ident}"),
+                proc_macro2::Span::call_site(),
+            );
+            let expanded = quote! {
+                #input
+
+                #[doc(hidden)]
+                #[allow(non_upper_case_globals)]
+                const #const_name: &[&str] = &[#(#specs),*];
+            };
+            expanded.into()
+        }
+        Err(err) => err.to_compile_error().into(),
+    }
 }
 
 /// Attribute macro for authorization gates.
 ///
 /// Grammar: `#[authorize("update", User)]` — an ability string plus an
-/// optional target type. Evaluated before the handler body; re-emits the
-/// function unchanged.
+/// optional target type, comma-separated. The function is re-emitted
+/// unchanged and a doc-hidden const `__RUSTAVEL_AUTHORIZE_<Fn>` records the
+/// `(ability, target)` pair; the runtime resolves the enforcing guard from
+/// the handler's `#[middleware("auth:<guard>")]` spec and rejects with
+/// `GuardMismatch` before the body when the guard is unknown (FS-M3-06,
+/// TC-M3-02):
+///
+/// ```rust,ignore
+/// #[authorize("update", User)]
+/// async fn update_user() -> &'static str { "updated" }
+/// ```
 #[proc_macro_attribute]
 pub fn authorize(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
-    let _attr = attr;
-    let expanded = quote! {
-        #input
-    };
-    expanded.into()
+    let ident = input.sig.ident.clone();
+    match attrs::parse_authorize(attr.into()) {
+        Ok((ability, target)) => {
+            let const_name = syn::Ident::new(
+                &format!("__RUSTAVEL_AUTHORIZE_{ident}"),
+                proc_macro2::Span::call_site(),
+            );
+            let tuple = if target.is_empty() {
+                quote! { (#ability, "") }
+            } else {
+                quote! { (#ability, #target) }
+            };
+            let expanded = quote! {
+                #input
+
+                #[doc(hidden)]
+                #[allow(non_upper_case_globals)]
+                const #const_name: (&str, &str) = #tuple;
+            };
+            expanded.into()
+        }
+        Err(err) => err.to_compile_error().into(),
+    }
 }
 
 /// Derive macro marking a payload as validated.

@@ -47,10 +47,10 @@ pub use orm::{
 
 /// Auth re-exports for handler ergonomics (`Auth::guard`, guards, CSRF).
 pub use auth::{
-    AuthError, AuthManager, AuthUser, Credentials, CsrfError, CsrfLayer, Guard, JwtClaims,
-    JwtConfig, JwtGuard, KeyBy, Limit, MemoryRateLimiter, PreventRequestForgery, RateLimiter,
-    SecFetchSite, SessionGuard, SessionPolicy, ThrottleConfig, ThrottleLayer, ThrottleService,
-    Token,
+    AuthError, AuthManager, AuthUser, Credentials, CsrfError, CsrfLayer, DeserializationAllowList,
+    Guard, JwtClaims, JwtConfig, JwtGuard, KeyBy, Limit, MemoryRateLimiter, PreventRequestForgery,
+    RateLimiter, SecFetchSite, SessionGuard, SessionPolicy, ThrottleConfig, ThrottleLayer,
+    ThrottleService, Token,
 };
 
 /// Validation re-exports (`#[validate]` wiring surface).

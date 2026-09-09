@@ -19,6 +19,63 @@ pub struct AuthUser {
     pub guard: String,
 }
 
+impl AuthUser {
+    /// Build a principal for a custom guard's `parse`/`user` results.
+    ///
+    /// # Custom guard example
+    ///
+    /// ```rust
+    /// use rustavel_auth::{AuthUser, Guard, AuthError};
+    ///
+    /// /// Minimal API-key guard: `"secret"` is the only valid key.
+    /// pub struct ApiKeyGuard;
+    ///
+    /// impl Guard for ApiKeyGuard {
+    ///     fn name(&self) -> &str { "api" }
+    ///     fn login<'a>(&'a self, _: &'a rustavel_auth::Credentials)
+    ///         -> std::pin::Pin<Box<dyn std::future::Future<Output = rustavel_auth::error::Result<rustavel_auth::Token>> + Send + 'a>>
+    ///     { Box::pin(async move { Err(AuthError::BadCredentials) }) }
+    ///     fn login_using_id<'a>(&'a self, _: &'a str)
+    ///         -> std::pin::Pin<Box<dyn std::future::Future<Output = rustavel_auth::error::Result<rustavel_auth::Token>> + Send + 'a>>
+    ///     { Box::pin(async move { Err(AuthError::BadCredentials) }) }
+    ///     fn parse<'a>(&'a self, token: &'a str)
+    ///         -> std::pin::Pin<Box<dyn std::future::Future<Output = rustavel_auth::error::Result<AuthUser>> + Send + 'a>>
+    ///     {
+    ///         Box::pin(async move {
+    ///             if token == "secret" {
+    ///                 Ok(AuthUser::new("user-1", Some("api@example.com"), "api"))
+    ///             } else {
+    ///                 Err(AuthError::InvalidToken)
+    ///             }
+    ///         })
+    ///     }
+    ///     fn refresh<'a>(&'a self, _: &'a str)
+    ///         -> std::pin::Pin<Box<dyn std::future::Future<Output = rustavel_auth::error::Result<rustavel_auth::Token>> + Send + 'a>>
+    ///     { Box::pin(async move { Err(AuthError::BadCredentials) }) }
+    ///     fn logout<'a>(&'a self, _: &'a str)
+    ///         -> std::pin::Pin<Box<dyn std::future::Future<Output = rustavel_auth::error::Result<()>> + Send + 'a>>
+    ///     { Box::pin(async move { Ok(()) }) }
+    ///     fn user<'a>(&'a self)
+    ///         -> std::pin::Pin<Box<dyn std::future::Future<Output = rustavel_auth::error::Result<Option<AuthUser>>> + Send + 'a>>
+    ///     { Box::pin(async move { Ok(None) }) }
+    ///     fn id<'a>(&'a self)
+    ///         -> std::pin::Pin<Box<dyn std::future::Future<Output = rustavel_auth::error::Result<Option<String>>> + Send + 'a>>
+    ///     { Box::pin(async move { Ok(None) }) }
+    /// }
+    /// ```
+    pub fn new(
+        id: impl Into<String>,
+        email: Option<impl Into<String>>,
+        guard: impl Into<String>,
+    ) -> Self {
+        Self {
+            id: id.into(),
+            email: email.map(Into::into),
+            guard: guard.into(),
+        }
+    }
+}
+
 /// Credentials accepted by `Guard::login`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Credentials {
@@ -189,6 +246,10 @@ impl AuthManager {
     }
 
     /// Register a guard instance under its own `Guard::name`.
+    ///
+    /// First registration wins: a duplicate `Guard::name` silently replaces
+    /// nothing because this is the low-level insert used by boot wiring;
+    /// prefer [`AuthManager::extend`] when duplicate names must be rejected.
     pub fn register(&self, guard: Arc<dyn Guard>) -> Result<()> {
         let name = guard.name().to_string();
         let mut guards = self
@@ -205,6 +266,23 @@ impl AuthManager {
     /// `GuardRegistrar` bound to this manager so later `register` calls land
     /// in the same real registry. A duplicate name is rejected here and by
     /// `GuardRegistrar::register`.
+    ///
+    /// # Custom guard registration (end-to-end)
+    ///
+    /// Implement [`Guard`], then register an `Arc`-producing factory under a
+    /// name and resolve it through the manager:
+    ///
+    /// ```rust,ignore
+    /// // bootstrap/providers.rs
+    /// let auth = AuthManager::new();
+    /// auth.extend("api", || std::sync::Arc::new(ApiKeyGuard::new()))?;
+    /// // app/http/middleware/authenticate.rs (handler side)
+    /// let guard = auth.guard("api")?;              // resolves the custom guard
+    /// let user = guard.parse("secret").await?;     // AuthUser { id: "user-1", .. }
+    /// ```
+    ///
+    /// `Auth::extend` fails with `AuthError::GuardMismatch` when the name is
+    /// already registered (first-wins registry, ADR-005).
     pub fn extend(
         &self,
         name: impl Into<String>,
@@ -253,6 +331,22 @@ impl AuthManager {
     pub fn default_guard(&self) -> Result<Arc<dyn Guard>> {
         let name = self.default.clone();
         self.guard(&name)
+    }
+
+    /// Resolve the default guard name (`expected` in `GuardMismatch`).
+    pub fn default_guard_name(&self) -> &str {
+        &self.default
+    }
+
+    /// Synchronous authorization gate backing the `#[authorize]` macro.
+    ///
+    /// The macro expands to an `ensure_authorized` wrapper (see the
+    /// `rustavel-macros` crate) that calls this helper with the guard name
+    /// parsed from `#[authorize("update", User)]` on a `#[middleware("auth:<guard>")]`
+    /// handler. Unknown guard names surface the typed `GuardMismatch` error
+    /// (TC-M3-02), keeping the fail-closed posture.
+    pub fn authorize_gate(&self, guard: &str) -> Result<Arc<dyn Guard>> {
+        self.guard(guard)
     }
 
     /// List registered guard names.

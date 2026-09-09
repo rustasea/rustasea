@@ -201,6 +201,97 @@ fn const_ident(key: &str, suffix: Option<&syn::Ident>) -> syn::Ident {
     )
 }
 
+/// Parse a comma-separated list of string literals.
+///
+/// Grammar: `#[middleware("auth:jwt", "throttle:60,1")]` — every argument
+/// must be a string literal; a trailing comma is tolerated. Used by the
+/// `#[middleware]` handler attribute (FS-M3-06).
+pub(crate) fn parse_string_list(
+    tokens: proc_macro2::TokenStream,
+    attr: &str,
+) -> Result<Vec<String>, syn::Error> {
+    let items = syn::punctuated::Punctuated::<syn::LitStr, syn::Token![,]>::parse_terminated
+        .parse2(tokens)
+        .map_err(|e| {
+            syn::Error::new(
+                e.span(),
+                format!(
+                    "#[{attr}] expects a comma-separated list of string literals, e.g. #[{attr}(\"a\", \"b\")]; {e}"
+                ),
+            )
+        })?;
+    let values = items.iter().map(syn::LitStr::value).collect::<Vec<_>>();
+    if values.is_empty() {
+        return Err(syn::Error::new(
+            proc_macro2::Span::call_site(),
+            format!("#[{attr}] requires at least one string literal"),
+        ));
+    }
+    Ok(values)
+}
+
+/// Parse `#[authorize]` metadata: ability string plus optional target type.
+///
+/// Grammar: `#[authorize("update")]` or `#[authorize("update", User)]` —
+/// the ability must be a string literal; the optional second argument is a
+/// type path rendered as its source text (FS-M3-06). A trailing comma is
+/// tolerated. Returns `(ability, target_type_source)` where the target is an
+/// empty string when omitted.
+pub(crate) fn parse_authorize(
+    tokens: proc_macro2::TokenStream,
+) -> Result<(String, String), syn::Error> {
+    let args =
+        syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated.parse2(tokens)
+            .map_err(|e| {
+                syn::Error::new(
+                    e.span(),
+                    format!(
+                        "#[authorize] expects an ability string plus an optional type, e.g. #[authorize(\"update\", User)]; {e}"
+                    ),
+                )
+            })?;
+    let mut ability: Option<String> = None;
+    let mut target = String::new();
+    for (idx, arg) in args.iter().enumerate() {
+        if idx == 0 {
+            match arg {
+                syn::Expr::Lit(syn::ExprLit {
+                    lit: syn::Lit::Str(s),
+                    ..
+                }) => ability = Some(s.value()),
+                _ => {
+                    return Err(syn::Error::new_spanned(
+                        arg,
+                        "#[authorize] first argument must be an ability string, e.g. \"update\"",
+                    ));
+                }
+            }
+        } else {
+            // Optional target type: rendered from the type expression tokens.
+            let mut rendered = String::new();
+            for token in quote::ToTokens::to_token_stream(arg) {
+                rendered.push_str(&token.to_string());
+            }
+            // Trailing comma token was already consumed by Punctuated.
+            if target.is_empty() {
+                target = rendered;
+            } else {
+                return Err(syn::Error::new_spanned(
+                    arg,
+                    "#[authorize] accepts at most one ability string and one target type",
+                ));
+            }
+        }
+    }
+    let ability = ability.ok_or_else(|| {
+        syn::Error::new(
+            proc_macro2::Span::call_site(),
+            "#[authorize] requires an ability string, e.g. #[authorize(\"update\")]",
+        )
+    })?;
+    Ok((ability, target))
+}
+
 /// Emit a usize-typed helper const for the annotated item.
 ///
 /// Grammar: `#[tries(3)]`, `#[backoff(10)]`, `#[timeout(30)]` — appends

@@ -133,7 +133,7 @@ fn apply_rule(
                 ))
             }
         }
-        "in_array" | "in" => {
+        "in_array" | "in" | "strict_in_array" => {
             let list = parse_list(arg);
             let allow = Value::Array(
                 list.iter()
@@ -149,7 +149,7 @@ fn apply_rule(
                 ))
             }
         }
-        "contains" | "contains_strict" => {
+        "contains" | "contains_strict" | "strict_contains" => {
             let needle = parse_needle(arg);
             if contains_strict(present, &needle) {
                 Ok(())
@@ -273,5 +273,22 @@ mod tests {
         let rules = Rules::new().field("role", "contains_strict:admin").clone();
         assert!(rules.validate(&json!({})).is_ok());
         assert!(rules.validate(&json!({ "role": null })).is_ok());
+    }
+
+    /// `strict_contains` / `strict_in_array` rule names are accepted and
+    /// enforce strict type+case semantics (FS-M3-05).
+    #[test]
+    fn strict_alias_rule_names_are_accepted() {
+        let rules = Rules::new().field("role", "strict_contains:admin").clone();
+        assert!(rules.validate(&json!({ "role": "admin" })).is_ok());
+        let bag = rules.validate(&json!({ "role": "Admin" })).unwrap_err();
+        assert!(bag.get("role").iter().any(|e| e.code == "contains_strict"));
+
+        let rules = Rules::new()
+            .field("identifier", "strict_in_array:1,2,3")
+            .clone();
+        assert!(rules.validate(&json!({ "identifier": 2 })).is_ok());
+        let bag = rules.validate(&json!({ "identifier": "2" })).unwrap_err();
+        assert!(bag.get("identifier").iter().any(|e| e.code == "in_array"));
     }
 }
