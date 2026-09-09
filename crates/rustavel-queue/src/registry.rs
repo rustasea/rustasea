@@ -197,7 +197,9 @@ impl Queue {
     /// Runs the body and returns the `JobOutcome`. `Failed` outcomes are
     /// dead-lettered; `Retrying` cannot be re-enqueued on sync (no worker to
     /// release it later), so it is dead-lettered too — a sync dispatch never
-    /// silently drops a failed job. The driver buffer is untouched.
+    /// silently drops a failed job. `Skipped` outcomes (missing-model
+    /// suppression, FR-605) are recorded as diagnostics but never dead-lettered
+    /// nor retried. The driver buffer is untouched.
     async fn execute_sync(handle: &DispatchHandle) -> Result<JobOutcome> {
         let outcome = run_erased(handle.exec.as_ref()).await;
         match outcome {
@@ -219,7 +221,7 @@ impl Queue {
                 ));
                 Ok(outcome)
             }
-            JobOutcome::Succeeded => Ok(outcome),
+            JobOutcome::Succeeded | JobOutcome::Skipped => Ok(outcome),
         }
     }
 
@@ -236,13 +238,14 @@ impl Queue {
     ///
     /// Executes sequentially and stops at the first non-succeeded outcome —
     /// `Failed` and `Retrying` are both dead-lettered (sync cannot schedule a
-    /// later retry), so no chain step is ever silently dropped.
+    /// later retry), so no chain step is ever silently dropped; a `Skipped`
+    /// step stops the chain without dead-lettering (FR-605 suppression).
     pub async fn chain(jobs: Vec<Arc<dyn ErasedJob>>) -> Result<Vec<JobOutcome>> {
         let mut outcomes = Vec::with_capacity(jobs.len());
         for exec in jobs {
             let outcome = run_erased(exec.as_ref()).await;
             let stopped = !matches!(outcome, JobOutcome::Succeeded);
-            if stopped {
+            if matches!(outcome, JobOutcome::Failed | JobOutcome::Retrying { .. }) {
                 record_failed(FailedJob::new(
                     SYNC_CONNECTION,
                     exec.type_key(),

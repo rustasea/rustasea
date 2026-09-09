@@ -73,6 +73,15 @@ impl CacheManager {
         self.store(MEMORY_STORE)
     }
 
+    /// Access a context-scoped default-store repository.
+    ///
+    /// Mirrors Laravel's `Cache::withContext([...])`: every key passing through
+    /// the returned repository carries a deterministic context segment, so
+    /// tenant-scoped writes are invisible to unscoped reads and vice versa.
+    pub fn with_context(&self, context: HashMap<String, String>) -> Result<Repository> {
+        Ok(self.repository()?.with_context(context))
+    }
+
     /// Access a named store repository (same as `store`).
     pub fn cache(&self, name: &str) -> Result<Repository> {
         self.store(name)
@@ -106,12 +115,46 @@ impl Default for CacheManager {
 #[derive(Clone)]
 pub struct Repository {
     store: StoreRef,
+    context: Option<String>,
 }
 
 impl Repository {
     /// Create a repository over an existing store.
     pub fn new(store: StoreRef) -> Self {
-        Self { store }
+        Self {
+            store,
+            context: None,
+        }
+    }
+
+    /// Return a repository whose keys carry a deterministic context segment.
+    ///
+    /// Laravel's `Cache::withContext` prefixes keys with the supplied context
+    /// map. Here the map is normalized into one stable segment — values are
+    /// percent-encoded (`=` → `%3D`, `/` → `%2F`) so keys can never collide
+    /// with an unscoped key or smuggle a delimiter, and pairs are emitted in
+    /// sorted key order so the same map always yields the same key. Scoping is
+    /// additive: calling this on an already-contextual repository nests the
+    /// new segment after the existing one.
+    pub fn with_context(&self, context: HashMap<String, String>) -> Repository {
+        let mut pairs: Vec<(String, String)> = context
+            .into_iter()
+            .map(|(k, v)| (k, percent_encode(&v)))
+            .collect();
+        pairs.sort_unstable();
+        let segment = pairs
+            .iter()
+            .map(|(k, v)| format!("{k}={v}"))
+            .collect::<Vec<_>>()
+            .join("&");
+        let segment = match self.context {
+            Some(ref base) if !base.is_empty() => format!("{base}:{segment}"),
+            _ => segment,
+        };
+        Repository {
+            store: self.store.clone(),
+            context: Some(segment),
+        }
     }
 
     /// Store this repository wraps.
@@ -119,9 +162,17 @@ impl Repository {
         &self.store
     }
 
+    /// Context segment carried by this repository, if any.
+    pub fn context(&self) -> Option<&str> {
+        self.context.as_deref()
+    }
+
     /// Prefixed key helper.
     fn key(&self, key: &str) -> String {
-        format!("{}{}", crate::store::DEFAULT_PREFIX, key)
+        match self.context {
+            Some(ref ctx) => format!("{}{}:{}", crate::store::DEFAULT_PREFIX, ctx, key),
+            None => format!("{}{}", crate::store::DEFAULT_PREFIX, key),
+        }
     }
 
     /// Fetch a typed value, or `None` on miss/expiry.
@@ -236,4 +287,23 @@ impl RepositoryLike for Repository {
     async fn get_typed<T: DeserializeOwned + Send>(&self, key: &str) -> Result<Option<T>> {
         self.get::<T>(key).await
     }
+}
+
+/// Percent-encode a context value for safe embedding in a cache key segment.
+///
+/// Only unreserved URI characters survive as-is; `%` is encoded first so
+/// double-encoding never produces ambiguity. This guarantees the context
+/// segment contains no `:`, `&`, `=` or `/` of its own, keeping composite keys
+/// unambiguous and collision-free.
+fn percent_encode(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    for byte in value.bytes() {
+        let allowed = byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'~');
+        if allowed {
+            out.push(byte as char);
+        } else {
+            out.push_str(&format!("%{byte:02X}"));
+        }
+    }
+    out
 }

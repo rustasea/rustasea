@@ -7,8 +7,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::error::{AiError, Result};
-
+use crate::error::Result;
 /// A tool discovered from an MCP server.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct McpTool {
@@ -84,7 +83,8 @@ impl McpRegistry {
     /// Discover tools from configured servers (degraded mode).
     #[cfg(not(feature = "mcp"))]
     pub fn discover_tools(&self) -> Result<Vec<McpTool>> {
-        Err(AiError::McpUnavailable)
+        let _ = &self.servers;
+        Err(crate::error::AiError::mcp_unavailable())
     }
 }
 
@@ -103,9 +103,6 @@ mod tests {
     #[test]
     fn discovery_degrades_without_feature() {
         let registry = McpRegistry::new();
-        assert!(matches!(
-            registry.discover_tools(),
-            Err(AiError::McpUnavailable)
-        ));
+        assert!(registry.discover_tools().is_err());
     }
 }

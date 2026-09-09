@@ -93,3 +93,44 @@ pub struct TokenUsage {
     /// Completion tokens.
     pub completion: u32,
 }
+
+/// Uniform provider response (Laravel `AiResponse` parity, ai-sdk.md §5).
+///
+/// Every adapter returns this same shape so switching providers (`openai` →
+/// `anthropic`) preserves the contract; `usage` is kept as an opaque JSON
+/// value because providers report heterogeneous token fields.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AiResponse {
+    /// Generated text.
+    pub text: String,
+    /// Token usage metadata (provider-specific shape).
+    pub usage: serde_json::Value,
+    /// Tool calls requested by the model, in request order.
+    pub tool_calls: Vec<crate::agent::ToolCall>,
+}
+
+impl AiResponse {
+    /// Build a response from a text completion.
+    pub fn from_text(text: String, usage: serde_json::Value) -> Self {
+        Self {
+            text,
+            usage,
+            tool_calls: Vec::new(),
+        }
+    }
+}
+
+impl From<TextResponse> for AiResponse {
+    /// Convert a provider text response into the uniform AI response shape.
+    fn from(response: TextResponse) -> Self {
+        let usage = match response.usage {
+            Some(usage) => serde_json::json!({
+                "prompt": usage.prompt,
+                "completion": usage.completion,
+                "tokens": usage.prompt + usage.completion,
+            }),
+            None => serde_json::json!({}),
+        };
+        Self::from_text(response.text, usage)
+    }
+}

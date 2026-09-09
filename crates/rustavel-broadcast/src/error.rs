@@ -7,6 +7,14 @@ pub type Result<T> = std::result::Result<T, BroadcastError>;
 /// Top-level broadcast error type.
 #[derive(Debug, Error)]
 pub enum BroadcastError {
+    /// The caller is not allowed on a private/presence channel
+    /// (HTTP 403 / WebSocket close 4403).
+    #[error("unauthorized on channel {channel}")]
+    Unauthorized {
+        /// Channel the caller attempted to join.
+        channel: String,
+    },
+
     /// A channel requires authentication but no identity was supplied.
     #[error("channel {channel} requires authentication")]
     Unauthenticated {

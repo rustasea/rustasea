@@ -115,6 +115,15 @@ fn split_ident(name: &str) -> Result<Vec<String>> {
             parts.push(current);
         }
     }
+    // "SearchDocs" -> parts ["Search","Docs"]; re-lowercase each part.
+    let parts: Vec<String> = parts
+        .into_iter()
+        .map(|p| {
+            let mut chars = p.chars();
+            let first = chars.next().unwrap_or_default();
+            format!("{}{}", first.to_lowercase(), chars.as_str())
+        })
+        .collect();
     Ok(parts)
 }
 

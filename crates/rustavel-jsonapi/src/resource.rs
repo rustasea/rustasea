@@ -187,21 +187,47 @@ pub trait JsonApiResource {
             r#type: self.r#type().to_string(),
             id: self.id(),
             attributes: filtered,
-            relationships: self.relationship_links(),
+            relationships: self.relationship_objects(),
             links: self.links(),
         })
     }
 
-    /// Relationship links map (`name` → `{links: {related}}`).
-    fn relationship_links(&self) -> Map<String, Value> {
+    /// Relationship map (`name` → `{data:[{type,id}], links:{self,related}}`).
+    ///
+    /// JSON:API 1.1 requires relationships to carry `data` resource-identifier
+    /// references; `self`/`related` links are emitted alongside them. Sparse
+    /// fieldsets never filter relationships.
+    fn relationship_objects(&self) -> Map<String, Value> {
         let mut map = Map::new();
         for rel in self.relationships() {
+            let data: Vec<Value> = rel
+                .ids
+                .iter()
+                .map(|id| {
+                    let mut obj = Map::new();
+                    obj.insert("type".to_string(), Value::String(rel.r#type.to_string()));
+                    obj.insert("id".to_string(), Value::String(id.clone()));
+                    Value::Object(obj)
+                })
+                .collect();
+
             let mut links = Map::new();
+            links.insert(
+                "self".to_string(),
+                Value::String(format!(
+                    "/{}/{}/relationships/{}",
+                    self.r#type(),
+                    self.id(),
+                    rel.name
+                )),
+            );
             links.insert(
                 "related".to_string(),
                 Value::String(format!("/{}/{}/{}", self.r#type(), self.id(), rel.name)),
             );
+
             let mut obj = Map::new();
+            obj.insert("data".to_string(), Value::Array(data));
             obj.insert("links".to_string(), Value::Object(links));
             map.insert(rel.name.to_string(), Value::Object(obj));
         }
@@ -210,14 +236,14 @@ pub trait JsonApiResource {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
-    struct User {
-        id: String,
-        name: String,
-        email: String,
-        posts: Vec<String>,
+    pub(crate) struct User {
+        pub id: String,
+        pub name: String,
+        pub email: String,
+        pub posts: Vec<String>,
     }
 
     impl JsonApiResource for User {
@@ -251,9 +277,35 @@ mod tests {
                 true,
             )]
         }
+
+        fn include(&self, relationship: &str) -> Vec<Inclusion> {
+            if relationship != "posts" {
+                return Vec::new();
+            }
+            self.posts
+                .iter()
+                .map(|post_id| {
+                    let mut attrs = Map::new();
+                    attrs.insert(
+                        "title".to_string(),
+                        Value::String(format!("Post {post_id}")),
+                    );
+                    Inclusion {
+                        relationship: "posts",
+                        resource: ResourceObject {
+                            r#type: "posts".to_string(),
+                            id: post_id.clone(),
+                            attributes: attrs,
+                            relationships: Map::new(),
+                            links: None,
+                        },
+                    }
+                })
+                .collect()
+        }
     }
 
-    fn user(posts: Vec<String>) -> User {
+    pub(crate) fn sample_user(posts: Vec<String>) -> User {
         User {
             id: "1".to_string(),
             name: "Ada".to_string(),
@@ -265,7 +317,9 @@ mod tests {
     #[test]
     fn sparse_fieldset_filters_attributes() {
         let fields = SparseFields::parse(&[("fields[users]", "name,email")]);
-        let doc = user(vec!["10".to_string()]).render(&fields, &[]).unwrap();
+        let doc = sample_user(vec!["10".to_string()])
+            .render(&fields, &[])
+            .unwrap();
         let attrs = doc.data.as_object().unwrap()["attributes"]
             .as_object()
             .unwrap()
@@ -278,7 +332,7 @@ mod tests {
     #[test]
     fn unknown_field_excluded_by_sparse_fieldset() {
         let fields = SparseFields::parse(&[("fields[users]", "name")]);
-        let doc = user(Vec::new()).render(&fields, &[]).unwrap();
+        let doc = sample_user(Vec::new()).render(&fields, &[]).unwrap();
         let attrs = doc.data.as_object().unwrap()["attributes"]
             .as_object()
             .unwrap()
@@ -290,7 +344,28 @@ mod tests {
     #[test]
     fn collection_renders_array_data() {
         let fields = SparseFields::default();
-        let doc = User::render_many(&[user(Vec::new())], &fields, &[]).unwrap();
+        let doc = User::render_many(&[sample_user(Vec::new())], &fields, &[]).unwrap();
         assert!(doc.data.is_array());
+    }
+
+    #[test]
+    fn relationship_emits_data_refs_and_links() {
+        let doc = sample_user(vec!["p1".to_string()])
+            .render(&SparseFields::default(), &[])
+            .unwrap();
+        let rels = doc.data.as_object().unwrap()["relationships"]
+            .as_object()
+            .unwrap();
+        let posts = rels["posts"].as_object().unwrap();
+        assert_eq!(posts["data"][0]["type"], "posts");
+        assert_eq!(posts["data"][0]["id"], "p1");
+        assert!(posts["links"]["self"]
+            .as_str()
+            .unwrap()
+            .contains("/relationships/posts"));
+        assert!(posts["links"]["related"]
+            .as_str()
+            .unwrap()
+            .ends_with("/posts"));
     }
 }

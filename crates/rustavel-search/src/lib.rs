@@ -7,10 +7,12 @@
 
 pub mod embeddings;
 pub mod index;
+pub mod store;
 pub mod vector;
 
 pub use embeddings::{EmbeddingError, Str, VectorEmbeddings};
 pub use index::{IndexError, VectorIndex, VectorIndexOps};
+pub use store::MemoryVectorStore;
 pub use vector::{VectorDocument, VectorMatch, VectorSearch, VectorSearchError};
 
 /// Similarity ranking strategy for a vector search.

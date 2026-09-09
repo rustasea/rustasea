@@ -1,9 +1,10 @@
 //! Rustavel Broadcast — realtime channels over WebSocket and SSE.
 //!
-//! Sprint 07 (M6) scope: the `ShouldBroadcast` marker trait, typed
-//! `Channel` kinds (`Public`/`Private`/`Presence`), the `Authorize` gate for
-//! channel authentication, an SSE `eventStream` stub and an Axum WebSocket
-//! stub. Events are serializable, cloneable payloads — no `Any` (C-03).
+//! Sprint 07 (M6) scope: the `ShouldBroadcast` trait, typed `Channel` kinds
+//! (`Public(name)`/`Private(name)`/`Presence(name)`), the `Authorize` gate for
+//! channel authentication, an SSE `eventStream` response, and an Axum
+//! WebSocket broadcast handler. Events are serializable, cloneable payloads —
+//! no `Any` (C-03).
 
 pub mod channel;
 pub mod error;
@@ -12,20 +13,25 @@ pub mod sse;
 pub mod ws;
 
 pub use async_trait::async_trait;
-pub use channel::{AuthDecision, Authorize, Channel, PresenceUser, Private, Public, Subscriber};
+pub use channel::{
+    authorize_subscription, AuthDecision, Authorize, Channel, PresenceUser, Private, Public,
+    Subscriber, WS_CLOSE_UNAUTHENTICATED, WS_CLOSE_UNAUTHORIZED,
+};
 pub use error::{BroadcastError, Result};
-pub use sse::{event_stream, EventSender, EventStream, SseEvent};
+pub use sse::{event_stream, event_stream_response, EventSender, EventStream, SseEvent};
 #[cfg(feature = "ws")]
-pub use ws::{ws_broadcast_handler, WebSocketConfig, WsMessage};
+pub use ws::{
+    ws_frame, ws_handler, ws_route, BroadcastHub, SubscribeFrame, WebSocketConfig, WsMessage,
+};
 
-/// Marker trait for models that should broadcast model events.
+/// Trait for broadcastable events that know their destination channel.
 ///
 /// Implementing this trait advertises that instances participate in channel
 /// broadcasting; the channel identity is derived by implementors via
-/// [`ShouldBroadcast::broadcast_channel`] (Laravel `ShouldBroadcast` parity).
+/// [`ShouldBroadcast::broadcast_on`] (Laravel `ShouldBroadcast` parity).
 pub trait ShouldBroadcast: Send + Sync + 'static {
     /// Channel this event broadcasts on.
-    fn broadcast_channel(&self) -> String;
+    fn broadcast_on(&self) -> Channel;
 }
 
 /// A broadcastable event payload.
@@ -34,20 +40,53 @@ pub trait BroadcastEvent: Send + Sync + 'static {
     fn event_name(&self) -> &'static str;
 }
 
+/// Serialize a broadcastable payload into the wire push shape
+/// `{ event, channel, data }` (FS-M6-01).
+pub fn to_wire(
+    event_name: &str,
+    channel: &Channel,
+    data: &impl serde::Serialize,
+) -> Result<serde_json::Value> {
+    Ok(serde_json::json!({
+        "event": event_name,
+        "channel": channel.auth_channel(),
+        "data": serde_json::to_value(data)?,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    struct OrderShipped;
+    struct UserCreated {
+        name: String,
+    }
 
-    impl ShouldBroadcast for OrderShipped {
-        fn broadcast_channel(&self) -> String {
-            "orders.1".to_string()
+    impl ShouldBroadcast for UserCreated {
+        fn broadcast_on(&self) -> Channel {
+            Channel::Private("chat.1".to_string())
         }
     }
 
     #[test]
     fn should_broadcast_exposes_channel() {
-        assert_eq!(OrderShipped.broadcast_channel(), "orders.1");
+        let event = UserCreated {
+            name: "Ada".to_string(),
+        };
+        assert_eq!(event.broadcast_on().auth_channel(), "private-chat.1");
+    }
+
+    #[test]
+    fn to_wire_produces_push_shape() {
+        let channel = Channel::Private("chat.1".to_string());
+        let wire = to_wire(
+            "UserCreated",
+            &channel,
+            &serde_json::json!({ "name": "Ada" }),
+        )
+        .unwrap();
+        assert_eq!(wire["event"], "UserCreated");
+        assert_eq!(wire["channel"], "private-chat.1");
+        assert_eq!(wire["data"]["name"], "Ada");
     }
 }

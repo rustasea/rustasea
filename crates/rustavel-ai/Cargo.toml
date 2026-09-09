@@ -8,6 +8,7 @@ description = "Rustavel AI SDK — provider-agnostic AiProvider trait, Agent/Too
 [dependencies]
 async-trait = { workspace = true }
 futures-core = "0.3"
+futures-util = { version = "0.3", default-features = false }
 rustavel-search = { path = "../rustavel-search", optional = true }
 rustavel-storage = { path = "../rustavel-storage", optional = true }
 serde = { workspace = true }

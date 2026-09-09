@@ -30,6 +30,10 @@ pub enum StorageError {
     /// No disk is registered under the requested name.
     #[error("unknown disk: {0}")]
     UnknownDisk(String),
+
+    /// The configured store is unreachable or rejected the operation.
+    #[error("store unavailable: {0}")]
+    StoreUnavailable(String),
 }
 
 /// Error produced by [`crate::confine_path`] on a traversal attempt.

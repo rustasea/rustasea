@@ -12,6 +12,7 @@ pub mod driver;
 pub mod error;
 pub mod job;
 pub mod metrics;
+pub mod notification;
 pub mod registry;
 pub mod retry;
 
@@ -27,5 +28,9 @@ pub use job::{
     JobPayload,
 };
 pub use metrics::{JobQueueMetrics, QueueMetrics, Queues};
+pub use notification::{
+    should_suppress, skipped_notifications, NotificationGuard, NotificationSkipReason,
+    NotificationSkipped,
+};
 pub use registry::{Queue, QueueRegistry, Route};
 pub use retry::{ShouldRetry, ShouldRetryUntil};

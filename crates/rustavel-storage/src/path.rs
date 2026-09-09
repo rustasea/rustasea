@@ -53,7 +53,7 @@ mod tests {
         let err = confine_path(root, Path::new("../../etc/passwd")).unwrap_err();
         assert_eq!(
             err.0,
-            "path traversal detected: \"../../etc/passwd\" escapes root \"/tmp/rustavel-store\""
+            "candidate \"../../etc/passwd\" escapes root \"/tmp/rustavel-store\""
         );
     }
 

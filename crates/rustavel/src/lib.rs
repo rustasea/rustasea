@@ -82,14 +82,25 @@ pub use rustavel_ai as ai;
 pub use broadcast::{Authorize, BroadcastError, Channel, ShouldBroadcast};
 
 /// Storage re-exports for read-through disk ergonomics (M6).
-pub use storage::{LocalDisk, ReadThrough, Storage, StorageError};
+pub use storage::{
+    LocalDisk, ObjectDisk, ReadThrough, Storage, StorageConfig, StorageError, StorageManager,
+};
 
 /// Search re-exports for vector ergonomics (M6).
 pub use search::{
-    Similarity as VectorSimilarity, Str, VectorDocument, VectorSearch, VectorSearchError,
+    MemoryVectorStore, Similarity as VectorSimilarity, Str, VectorDocument, VectorIndex,
+    VectorIndexOps, VectorSearch, VectorSearchError,
 };
 
 /// JSON:API re-exports for resource ergonomics (M6).
 pub use jsonapi::{
-    content_type as jsonapi_content_type, JsonApiError, JsonApiResource, SparseFields,
+    content_type as jsonapi_content_type, Document as JsonApiDocument, JsonApiError,
+    JsonApiResource, Link as JsonApiLink, Links as JsonApiLinks, ResourceBuilder, SparseFields,
+};
+
+/// AI re-exports only with the `ai` feature (NFR-Sca-02).
+#[cfg(feature = "ai")]
+pub use ai::{
+    adapters, embed, Agent, AgentError, Ai, AiChunk, AiError, AiProvider, AiResponse, Capability,
+    InProcessProvider, ProviderCall, StrToEmbeddings, Tool, ToolRegistry,
 };

@@ -1,9 +1,13 @@
-//! Server-sent events: `event_stream` SSE stub with bounded buffering.
+//! Server-sent events: `event_stream` SSE with bounded buffering and Axum
+//! `Response::event_stream` wiring.
 
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+use axum::response::sse::{Event as AxumSseEvent, KeepAlive, Sse};
+use axum::response::{IntoResponse, Response};
 use futures_core::Stream;
+use futures_util::StreamExt;
 use serde::Serialize;
 use tokio::sync::mpsc;
 
@@ -12,7 +16,7 @@ use crate::error::{BroadcastError, Result};
 /// Capacity of the bounded SSE channel (backpressure cap).
 pub const SSE_BUFFER: usize = 64;
 
-/// Build a `Response::event_stream`-compatible SSE stub.
+/// Build a `Response::event_stream`-compatible SSE channel.
 ///
 /// Returns the caller side (`EventSender`) plus the stream that Axum's
 /// [`axum::response::sse::Sse`] can wrap. Contract (FS-M6-01): the response
@@ -22,6 +26,41 @@ pub const SSE_BUFFER: usize = 64;
 pub fn event_stream() -> (EventSender, EventStream) {
     let (tx, rx) = mpsc::channel::<SseEvent>(SSE_BUFFER);
     (EventSender { tx }, EventStream::new(rx))
+}
+
+/// Render any ordered stream of strings as an SSE HTTP response.
+///
+/// This is the `Response::eventStream(stream)` contract (FS-M6-01): the
+/// response carries `Content-Type: text/event-stream` and each input item is
+/// streamed as one `data:` frame. Frames are emitted in input order; a stream
+/// error terminates the response.
+pub fn event_stream_response<S, E>(stream: S) -> Response
+where
+    S: Stream<Item = std::result::Result<SseEvent, E>> + Send + 'static,
+    E: std::error::Error + Send + 'static,
+{
+    let sse = Sse::new(stream.map(|item| match item {
+        Ok(frame) => {
+            let mut event = AxumSseEvent::default().data(frame.data);
+            if !frame.event.is_empty() {
+                event = event.event(frame.event);
+            }
+            Ok(event)
+        }
+        Err(err) => Err(err.to_string()),
+    }))
+    .keep_alive(KeepAlive::default());
+    sse.into_response()
+}
+
+impl EventSender {
+    /// Send one frame; errors when the subscriber disconnected (Lagged-safe).
+    pub async fn send(&self, event: SseEvent) -> Result<()> {
+        self.tx
+            .send(event)
+            .await
+            .map_err(|_| BroadcastError::Transport("sse receiver dropped".to_string()))
+    }
 }
 
 /// One SSE frame (Laravel `event:` framing parity).
@@ -52,16 +91,6 @@ impl SseEvent {
 #[derive(Debug, Clone)]
 pub struct EventSender {
     tx: mpsc::Sender<SseEvent>,
-}
-
-impl EventSender {
-    /// Send one frame; errors when the subscriber disconnected (Lagged-safe).
-    pub async fn send(&self, event: SseEvent) -> Result<()> {
-        self.tx
-            .send(event)
-            .await
-            .map_err(|_| BroadcastError::Transport("sse receiver dropped".to_string()))
-    }
 }
 
 /// Stream half of the bounded SSE channel.
@@ -118,5 +147,21 @@ mod tests {
             out.push(frame.event);
         }
         assert_eq!(out, vec!["a".to_string(), "b".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn event_stream_response_sets_content_type() {
+        use futures_core::Stream;
+        let stream = futures_util::stream::iter(std::iter::empty::<
+            std::result::Result<SseEvent, std::io::Error>,
+        >());
+        let response = event_stream_response(stream);
+        assert_eq!(
+            response
+                .headers()
+                .get("content-type")
+                .map(|v| v.to_str().unwrap_or_default()),
+            Some("text/event-stream")
+        );
     }
 }

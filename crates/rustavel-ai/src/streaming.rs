@@ -152,8 +152,8 @@ impl StreamReceiver {
 /// `FileStorage`, `ToolSearch`) only when first used; constructing the loader
 /// never performs I/O.
 pub trait DeferredLoader {
-    /// Loaded resource type.
-    type Target: Send + Sync;
+    /// Loaded resource type (may be a `dyn` trait object).
+    type Target: Send + Sync + ?Sized;
 
     /// Load the target, caching the result for later calls.
     fn load(&self) -> Result<std::sync::Arc<Self::Target>>;

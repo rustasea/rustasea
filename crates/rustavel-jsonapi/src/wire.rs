@@ -90,6 +90,9 @@ pub struct Document {
     /// Top-level links.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Links>,
+    /// Top-level meta (e.g. provider, pagination metadata).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub meta: Option<Value>,
 }
 
 impl Document {
@@ -103,6 +106,7 @@ impl Document {
             data: serde_json::to_value(resource).unwrap_or(Value::Null),
             included,
             links,
+            meta: None,
         }
     }
 
@@ -120,8 +124,40 @@ impl Document {
             data: Value::Array(values),
             included,
             links,
+            meta: None,
         }
     }
+
+    /// Attach top-level `meta`.
+    pub fn with_meta(mut self, meta: Value) -> Self {
+        self.meta = Some(meta);
+        self
+    }
+
+    /// Serialize this document and wrap it in an HTTP response.
+    ///
+    /// The response carries `Content-Type: application/vnd.api+json` with a
+    /// 200 status (FS-M6-03 contract); serialization failures surface as a
+    /// 500 response with a JSON error body.
+    pub fn to_response(&self) -> http::Response<Vec<u8>> {
+        match serde_json::to_vec(self) {
+            Ok(bytes) => http::Response::builder()
+                .status(http::StatusCode::OK)
+                .header(http::header::CONTENT_TYPE, JSON_API_CONTENT_TYPE)
+                .body(bytes)
+                .unwrap_or_else(|_| internal_error()),
+            Err(_) => internal_error(),
+        }
+    }
+}
+
+/// Build a 500 JSON error response (programmer-error path).
+fn internal_error() -> http::Response<Vec<u8>> {
+    http::Response::builder()
+        .status(http::StatusCode::INTERNAL_SERVER_ERROR)
+        .header(http::header::CONTENT_TYPE, JSON_API_CONTENT_TYPE)
+        .body(br#"{"errors":[{"status":"500","code":"JsonApiError::Serialization","title":"Failed to serialize document"}]}"#.to_vec())
+        .unwrap_or_else(|_| http::Response::new(Vec::new()))
 }
 
 #[cfg(test)]

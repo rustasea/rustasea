@@ -4,9 +4,10 @@
 //! never performs I/O; the first use binds or degrades. With the `search`
 //! feature [`SimilaritySearch`] wraps a `VectorSearch` engine and with the
 //! `storage` feature [`FileStorage`] wraps a `Storage` engine — otherwise
-//! each degrades to a typed capability denial (NFR-Sca-02).
+//! each degrades to a typed capability denial (NFR-Sca-02). Each loader also
+//! implements [`crate::streaming::DeferredLoader`] so agents can inject
+//! context on demand before a `Tool::call`.
 
-#[cfg(any(feature = "search", feature = "storage"))]
 use std::sync::Arc;
 
 use crate::error::{AiError, Result};
@@ -81,6 +82,41 @@ impl SimilaritySearch {
     }
 }
 
+/// Deferred-loader contract for the bound similarity engine.
+#[cfg(feature = "search")]
+impl crate::streaming::DeferredLoader for SimilaritySearch {
+    /// Engine type resolved by the loader.
+    type Target = dyn rustavel_search::VectorSearch;
+
+    /// Resolve the bound vector-search engine.
+    fn load(&self) -> Result<Arc<Self::Target>> {
+        self.handle()
+    }
+
+    /// Whether the engine is bound.
+    fn loaded(&self) -> bool {
+        self.ready()
+    }
+}
+
+/// Deferred-loader contract in degraded mode (no `search` feature).
+#[cfg(not(feature = "search"))]
+impl crate::streaming::DeferredLoader for SimilaritySearch {
+    /// Never-constructed degraded engine type.
+    type Target = UnavailableEngine;
+
+    /// Always errors with a capability denial.
+    fn load(&self) -> Result<Arc<Self::Target>> {
+        let _engine = self.handle()?;
+        unreachable!("no-feature similarity search handle always errors")
+    }
+
+    /// Never loaded in degraded mode.
+    fn loaded(&self) -> bool {
+        false
+    }
+}
+
 /// Cached handle to a lazily-loaded file-storage engine.
 #[cfg(feature = "storage")]
 pub struct FileStorage {
@@ -141,6 +177,41 @@ impl FileStorage {
     pub fn handle(&self) -> Result<crate::loaders::UnavailableEngine> {
         let _ = &self.name;
         Err(AiError::unsupported("file-storage", "storage"))
+    }
+}
+
+/// Deferred-loader contract for the bound storage engine.
+#[cfg(feature = "storage")]
+impl crate::streaming::DeferredLoader for FileStorage {
+    /// Engine type resolved by the loader.
+    type Target = dyn rustavel_storage::Storage;
+
+    /// Resolve the bound storage engine.
+    fn load(&self) -> Result<Arc<Self::Target>> {
+        self.handle()
+    }
+
+    /// Whether the engine is bound.
+    fn loaded(&self) -> bool {
+        self.ready()
+    }
+}
+
+/// Deferred-loader contract in degraded mode (no `storage` feature).
+#[cfg(not(feature = "storage"))]
+impl crate::streaming::DeferredLoader for FileStorage {
+    /// Never-constructed degraded engine type.
+    type Target = UnavailableEngine;
+
+    /// Always errors with a capability denial.
+    fn load(&self) -> Result<Arc<Self::Target>> {
+        let _engine = self.handle()?;
+        unreachable!("no-feature file-storage handle always errors")
+    }
+
+    /// Never loaded in degraded mode.
+    fn loaded(&self) -> bool {
+        false
     }
 }
 
@@ -205,6 +276,23 @@ impl ToolSearch {
     }
 }
 
+/// Deferred-loader contract for tool search: the loaded target is the list of
+/// registered tools the agent can invoke.
+impl crate::streaming::DeferredLoader for ToolSearch {
+    /// Tool-name snapshot produced by the loader.
+    type Target = Vec<&'static str>;
+
+    /// Load (search) matching tool names; empty query yields an empty set.
+    fn load(&self) -> Result<Arc<Self::Target>> {
+        Ok(Arc::new(self.search(&[])))
+    }
+
+    /// Tool search is available as soon as the query is recorded.
+    fn loaded(&self) -> bool {
+        self.query.is_some()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -222,5 +310,27 @@ mod tests {
         loader.with_query("search");
         let matches = loader.search(&["search_docs", "send_email", "web_search"]);
         assert_eq!(matches, vec!["search_docs", "web_search"]);
+    }
+
+    #[test]
+    fn deferred_loaders_report_readiness() {
+        use crate::streaming::DeferredLoader;
+
+        // SimilaritySearch without the search feature is never loaded.
+        let similarity = SimilaritySearch::new("docs");
+        assert!(!similarity.loaded());
+        assert!(similarity.load().is_err());
+
+        // ToolSearch loads once a query is recorded.
+        let mut tool_search = ToolSearch::new("find-tools");
+        assert!(!tool_search.loaded());
+        tool_search.with_query("search");
+        assert!(tool_search.loaded());
+        assert!(tool_search.load().is_ok());
+
+        // FileStorage without the storage feature is never loaded.
+        let storage = FileStorage::new("assets");
+        assert!(!storage.loaded());
+        assert!(storage.load().is_err());
     }
 }

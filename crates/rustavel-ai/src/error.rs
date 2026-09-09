@@ -35,8 +35,11 @@ pub enum AiError {
     NotConfigured(String),
 
     /// MCP support was requested without the `mcp` feature.
-    #[error("MCP support is unavailable; enable the `mcp` feature")]
-    McpUnavailable,
+    #[error("MCP support is unavailable: {hint}")]
+    McpUnavailable {
+        /// Remediation hint for the caller.
+        hint: String,
+    },
 }
 
 impl From<crate::agent::AgentError> for AiError {
@@ -55,6 +58,13 @@ impl AiError {
         AiError::UnsupportedCapability {
             provider: provider.into(),
             capability,
+        }
+    }
+
+    /// Convenience constructor for the MCP feature gate denial.
+    pub fn mcp_unavailable() -> Self {
+        AiError::McpUnavailable {
+            hint: "enable the `mcp` feature on rustavel-ai to discover MCP tools".to_string(),
         }
     }
 }

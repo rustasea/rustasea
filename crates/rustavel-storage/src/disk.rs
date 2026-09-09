@@ -70,6 +70,20 @@ impl LocalDisk {
     }
 
     fn resolve(&self, key: &str) -> Result<PathBuf> {
+        let root = self.root();
+        std::fs::create_dir_all(&root).map_err(|e| StorageError::Io {
+            path: root.display().to_string(),
+            source: e,
+        })?;
+        self.confined_path(key)
+    }
+
+    /// Confined canonical path for `key` without creating any directory.
+    ///
+    /// Lexical traversal (`..` segments) is rejected before any filesystem
+    /// probe so `path("../../etc/passwd")` fails deterministically even when
+    /// the disk root does not exist yet.
+    fn confined_path(&self, key: &str) -> Result<PathBuf> {
         let rel = Path::new(key);
         if rel.is_absolute() {
             return Err(StorageError::PathTraversal(format!(
@@ -77,10 +91,6 @@ impl LocalDisk {
             )));
         }
         let root = self.root();
-        std::fs::create_dir_all(&root).map_err(|e| StorageError::Io {
-            path: root.display().to_string(),
-            source: e,
-        })?;
         match confine_path(&root, &root.join(rel))? {
             crate::path::PathOutcome::Confined(path) => Ok(path),
             crate::path::PathOutcome::Traversal => {
@@ -139,6 +149,16 @@ impl Storage for LocalDisk {
                 source: e,
             }),
         }
+    }
+}
+
+impl crate::manager::ManagedDisk for LocalDisk {
+    fn path(&self, key: &str) -> Result<PathBuf> {
+        self.confined_path(key)
+    }
+
+    fn label(&self) -> String {
+        self.root().display().to_string()
     }
 }
 

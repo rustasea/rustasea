@@ -7,6 +7,8 @@ description = "Rustavel storage — read-through disk Storage, path confinement,
 
 [dependencies]
 async-trait = { workspace = true }
+object_store = "0.14.1"
 serde = { workspace = true }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }

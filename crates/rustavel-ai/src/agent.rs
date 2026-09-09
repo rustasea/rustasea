@@ -5,18 +5,48 @@ use serde_json::{json, Value};
 use crate::error::Result;
 use crate::types::AiChunk;
 
-/// Agent error type.
+/// Agent error type (ai-agents.md §5: `ToolNotFound`, `McpUnavailable`+hint,
+/// `UnsupportedCapability`; `UnknownTool` retained for registry callers).
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum AgentError {
     /// An unknown tool name was invoked.
     #[error("unknown tool: {0}")]
     UnknownTool(String),
+
+    /// A requested tool is not registered on this agent.
+    #[error("tool not found: {0}")]
+    ToolNotFound(String),
+
+    /// MCP discovery was attempted without the `mcp` feature.
+    #[error("MCP unavailable: {hint}")]
+    McpUnavailable {
+        /// Remediation hint (feature flag name).
+        hint: String,
+    },
+
+    /// The agent's provider cannot perform the requested capability.
+    #[error("provider {provider} does not support capability {capability}")]
+    UnsupportedCapability {
+        /// Provider name.
+        provider: String,
+        /// Unsupported capability.
+        capability: &'static str,
+    },
+}
+
+impl AgentError {
+    /// Convenience constructor for MCP feature-gate denial.
+    pub fn mcp_unavailable() -> Self {
+        AgentError::McpUnavailable {
+            hint: "enable feature `mcp` on rustavel-ai to discover MCP tools".to_string(),
+        }
+    }
 }
 
 /// A callable tool exposed to an agent (Laravel `#[derive(Tool)]` parity).
 ///
 /// Tool contracts are JSON Schema ([`Tool::schema`]); execution is an
-/// async `run` over a `serde_json` argument payload returning a JSON value.
+/// async `call` over a `serde_json` argument payload returning a JSON value.
 #[async_trait::async_trait]
 pub trait Tool: Send + Sync + 'static {
     /// Stable tool name (`search_docs`).
@@ -30,8 +60,13 @@ pub trait Tool: Send + Sync + 'static {
         json!({ "type": "object", "properties": {} })
     }
 
-    /// Execute the tool with parsed arguments.
-    async fn run(&self, arguments: Value) -> Result<Value>;
+    /// Execute the tool with parsed arguments (docs name: `call`).
+    async fn call(&self, arguments: Value) -> Result<Value>;
+
+    /// Back-compat alias for `call` (earlier runs used `run`).
+    async fn run(&self, arguments: Value) -> Result<Value> {
+        self.call(arguments).await
+    }
 }
 
 /// Tool registry owned by an agent.
@@ -57,16 +92,25 @@ impl ToolRegistry {
         self.tools.get(name).map(|t| t.as_ref())
     }
 
+    /// Registered tool names.
+    pub fn names(&self) -> Vec<&'static str> {
+        self.tools.keys().copied().collect()
+    }
+
+    /// Whether a tool is registered.
+    pub fn has(&self, name: &str) -> bool {
+        self.tools.contains_key(name)
+    }
+
     /// Invoke a registered tool; unknown names error.
     pub async fn invoke(&self, name: &str, arguments: Value) -> Result<Value> {
         let tool = self
             .tools
             .get(name)
-            .ok_or_else(|| AgentError::UnknownTool(name.to_string()))?;
-        tool.run(arguments).await
+            .ok_or_else(|| AgentError::ToolNotFound(name.to_string()))?;
+        tool.call(arguments).await
     }
 }
-
 /// Streamed run outcome carrying ordered token chunks.
 #[derive(Debug)]
 pub struct AgentRun {
@@ -94,7 +138,8 @@ pub trait AgentMiddleware: Send + Sync + 'static {
 ///
 /// An agent owns a tool registry and a middleware chain and runs prompts to
 /// token streams (FS-M6-07 contract: tools invoked, output streamed,
-/// middleware observed).
+/// middleware observed). Sub-agents are plain tools wrapping a nested
+/// [`Agent`] (see [`SubAgentTool`]).
 #[derive(Clone)]
 pub struct Agent {
     /// Provider this agent runs on.
@@ -121,6 +166,14 @@ impl Agent {
         self
     }
 
+    /// Register a sub-agent as a tool on this agent.
+    pub fn sub_agent(mut self, sub: Agent) -> Self {
+        std::sync::Arc::get_mut(&mut self.tools)
+            .expect("agent tool registration requires exclusive ownership")
+            .register(SubAgentTool::new(sub));
+        self
+    }
+
     /// Append a middleware to this agent's chain.
     pub fn middleware<M: AgentMiddleware>(mut self, middleware: M) -> Self {
         std::sync::Arc::get_mut(&mut self.middleware)
@@ -129,11 +182,15 @@ impl Agent {
         self
     }
 
-    /// Stream a prompt through the agent.
+    /// Access the tool registry.
+    pub fn tools(&self) -> &ToolRegistry {
+        &self.tools
+    }
+
+    /// Run a prompt and collect the full outcome.
     ///
-    /// Stub: emits a single `token` chunk naming the provider, invokes tools
-    /// embedded in the prompt (`tool:name(args)`), and fires middleware
-    /// around the run.
+    /// Fires middleware before/after, emits one `token` chunk naming the
+    /// provider, and invokes tools embedded in the prompt (`tool:name(args)`).
     pub async fn run(&self, prompt: &str) -> AgentRun {
         for middleware in self.middleware.iter() {
             middleware.before_run(prompt).await;
@@ -145,6 +202,45 @@ impl Agent {
         run
     }
 
+    /// Stream a prompt as ordered `AiChunk`s (FS-M6-06 `prompt` → `Stream`).
+    ///
+    /// The returned stream runs the prompt once (invoking embedded tools),
+    /// then replays the outcome chunks in order and ends. Transport framing
+    /// (`event: token` over WS/SSE) is applied by the caller.
+    pub fn prompt_stream(
+        &self,
+        prompt: impl Into<String>,
+    ) -> futures_core::stream::BoxStream<'static, Result<AiChunk>> {
+        let agent = self.clone();
+        let prompt = prompt.into();
+        Box::pin(futures_util::stream::unfold(
+            (agent, prompt, None::<AgentRun>, 0usize),
+            |(agent, prompt, run, index)| async move {
+                let run = match run {
+                    Some(run) => run,
+                    None => {
+                        let completed = agent.run(&prompt).await;
+                        if completed.chunks.is_empty() {
+                            return None;
+                        }
+                        completed
+                    }
+                };
+                if index < run.chunks.len() {
+                    let chunk = run.chunks[index].clone();
+                    Some((Ok(chunk), (agent, prompt, Some(run), index + 1)))
+                } else {
+                    None
+                }
+            },
+        ))
+    }
+
+    /// Queue a prompt for background execution (queueing stub).
+    pub async fn queue(&self, prompt: &str) -> Result<String> {
+        crate::streaming::queue_run(self.provider, prompt).await
+    }
+
     async fn run_inner(&self, prompt: &str) -> AgentRun {
         let mut chunks = vec![AiChunk::token(
             self.provider,
@@ -153,7 +249,7 @@ impl Agent {
         let mut tool_results = Vec::new();
         if let Some(call) = parse_tool_call(prompt) {
             if let Some(tool) = self.tools.get(&call.0) {
-                if let Ok(result) = tool.run(call.1.clone()).await {
+                if let Ok(result) = tool.call(call.1.clone()).await {
                     tool_results.push((call.0.clone(), result));
                     chunks.push(AiChunk {
                         kind: "tool_call".to_string(),
@@ -170,25 +266,88 @@ impl Agent {
     }
 }
 
+/// Adapter exposing a nested agent as a tool (sub-agent invocation).
+///
+/// Prompting a parent with `tool:<name>({"task": "…"})` runs the sub-agent;
+/// the middleware chain of both parent and sub-agent observe the run.
+pub struct SubAgentTool {
+    name: &'static str,
+    agent: Agent,
+}
+
+impl SubAgentTool {
+    /// Wrap an agent as a tool under its provider name.
+    pub fn new(agent: Agent) -> Self {
+        // Leak a stable name: "{provider}-subagent" must be 'static for Tool.
+        let name: &'static str = Box::leak(format!("{}-subagent", agent.provider).into_boxed_str());
+        Self { name, agent }
+    }
+}
+
+#[async_trait::async_trait]
+impl Tool for SubAgentTool {
+    fn name(&self) -> &'static str {
+        self.name
+    }
+
+    fn description(&self) -> &'static str {
+        "Delegates the task to a nested sub-agent."
+    }
+
+    fn schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "task": { "type": "string", "description": "Task for the sub-agent" }
+            },
+            "required": ["task"]
+        })
+    }
+
+    async fn call(&self, arguments: Value) -> Result<Value> {
+        let task = arguments
+            .get("task")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        let run = self.agent.run(&task).await;
+        Ok(json!({
+            "agent": self.agent.provider,
+            "chunks": run.chunks.len(),
+            "text": run
+                .chunks
+                .iter()
+                .map(|chunk| chunk.text.clone())
+                .collect::<Vec<String>>()
+                .join("")
+        }))
+    }
+}
+
 /// Parse a `tool:name({json})` invocation embedded in a prompt.
+///
+/// The tool name runs to the first `(`, whitespace, or end of input — so both
+/// `tool:echo({"a":1})` and `tool:upper ({"t":"x"})` parse.
 fn parse_tool_call(prompt: &str) -> Option<(String, Value)> {
-    let rest = prompt.trim().strip_prefix("tool:")?;
-    let name = rest.split_whitespace().next()?.to_string();
-    let payload = rest[name.len()..]
-        .trim()
-        .strip_prefix('(')?
-        .strip_suffix(')')?;
+    let rest = prompt.trim().strip_prefix("tool:")?.trim_start();
+    let paren = rest.find('(')?;
+    let name = rest[..paren].trim().to_string();
+    if name.is_empty() {
+        return None;
+    }
+    let payload = rest[paren..].strip_prefix('(')?.strip_suffix(')')?;
     serde_json::from_str::<Value>(payload)
         .ok()
         .map(|v| (name, v))
 }
 
-/// Tool calls from an agent run (alias used by `Ai::agent` output).
+/// Tool calls from an agent run (alias used by `AiResponse::tool_calls`).
 pub type ToolCall = (String, Value);
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use futures_util::StreamExt;
 
     struct EchoTool;
 
@@ -202,7 +361,7 @@ mod tests {
             "Echoes its input back"
         }
 
-        async fn run(&self, arguments: Value) -> Result<Value> {
+        async fn call(&self, arguments: Value) -> Result<Value> {
             Ok(arguments)
         }
     }
@@ -221,5 +380,47 @@ mod tests {
         let agent = Agent::new("echo");
         let run = agent.run("tool:missing({\"a\":1})").await;
         assert!(run.tool_results.is_empty());
+    }
+
+    #[tokio::test]
+    async fn registry_invoke_returns_tool_not_found() {
+        let registry = ToolRegistry::new();
+        let error = registry.invoke("nope", json!({})).await.unwrap_err();
+        // `invoke` promotes agent errors into the AI error space; assert the
+        // underlying tool-not-found message survives the promotion.
+        let message = error.to_string();
+        assert!(
+            message.contains("tool not found: nope"),
+            "unexpected error: {message}"
+        );
+        // Direct registry lookup exposes the typed AgentError.
+        assert!(matches!(registry.get("nope"), None));
+    }
+
+    #[tokio::test]
+    async fn prompt_stream_emits_ordered_chunks() {
+        let agent = Agent::new("echo").tool(EchoTool);
+        let mut stream = agent.prompt_stream("tool:echo({\"a\":1})");
+        let first = stream.next().await.unwrap().unwrap();
+        assert_eq!(first.kind, "token");
+        assert!(first.text.contains("echo"));
+        let second = stream.next().await.unwrap().unwrap();
+        assert_eq!(second.kind, "tool_call");
+        assert!(second.text.contains("echo -> "));
+        assert!(stream.next().await.is_none());
+    }
+
+    #[tokio::test]
+    async fn sub_agent_invoked_as_tool() {
+        let sub = Agent::new("knowledge");
+        let parent = Agent::new("parent").sub_agent(sub);
+        let run = parent
+            .run("tool:knowledge-subagent({\"task\":\"find docs\"})")
+            .await;
+        assert_eq!(run.tool_results.len(), 1);
+        assert_eq!(run.tool_results[0].0, "knowledge-subagent");
+        let result = run.tool_results[0].1.clone();
+        assert_eq!(result["agent"], "knowledge");
+        assert!(result["text"].as_str().unwrap().contains("find docs"));
     }
 }

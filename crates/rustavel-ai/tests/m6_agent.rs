@@ -23,7 +23,7 @@ impl Tool for UpperTool {
         "Uppercases the text argument"
     }
 
-    async fn run(&self, arguments: Value) -> Result<Value> {
+    async fn call(&self, arguments: Value) -> Result<Value> {
         let text = arguments["text"].as_str().unwrap_or_default();
         Ok(json!({ "text": text.to_uppercase() }))
     }
@@ -51,6 +51,7 @@ async fn agent_invokes_tool_and_emits_ordered_chunks() {
     assert!(texts.iter().any(|t| t.contains("hi")));
 }
 
+#[cfg(not(feature = "search"))]
 #[tokio::test]
 async fn deferred_loader_degrades_without_search_feature() {
     let loader = SimilaritySearch::new("docs");
@@ -60,4 +61,13 @@ async fn deferred_loader_degrades_without_search_feature() {
         loader.handle(),
         Err(AiError::UnsupportedCapability { .. })
     ));
+}
+
+#[cfg(feature = "search")]
+#[tokio::test]
+async fn deferred_loader_requires_binding_with_search_feature() {
+    let loader = SimilaritySearch::new("docs");
+    // Feature on but no engine bound → configured-error (never panics).
+    assert!(!loader.ready());
+    assert!(matches!(loader.handle(), Err(AiError::NotConfigured(_))));
 }

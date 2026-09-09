@@ -51,6 +51,10 @@ impl std::fmt::Display for JobId {
 pub enum JobOutcome {
     /// `handle` returned `Ok`.
     Succeeded,
+    /// The job was deliberately skipped before running (e.g. a queued
+    /// notification whose target model was deleted — FR-605
+    /// `#[deleteWhenMissingModels]`). A skipped job is never retried.
+    Skipped,
     /// `handle` returned `Err` and the retry budget is exhausted.
     Failed,
     /// `handle` returned `Err`; the job will be retried after `delay`.
@@ -126,6 +130,36 @@ pub trait Job: Serialize + Send + Sync + 'static {
     /// Hook invoked when the per-job timeout elapses (`#[failOnTimeout]`).
     fn on_timeout(&self) {}
 
+    /// Whether this job declares `#[deleteWhenMissingModels]` (FR-605).
+    ///
+    /// Queued notifications (mail/notification adjacency #17) mark themselves
+    /// so the worker resolves their referenced model before sending: when the
+    /// model was deleted/soft-deleted before the worker ran, the job is skipped
+    /// — never retried — and a `NotificationSkipped { reason: MissingModel }`
+    /// diagnostic is recorded.
+    fn delete_when_missing_models(&self) -> bool {
+        false
+    }
+
+    /// Suppression probe consulted before `handle` runs.
+    ///
+    /// Implementors declaring `delete_when_missing_models()` resolve their
+    /// referenced model (e.g. via a `NotificationGuard`) and return `true`
+    /// here when that model is gone; the worker then reports
+    /// [`JobOutcome::Skipped`] instead of executing the body (FR-605).
+    fn is_missing_model_suppressed(&self) -> bool {
+        false
+    }
+
+    /// Skip diagnostic recorded when suppression fires.
+    ///
+    /// Defaults to `None`; notification jobs returning `true` from
+    /// [`Job::is_missing_model_suppressed`] supply a `NotificationSkipped`
+    /// record here so workers log `reason: MissingModel` (domain E-06).
+    fn skipped_notification(&self) -> Option<crate::notification::NotificationSkipped> {
+        None
+    }
+
     /// Type identity used by the routing registry.
     fn type_id(&self) -> std::any::TypeId
     where
@@ -172,6 +206,9 @@ pub trait ErasedJob: Send + Sync {
     /// Retry decision for a failed attempt.
     fn should_retry(&self, attempt: u32, err: &JobError) -> bool;
 
+    /// Whether the job declares `#[deleteWhenMissingModels]` (FR-605).
+    fn delete_when_missing_models(&self) -> bool;
+
     /// Timeout hook.
     fn on_timeout(&self);
 
@@ -186,6 +223,7 @@ pub struct ConcreteJob<J: Job> {
     tries: u32,
     backoff: Duration,
     timeout: Duration,
+    delete_when_missing: bool,
 }
 
 impl<J: Job> ConcreteJob<J> {
@@ -195,12 +233,14 @@ impl<J: Job> ConcreteJob<J> {
         let tries = job.tries();
         let backoff = job.backoff();
         let timeout = job.timeout();
+        let delete_when_missing = job.delete_when_missing_models();
         Self {
             body: Mutex::new(Some(job)),
             key,
             tries,
             backoff,
             timeout,
+            delete_when_missing,
         }
     }
 }
@@ -236,6 +276,11 @@ impl<J: Job> ErasedJob for ConcreteJob<J> {
         self.timeout
     }
 
+    /// Suppression marker captured at dispatch.
+    fn delete_when_missing_models(&self) -> bool {
+        self.delete_when_missing
+    }
+
     /// Retry decision via the concrete job's contract.
     fn should_retry(&self, attempt: u32, err: &JobError) -> bool {
         let guard = self.body.lock().unwrap_or_else(|p| p.into_inner());
@@ -254,7 +299,33 @@ impl<J: Job> ErasedJob for ConcreteJob<J> {
     }
 
     /// Consume the body and execute it under the retry policy.
+    ///
+    /// When the job declares missing-model suppression, the body is consulted
+    /// first (via `NotificationGuard`-style existence probing); a deleted
+    /// model short-circuits to [`JobOutcome::Skipped`] without consuming the
+    /// retry budget (FR-605 `#[deleteWhenMissingModels]`).
     async fn run(&self) -> JobOutcome {
+        // Suppression check happens before the body is consumed so a skip can
+        // still be observed (and re-evaluated) by a later pass.
+        let suppressed = {
+            let guard = self.body.lock().unwrap_or_else(|p| p.into_inner());
+            guard
+                .as_ref()
+                .map(|job| {
+                    let suppressed = job.is_missing_model_suppressed();
+                    if suppressed {
+                        if let Some(record) = job.skipped_notification() {
+                            crate::notification::record_skipped(record);
+                        }
+                    }
+                    suppressed
+                })
+                .unwrap_or(false)
+        };
+        if suppressed {
+            return JobOutcome::Skipped;
+        }
+
         let body = self
             .body
             .lock()
