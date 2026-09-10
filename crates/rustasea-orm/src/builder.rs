@@ -3,11 +3,12 @@
 use crate::error::{OrmError, Result};
 use crate::types::{JsonFilter, Value};
 
-pub use crate::clause::{Lock, OrderDirection, Raw, SqlFragment, TransactionStub};
+pub use crate::clause::{Lock, OrderDirection, Raw, SqlFragment};
 
 mod exec;
 mod ext;
 
+pub use exec::Executor;
 pub(crate) use exec::json_to_model;
 
 /// Driver dialect selected via cargo features (Postgres default).

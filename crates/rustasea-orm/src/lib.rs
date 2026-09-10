@@ -21,7 +21,7 @@ pub mod types;
 pub mod value;
 pub mod vector;
 
-pub use builder::{Lock, OrderDirection, QueryBuilder, Raw, TransactionStub};
+pub use builder::{Executor, Lock, OrderDirection, QueryBuilder, Raw};
 pub use db::DbPool;
 pub use error::{OrmError, Result, UpsertError};
 pub use execution::{

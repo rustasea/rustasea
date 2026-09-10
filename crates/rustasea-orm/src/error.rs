@@ -46,6 +46,10 @@ pub enum OrmError {
     #[error(transparent)]
     Migration(#[from] crate::migration::MigrationError),
 
+    /// Transaction lifecycle failure (already committed or rolled back).
+    #[error(transparent)]
+    Transaction(#[from] crate::tx::TransactionError),
+
     /// Vector dimension mismatch: the column expects `expected` dimensions but
     /// the supplied embedding has `actual`.
     #[error("vector dimension mismatch: expected {expected}, got {actual}")]

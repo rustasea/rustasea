@@ -9,6 +9,7 @@ use crate::db::DbPool;
 #[cfg(not(any(feature = "sqlite", feature = "postgres", feature = "mysql")))]
 use crate::error::OrmError;
 use crate::error::Result;
+use crate::tx::DbTransaction;
 use crate::types::Value;
 #[cfg(any(feature = "sqlite", feature = "postgres", feature = "mysql"))]
 use crate::value::{bind_all, row_to_json};
@@ -106,6 +107,129 @@ impl DbPool {
             )),
         }
     }
+}
+
+impl DbTransaction {
+    /// The dialect name for this transaction (`sqlite` / `postgres` / `mysql`).
+    pub(crate) fn dialect(&self) -> &'static str {
+        match self {
+            #[cfg(feature = "sqlite")]
+            DbTransaction::Sqlite(_) => "sqlite",
+            #[cfg(feature = "postgres")]
+            DbTransaction::Postgres(_) => "postgres",
+            #[cfg(feature = "mysql")]
+            DbTransaction::MySql(_) => "mysql",
+            #[cfg(not(any(feature = "sqlite", feature = "postgres", feature = "mysql")))]
+            _ => "unknown",
+        }
+    }
+
+    /// Run `sql` with `bindings` on the transaction, decoding every row to JSON.
+    pub(crate) async fn fetch_json(
+        &mut self,
+        sql: &str,
+        bindings: &[Value],
+    ) -> Result<Vec<serde_json::Value>> {
+        let sql = adapt_placeholders(sql, self.dialect());
+        match self {
+            #[cfg(feature = "sqlite")]
+            DbTransaction::Sqlite(tx) => fetch_json_sqlite_tx(tx, &sql, bindings).await,
+            #[cfg(feature = "postgres")]
+            DbTransaction::Postgres(tx) => fetch_json_postgres_tx(tx, &sql, bindings).await,
+            #[cfg(feature = "mysql")]
+            DbTransaction::MySql(tx) => fetch_json_mysql_tx(tx, &sql, bindings).await,
+            #[cfg(not(any(feature = "sqlite", feature = "postgres", feature = "mysql")))]
+            _ => Err(OrmError::UnsupportedDriver(
+                "no sqlx driver compiled in".into(),
+            )),
+        }
+    }
+
+    /// Run `sql` with `bindings` on the transaction, returning affected rows.
+    pub(crate) async fn execute_bind(&mut self, sql: &str, bindings: &[Value]) -> Result<u64> {
+        let sql = adapt_placeholders(sql, self.dialect());
+        match self {
+            #[cfg(feature = "sqlite")]
+            DbTransaction::Sqlite(tx) => execute_sqlite_tx(tx, &sql, bindings).await,
+            #[cfg(feature = "postgres")]
+            DbTransaction::Postgres(tx) => execute_postgres_tx(tx, &sql, bindings).await,
+            #[cfg(feature = "mysql")]
+            DbTransaction::MySql(tx) => execute_mysql_tx(tx, &sql, bindings).await,
+            #[cfg(not(any(feature = "sqlite", feature = "postgres", feature = "mysql")))]
+            _ => Err(OrmError::UnsupportedDriver(
+                "no sqlx driver compiled in".into(),
+            )),
+        }
+    }
+}
+
+/// Fetch rows from an open SQLite transaction as JSON objects.
+#[cfg(feature = "sqlite")]
+async fn fetch_json_sqlite_tx(
+    tx: &mut sqlx::Transaction<'static, sqlx::Sqlite>,
+    sql: &str,
+    bindings: &[Value],
+) -> Result<Vec<serde_json::Value>> {
+    let query = bind_all::<sqlx::Sqlite>(sqlx::query(sql), bindings);
+    let rows = query.fetch_all(&mut **tx).await?;
+    rows.iter().map(row_to_json::<sqlx::Sqlite>).collect()
+}
+
+/// Execute a statement against a SQLite transaction, returning affected rows.
+#[cfg(feature = "sqlite")]
+async fn execute_sqlite_tx(
+    tx: &mut sqlx::Transaction<'static, sqlx::Sqlite>,
+    sql: &str,
+    bindings: &[Value],
+) -> Result<u64> {
+    let query = bind_all::<sqlx::Sqlite>(sqlx::query(sql), bindings);
+    Ok(query.execute(&mut **tx).await?.rows_affected())
+}
+
+/// Fetch rows from an open Postgres transaction as JSON objects.
+#[cfg(feature = "postgres")]
+async fn fetch_json_postgres_tx(
+    tx: &mut sqlx::Transaction<'static, sqlx::Postgres>,
+    sql: &str,
+    bindings: &[Value],
+) -> Result<Vec<serde_json::Value>> {
+    let query = bind_all::<sqlx::Postgres>(sqlx::query(sql), bindings);
+    let rows = query.fetch_all(&mut **tx).await?;
+    rows.iter().map(row_to_json::<sqlx::Postgres>).collect()
+}
+
+/// Execute a statement against a Postgres transaction, returning affected rows.
+#[cfg(feature = "postgres")]
+async fn execute_postgres_tx(
+    tx: &mut sqlx::Transaction<'static, sqlx::Postgres>,
+    sql: &str,
+    bindings: &[Value],
+) -> Result<u64> {
+    let query = bind_all::<sqlx::Postgres>(sqlx::query(sql), bindings);
+    Ok(query.execute(&mut **tx).await?.rows_affected())
+}
+
+/// Fetch rows from an open MySQL transaction as JSON objects.
+#[cfg(feature = "mysql")]
+async fn fetch_json_mysql_tx(
+    tx: &mut sqlx::Transaction<'static, sqlx::MySql>,
+    sql: &str,
+    bindings: &[Value],
+) -> Result<Vec<serde_json::Value>> {
+    let query = bind_all::<sqlx::MySql>(sqlx::query(sql), bindings);
+    let rows = query.fetch_all(&mut **tx).await?;
+    rows.iter().map(row_to_json::<sqlx::MySql>).collect()
+}
+
+/// Execute a statement against a MySQL transaction, returning affected rows.
+#[cfg(feature = "mysql")]
+async fn execute_mysql_tx(
+    tx: &mut sqlx::Transaction<'static, sqlx::MySql>,
+    sql: &str,
+    bindings: &[Value],
+) -> Result<u64> {
+    let query = bind_all::<sqlx::MySql>(sqlx::query(sql), bindings);
+    Ok(query.execute(&mut **tx).await?.rows_affected())
 }
 
 /// Fetch rows from a SQLite pool as JSON objects.

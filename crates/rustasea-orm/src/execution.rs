@@ -4,12 +4,16 @@
 //! [`Paginator`] is the shared `{data, meta, links}` envelope; `count_sql` /
 //! `sum_sql` / the string `chunk_by` emit SQL text for callers to verify before
 //! a round-trip. The async executors live in [`crate::builder`] and
-//! [`crate::model_ops`]; the `transaction` body remains a stub until M2-C
-//! (TASK-005).
+//! [`crate::model_ops`]; [`transaction`] runs a body atomically against a real
+//! [`crate::db::DbPool`].
 
-use crate::builder::{QueryBuilder, Raw, TransactionStub};
+use crate::builder::{QueryBuilder, Raw};
+use crate::db::DbPool;
 use crate::error::{OrmError, Result};
+use crate::tx::Transaction;
 use crate::types::Value;
+use std::future::Future;
+use std::pin::Pin;
 
 /// Pagination metadata and rows (offset pagination).
 ///
@@ -303,21 +307,34 @@ pub fn chunk_by(
     Ok(chunks)
 }
 
-/// Execute a transaction body atomically (stub — pool wiring in the driver crate).
+/// Execute a transaction body atomically against `pool`.
 ///
-/// Commits on `Ok`, rolls back on `Err`; the body receives an open handle.
-pub async fn transaction<F, T>(body: F) -> Result<T>
+/// Begins a real transaction and commits on `Ok` / rolls back on `Err`. Do not call
+/// `transaction()` inside a `transaction()` body — a nested call acquires a second connection and deadlocks; use the passed `&mut Transaction` handle instead.
+///
+/// The body is a closure returning a boxed future so it can run driver
+/// statements asynchronously on the transaction connection:
+///
+/// ```ignore
+/// transaction(&pool, |tx| Box::pin(async move {
+///     tx.execute_bind("INSERT INTO t (id) VALUES ($1)", &[Value::Int(1)]).await?;
+///     Ok(())
+/// })).await?;
+/// ```
+pub async fn transaction<F, T>(pool: &DbPool, body: F) -> Result<T>
 where
-    F: FnOnce(&mut TransactionStub) -> Result<T>,
+    F: for<'a> FnOnce(
+        &'a mut Transaction,
+    ) -> Pin<Box<dyn Future<Output = Result<T>> + Send + 'a>>,
 {
-    let mut tx = TransactionStub::begin();
-    match body(&mut tx) {
+    let mut tx = Transaction::begin(pool).await?;
+    match body(&mut tx).await {
         Ok(value) => {
-            tx.commit()?;
+            tx.commit().await?;
             Ok(value)
         }
         Err(e) => {
-            tx.rollback()?;
+            let _ = tx.rollback().await;
             Err(e)
         }
     }
@@ -416,11 +433,25 @@ mod tests {
     }
 
     /// Verifies transaction commits on success and rolls back on error.
+    #[cfg(feature = "sqlite")]
     #[tokio::test]
     async fn transaction_rollback_on_error() {
-        let ok: crate::Result<u8> = transaction(|_tx| Ok(7)).await;
-        assert_eq!(ok.unwrap(), 7);
-        let err: crate::Result<u8> = transaction(|_tx| Err(crate::OrmError::NotFound)).await;
-        assert!(matches!(err.unwrap_err(), crate::OrmError::NotFound));
+        let pool = DbPool::connect("sqlite::memory:").await.unwrap();
+        pool.execute_bind("CREATE TABLE t (id INTEGER PRIMARY KEY)", &[])
+            .await
+            .unwrap();
+
+        let ok = transaction(&pool, |_tx| Box::pin(async { Ok(7u8) }))
+            .await
+            .unwrap();
+        assert_eq!(ok, 7);
+
+        let err = transaction(&pool, |_tx| {
+            Box::pin(async { Err::<u8, _>(crate::OrmError::NotFound) })
+        })
+        .await
+        .unwrap_err();
+        assert!(matches!(err, crate::OrmError::NotFound));
+        pool.close().await;
     }
 }
