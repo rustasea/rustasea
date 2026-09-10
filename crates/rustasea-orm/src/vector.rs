@@ -1,13 +1,22 @@
 //! Vector extension support (pgvector) — `vector` feature.
 //!
-//! Sprint 03 provides the query shape (`ORDER BY col <=> $1 LIMIT k`), the
-//! `VECTOR(n)` column type, and typed dimension errors. Execution against a real
-//! pgvector-enabled Postgres lands with the sqlx wiring and testcontainers suite.
+//! Provides the query shape (`ORDER BY col <=> $1 LIMIT k`), the `VECTOR(n)`
+//! column type, the `order_by_distance` metric switch (L2 `<->` / inner product
+//! `<#>`), typed dimension errors, and the `has_extension("vector")` migration
+//! guard. Execution runs through the normal runtime `sqlx` path.
 
+use crate::db::DbPool;
 use crate::error::{OrmError, Result};
+use crate::migration::MigrationError;
+#[cfg(feature = "vector")]
+use crate::types::Value;
 
 /// Maximum embedding dimension accepted by the ORM.
 pub const MAX_DIMENSION: u32 = 16_000;
+
+/// Remediation hint surfaced with [`MigrationError::ExtensionMissing`].
+pub const VECTOR_EXTENSION_HINT: &str = "CREATE EXTENSION IF NOT EXISTS vector;";
+
 
 /// A validated embedding vector plus similarity configuration.
 #[derive(Debug, Clone, PartialEq)]
@@ -96,11 +105,52 @@ pub fn to_vector_literal(embedding: &[f32]) -> String {
 
 /// Check whether the `vector` extension is available (guarded in migrations).
 ///
+/// Executes `SELECT 1 FROM pg_extension WHERE extname = 'vector'`; a missing
+/// extension surfaces as [`MigrationError::ExtensionMissing`] carrying
+/// [`VECTOR_EXTENSION_HINT`]. Non-Postgres pools have no `pg_extension`, so the
+/// probe reports the extension as absent.
+pub async fn has_extension(pool: &DbPool) -> Result<bool> {
+    if pool.dialect() != "postgres" {
+        return Ok(false);
+    }
+    let rows = pool
+        .fetch_json(
+            "SELECT 1 AS present FROM pg_extension WHERE extname = 'vector'",
+            &[],
+        )
+        .await?;
+    Ok(!rows.is_empty())
+}
+
+/// Fail with [`MigrationError::ExtensionMissing`] when `vector` is absent.
+///
+/// Call from a migration `up` body before emitting `VECTOR`/HNSW DDL.
+pub async fn require_extension(pool: &DbPool) -> Result<()> {
+    if has_extension(pool).await? {
+        return Ok(());
+    }
+    Err(OrmError::Migration(MigrationError::ExtensionMissing {
+        extension: "vector".to_string(),
+        hint: VECTOR_EXTENSION_HINT.to_string(),
+    }))
+}
+
+/// Check whether the `vector` extension is available (guarded in migrations).
+///
 /// Real implementation executes `SELECT 1 FROM pg_extension WHERE extname='vector'`;
 /// the stub returns the would-be SQL for the Migrator to run.
 pub fn has_extension_sql() -> &'static str {
     "SELECT 1 FROM pg_extension WHERE extname = 'vector'"
 }
+
+/// Render the pgvector bind literal for an embedding (`[a,b,c]::vector`).
+///
+/// Used when a similarity query must inline the embedding as a cast parameter.
+#[cfg(feature = "vector")]
+pub fn vector_param(embedding: &[f32]) -> Value {
+    Value::Vector(embedding.to_vec())
+}
+
 
 #[cfg(test)]
 mod tests {

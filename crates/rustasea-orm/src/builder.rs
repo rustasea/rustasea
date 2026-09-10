@@ -11,6 +11,8 @@ mod ext;
 pub use exec::Executor;
 pub(crate) use exec::json_to_model;
 
+mod eager;
+
 /// Driver dialect selected via cargo features (Postgres default).
 pub fn dialect() -> &'static str {
     #[cfg(feature = "postgres")]
@@ -70,6 +72,10 @@ pub struct QueryBuilder {
     /// Soft-delete guard state: `None` = not applied, `true` = include trashed,
     /// `false` = active rows only (`deleted_at IS NULL`).
     soft_delete_guard: Option<bool>,
+    /// Relation names requested for eager loading via `with(&[...])`.
+    eager: Vec<String>,
+    /// Declared relation metadata used to resolve `eager` names.
+    eager_declared: Vec<crate::model::Relation>,
 }
 
 impl QueryBuilder {
@@ -91,6 +97,7 @@ impl QueryBuilder {
         self.columns = columns.iter().map(|c| (*c).to_string()).collect();
         self
     }
+
 
     /// Add an equality WHERE clause: `where("email", value)`.
     pub fn where_eq(mut self, column: &str, value: impl Into<Value>) -> Self {

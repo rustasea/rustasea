@@ -159,20 +159,64 @@ impl QueryBuilder {
         limit: u32,
     ) -> Result<Self> {
         let sim = VectorSimilarity::new(embedding.to_vec())?;
+        self.push_distance_order(column, &sim);
+        self.limit = Some(limit as u64);
+        Ok(self)
+    }
+
+    /// Add a distance-ordered vector clause for an explicit [`VectorMetric`].
+    ///
+    /// Emits `ORDER BY col <op> $n ASC LIMIT k` with the metric's operator
+    /// (`<->` L2, `<#>` inner product, `<=>` cosine) and replaces prior orders.
+    #[cfg(feature = "vector")]
+    pub fn order_by_distance(
+        mut self,
+        column: &str,
+        embedding: &[f32],
+        metric: crate::vector::VectorMetric,
+    ) -> Result<Self> {
+        let sim = VectorSimilarity::new(embedding.to_vec())?.with_metric(metric);
+        self.push_distance_order(column, &sim);
+        Ok(self)
+    }
+
+    /// Add a metric-selected similarity clause with an expected column dimension.
+    ///
+    /// A dimension mismatch surfaces [`crate::error::OrmError::VectorDimensionMismatch`]
+    /// before any round-trip. `expected_dimension` is the column's `VECTOR(n)`.
+    #[cfg(feature = "vector")]
+    pub fn where_vector_similar_to_dim(
+        mut self,
+        column: &str,
+        embedding: &[f32],
+        limit: u32,
+        expected_dimension: u32,
+        metric: crate::vector::VectorMetric,
+    ) -> Result<Self> {
+        let sim = VectorSimilarity::new(embedding.to_vec())?
+            .with_dimension(expected_dimension)?
+            .with_metric(metric);
+        self.push_distance_order(column, &sim);
+        self.limit = Some(limit as u64);
+        Ok(self)
+    }
+
+    /// Bind the embedding and push its distance ordering onto the builder.
+    #[cfg(feature = "vector")]
+    fn push_distance_order(&mut self, column: &str, sim: &VectorSimilarity) {
         self.bindings.push(Value::Vector(sim.embedding.clone()));
         let idx = self.bindings.len();
-        self.orders = Vec::new(); // similarity ordering replaces explicit orders
+        let op = sim.metric.operator();
+        self.orders = Vec::new();
         self.conditions.push(Condition {
             glue: "AND",
-            sql: format!("{column} IS NOT NULL AND {column} <=> ${idx}"),
+            sql: format!("{column} IS NOT NULL"),
             bindings: Vec::new(),
         });
         self.orders.push(OrderBy {
-            column: format!("{column} <=> ${idx}"),
+            column: format!("{column} {op} ${idx}"),
             direction: OrderDirection::Asc,
         });
-        self.limit = Some(limit as u64);
-        Ok(self)
     }
 }
 
@@ -362,8 +406,10 @@ mod tests {
             .where_vector_similar_to("embedding", &[0.1, 0.2, 0.3], 10)
             .unwrap();
         let sql = qb.to_sql().unwrap();
-        assert!(sql.contains("embedding IS NOT NULL AND embedding <=> $1"));
-        assert!(sql.contains("ORDER BY embedding <=> $1 ASC"));
-        assert!(sql.contains("LIMIT 10"));
+        assert!(sql.contains("embedding IS NOT NULL"), "{sql}");
+        assert!(sql.contains("ORDER BY embedding <=> $1 ASC"), "{sql}");
+        assert!(sql.contains("LIMIT 10"), "{sql}");
+        let where_clause = sql.split("ORDER BY").next().unwrap_or_default();
+        assert!(!where_clause.contains("embedding <=> $1"), "{sql}");
     }
 }
