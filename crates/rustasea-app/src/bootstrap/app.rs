@@ -21,7 +21,12 @@ impl rustasea::ServiceProvider for AppServiceProvider {
 }
 
 /// Build and boot the application.
+///
+/// Registers the framework's core migrations (queue `jobs`/`failed_jobs`) into
+/// the process-wide migrator so `cargo artisan migrate` creates them, then runs
+/// the provider boot DAG.
 pub fn configure() -> Application {
+    rustasea::register_queue_migrations();
     let mut app = Application::configure(|_| {});
     app.provider(AppServiceProvider);
     app.boot();

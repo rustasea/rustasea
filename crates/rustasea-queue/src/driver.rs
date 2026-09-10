@@ -1,4 +1,9 @@
-/// Queue drivers — `sync` inline connection plus `database`/`redis` stubs.
+/// Queue drivers — `sync` inline, `database` (sqlx/ORM), and `redis` (feature).
+///
+/// [`QueueDriver`] is the storage contract shared by every connection: the
+/// `sync` buffer for inline/execution tests, the ORM-backed `database` driver,
+/// and the `redis` list/sorted-set driver. Driver submodules live in
+/// `src/driver/` and are re-exported here.
 use std::collections::VecDeque;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -7,6 +12,18 @@ use async_trait::async_trait;
 
 use crate::error::{QueueError, Result};
 use crate::job::{FailedJob, JobId, JobPayload};
+
+mod database;
+mod worker;
+#[cfg(feature = "redis")]
+mod redis;
+
+pub use database::DatabaseDriver;
+pub use worker::{
+    default_resolver, register_job, register_job_handler, run_worker, run_worker_with,
+};
+#[cfg(feature = "redis")]
+pub use redis::RedisDriver;
 
 /// Canonical name of the inline `sync` connection.
 pub const SYNC_CONNECTION: &str = "sync";
@@ -25,6 +42,11 @@ pub const REDIS_DRIVER: &str = "redis";
 /// `delayedSize`, `reservedSize`, `creationTimeOfOldestPendingJob`) alongside
 /// `push`/`pop` so one driver object serves both dispatch and observability
 /// (FS-M4-03). Drivers must be `Send + Sync` so they can live behind `Arc`.
+///
+/// `ack`/`release`/`dead_letter` complete the worker lifecycle: `pop` reserves
+/// a job, `ack` finalizes success, `release` re-enqueues for a retry, and
+/// `dead_letter` records a permanent failure. Each has a default so a driver
+/// only overrides the lifecycle steps it can do better.
 #[async_trait]
 pub trait QueueDriver: Send + Sync {
     /// Enqueue a serialized job payload.
@@ -47,6 +69,39 @@ pub trait QueueDriver: Send + Sync {
         &self,
         queue: &str,
     ) -> Result<Option<chrono::DateTime<chrono::Utc>>>;
+
+    /// Acknowledge a successfully executed job, removing its reservation.
+    ///
+    /// Defaults to a no-op for drivers whose `pop` already consumed the job
+    /// (sync buffer, redis list).
+    async fn ack(&self, payload: &JobPayload) -> Result<()> {
+        let _ = payload;
+        Ok(())
+    }
+
+    /// Re-enqueue a reserved job for a later retry after `delay`.
+    ///
+    /// The default bumps the attempt count and pushes the payload again; the
+    /// database driver overrides it to update its reserved row in place.
+    async fn release(&self, payload: &JobPayload, delay: Duration) -> Result<()> {
+        let mut next = payload.clone();
+        next.attempts = payload.attempts.saturating_add(1);
+        next.available_at = if delay.is_zero() {
+            None
+        } else {
+            Some(chrono::Utc::now() + chrono::Duration::from_std(delay).unwrap_or_default())
+        };
+        self.push(next).await
+    }
+
+    /// Record a permanently failed job in the dead-letter store.
+    ///
+    /// Defaults to the process-local `failed_jobs` sink; the database driver
+    /// overrides it to insert a `failed_jobs` row.
+    async fn dead_letter(&self, failed: FailedJob) -> Result<()> {
+        record_failed(failed);
+        Ok(())
+    }
 }
 
 /// In-memory queue buffer — the `sync` connection driver.
@@ -110,9 +165,9 @@ impl QueueDriver for SyncDriver {
 
 /// Placeholder dead-letter sink shared by the driver stubs.
 ///
-/// The real `failed_jobs` table + `queue:failed`/`queue:retry` CLI land with
-/// the database driver (S05-T03); this in-memory sink keeps the contract
-/// testable today.
+/// The database driver persists dead letters to a real `failed_jobs` table;
+/// this in-memory sink backs the sync/redis drivers and keeps the contract
+/// testable without a server.
 static FAILED: std::sync::OnceLock<Mutex<Vec<FailedJob>>> = std::sync::OnceLock::new();
 
 /// Record a dead-letter entry for a permanently failed job.
@@ -134,13 +189,11 @@ pub fn failed_jobs() -> Vec<FailedJob> {
     guard.clone()
 }
 
-/// Clear a dead-lettered entry by id (`queue:retry`).
+/// Clear a dead-lettered entry by id (`queue:retry`) from the in-memory sink.
 ///
-/// The sync stub has no typed deserializer registry, so re-execution of a
-/// consumed body is impossible here; the entry is dropped from the sink. Real
-/// re-enqueue-from-payload (`queue:retry` on the `failed_jobs` table) lands
-/// with the database driver in S05-T03, where the payload is re-pushed through
-/// the queue and the row cleared after success.
+/// The sync/redis sinks hold no re-executable body registry, so the entry is
+/// dropped. The database driver's `retry_failed` re-enqueues the stored payload
+/// and clears the row only after a successful push.
 pub async fn retry_failed(id: JobId) -> Result<()> {
     let list = FAILED.get_or_init(|| Mutex::new(Vec::new()));
     let mut guard = list.lock().map_err(|_| QueueError::RegistryPoisoned)?;

@@ -20,10 +20,12 @@ pub use rustasea_validation as validation;
 
 /// Queue re-exports for typed job dispatch ergonomics (M4).
 pub use queue::{
-    async_trait as queue_async_trait, ConcreteJob, DispatchHandle, ErasedJob, FailedJob, Job,
-    JobError, JobId, JobOutcome, Queue, QueueDriver, QueueError, QueueRegistry, ShouldRetry,
-    ShouldRetryUntil,
+    async_trait as queue_async_trait, default_resolver, register_job, register_job_handler,
+    run_worker, run_worker_with, ConcreteJob, DatabaseDriver, DispatchHandle, ErasedJob,
+    FailedJob, Job, JobError, JobId, JobOutcome, JobPayload, Queue, QueueDriver, QueueError,
+    QueueRegistry, ShouldRetry, ShouldRetryUntil,
 };
+pub use queue::{queue_migrator, register_queue_migrations};
 
 /// Cache re-exports for store/repository ergonomics (M4).
 pub use cache::{CacheError, CacheManager, Lock, LockError, LockGuard, Store};

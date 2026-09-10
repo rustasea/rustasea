@@ -32,9 +32,20 @@ impl Command for QueueFailed {
         Some("List all failed queue jobs")
     }
 
-    /// Execute: dump the in-memory dead-letter sink.
+    /// Execute: dump the persistent dead-letter table, else the in-memory sink.
     async fn run(&self, _args: Vec<String>, io: &mut Io) -> CliResult<()> {
-        let jobs = rustasea_queue::driver::failed_jobs();
+        let jobs = if let Ok(url) = database_url() {
+            let pool = DbPool::connect(&url)
+                .await
+                .map_err(|error| CliError::Domain(error.to_string()))?;
+            let driver = rustasea_queue::DatabaseDriver::new(pool.clone());
+            let listed = driver.failed_jobs().await;
+            pool.close().await;
+            listed.map_err(|error| CliError::Domain(error.to_string()))?
+        } else {
+            rustasea_queue::driver::failed_jobs()
+        };
+
         if jobs.is_empty() {
             io.line("No failed jobs.");
             return Ok(());
@@ -72,7 +83,7 @@ impl Command for QueueRetry {
         Some("Retry a failed queue job")
     }
 
-    /// Execute: resolve the JobId and drop it from the sink.
+    /// Execute: re-enqueue through the database driver, else drop from the sink.
     async fn run(&self, args: Vec<String>, io: &mut Io) -> CliResult<()> {
         let id = args
             .first()
@@ -84,6 +95,25 @@ impl Command for QueueRetry {
             detail: format!("invalid job id `{id}`: {e}"),
         })?;
         let job_id = rustasea_queue::JobId::from_uuid(parsed);
+
+        // Prefer the persistent driver when a database is configured: it
+        // re-enqueues the stored payload and clears the row only on success.
+        if let Ok(url) = database_url() {
+            let pool = DbPool::connect(&url)
+                .await
+                .map_err(|error| CliError::Domain(error.to_string()))?;
+            let driver = rustasea_queue::DatabaseDriver::new(pool.clone());
+            let result = driver.retry_failed(job_id).await;
+            pool.close().await;
+            return match result {
+                Ok(()) => {
+                    io.line(format!("retried job {id}"));
+                    Ok(())
+                }
+                Err(e) => Err(CliError::Domain(e.to_string())),
+            };
+        }
+
         match rustasea_queue::driver::retry_failed(job_id).await {
             Ok(()) => {
                 io.line(format!("retried job {id}"));
@@ -255,7 +285,7 @@ impl Command for ScheduleRun {
 /// Precedence: `database.url` (TOML or `DATABASE__URL`), then `DATABASE_URL`
 /// (plain env), then the `database_url` key produced by the config env overlay.
 /// Returns a typed error when nothing is configured.
-fn database_url() -> CliResult<String> {
+pub(crate) fn database_url() -> CliResult<String> {
     let loader = rustasea_config::ConfigLoader::load_from(&["config/database", "config/app"])
         .map_err(|error| CliError::Domain(format!("failed to load database config: {error}")))?;
 
