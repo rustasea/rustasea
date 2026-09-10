@@ -35,6 +35,7 @@ pub fn register_all_into(reg: &mut CommandRegistry) {
     reg.register(ops::ScheduleResume);
     reg.register(ops::ScheduleRun);
     reg.register(ops::Migrate);
+    reg.register(ops::MigrateFresh);
 }
 
 /// Register every built-in command into the global process registry.

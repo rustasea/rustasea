@@ -107,6 +107,35 @@ impl DbPool {
             )),
         }
     }
+
+    /// Execute a `;`-separated SQL script with no bind values.
+    ///
+    /// Used by migrations and seeders whose bodies contain multiple statements
+    /// (`sqlx::query` accepts one statement only). The script is sent verbatim —
+    /// never interpolate user input; pass it as a bound value instead.
+    pub async fn execute_script(&self, _sql: &str) -> Result<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            DbPool::Sqlite(pool) => {
+                sqlx::raw_sql(_sql).execute(pool).await?;
+            }
+            #[cfg(feature = "postgres")]
+            DbPool::Postgres(pool) => {
+                sqlx::raw_sql(_sql).execute(pool).await?;
+            }
+            #[cfg(feature = "mysql")]
+            DbPool::MySql(pool) => {
+                sqlx::raw_sql(_sql).execute(pool).await?;
+            }
+            #[cfg(not(any(feature = "sqlite", feature = "postgres", feature = "mysql")))]
+            _ => {
+                return Err(OrmError::UnsupportedDriver(
+                    "no sqlx driver compiled in".into(),
+                ))
+            }
+        }
+        Ok(())
+    }
 }
 
 impl DbTransaction {
@@ -161,6 +190,32 @@ impl DbTransaction {
             )),
         }
     }
+
+    /// Execute a `;`-separated SQL script on the transaction, with no bind values.
+    ///
+    /// The future is boxed per driver arm so the concrete `Send` future is
+    /// visible to higher-ranked transaction closures (the generic `raw_sql`
+    /// future is otherwise not provably `Send` for every lifetime).
+    pub(crate) fn execute_script<'a>(
+        &'a mut self,
+        sql: &'a str,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + 'a>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            DbTransaction::Sqlite(tx) => Box::pin(execute_sqlite_script_tx(tx, sql)),
+            #[cfg(feature = "postgres")]
+            DbTransaction::Postgres(tx) => Box::pin(execute_postgres_script_tx(tx, sql)),
+            #[cfg(feature = "mysql")]
+            DbTransaction::MySql(tx) => Box::pin(execute_mysql_script_tx(tx, sql)),
+            #[cfg(not(any(feature = "sqlite", feature = "postgres", feature = "mysql")))]
+            _ => Box::pin(async move {
+                let _ = sql;
+                Err(OrmError::UnsupportedDriver(
+                    "no sqlx driver compiled in".into(),
+                ))
+            }),
+        }
+    }
 }
 
 /// Fetch rows from an open SQLite transaction as JSON objects.
@@ -186,6 +241,17 @@ async fn execute_sqlite_tx(
     Ok(query.execute(&mut **tx).await?.rows_affected())
 }
 
+/// Execute a `;`-separated script against a SQLite transaction.
+#[cfg(feature = "sqlite")]
+async fn execute_sqlite_script_tx(
+    tx: &mut sqlx::Transaction<'static, sqlx::Sqlite>,
+    sql: &str,
+) -> Result<()> {
+    use sqlx::Executor as _;
+    (&mut **tx).execute(sqlx::raw_sql(sql)).await?;
+    Ok(())
+}
+
 /// Fetch rows from an open Postgres transaction as JSON objects.
 #[cfg(feature = "postgres")]
 async fn fetch_json_postgres_tx(
@@ -209,6 +275,17 @@ async fn execute_postgres_tx(
     Ok(query.execute(&mut **tx).await?.rows_affected())
 }
 
+/// Execute a `;`-separated script against a Postgres transaction.
+#[cfg(feature = "postgres")]
+async fn execute_postgres_script_tx(
+    tx: &mut sqlx::Transaction<'static, sqlx::Postgres>,
+    sql: &str,
+) -> Result<()> {
+    use sqlx::Executor as _;
+    (&mut **tx).execute(sqlx::raw_sql(sql)).await?;
+    Ok(())
+}
+
 /// Fetch rows from an open MySQL transaction as JSON objects.
 #[cfg(feature = "mysql")]
 async fn fetch_json_mysql_tx(
@@ -230,6 +307,17 @@ async fn execute_mysql_tx(
 ) -> Result<u64> {
     let query = bind_all::<sqlx::MySql>(sqlx::query(sql), bindings);
     Ok(query.execute(&mut **tx).await?.rows_affected())
+}
+
+/// Execute a `;`-separated script against a MySQL transaction.
+#[cfg(feature = "mysql")]
+async fn execute_mysql_script_tx(
+    tx: &mut sqlx::Transaction<'static, sqlx::MySql>,
+    sql: &str,
+) -> Result<()> {
+    use sqlx::Executor as _;
+    (&mut **tx).execute(sqlx::raw_sql(sql)).await?;
+    Ok(())
 }
 
 /// Fetch rows from a SQLite pool as JSON objects.

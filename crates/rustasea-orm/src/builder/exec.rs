@@ -77,6 +77,17 @@ impl<'a> Executor<'a> {
         }
     }
 
+    /// Execute a `;`-separated SQL script with no bind values.
+    ///
+    /// Used by migration/seed bodies containing multiple statements; the script
+    /// is sent verbatim — never interpolate user input.
+    pub async fn execute_script(&mut self, sql: &str) -> Result<()> {
+        match self {
+            Executor::Pool(pool) => pool.execute_script(sql).await,
+            Executor::Transaction(tx) => tx.execute_script(sql).await,
+        }
+    }
+
     /// Reborrow the executor so multi-statement methods can reuse it.
     fn reborrow(&mut self) -> Executor<'_> {
         match self {

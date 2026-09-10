@@ -23,6 +23,10 @@ pub enum TestError {
     /// An io error while loading `.env.testing` or fixtures.
     #[error("io error: {0}")]
     Io(std::io::Error),
+
+    /// An ORM failure while provisioning the test database (e.g. migrate).
+    #[error("orm error: {0}")]
+    Orm(#[from] rustasea_orm::OrmError),
 }
 
 /// Alias for results produced by the test harness.

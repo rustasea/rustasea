@@ -16,6 +16,7 @@ serde_json = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 uuid = { workspace = true, features = ["v4", "serde"] }
 thiserror = { workspace = true }
+async-trait = { workspace = true }
 rustasea-foundation = { path = "../rustasea-foundation" }
 rustasea-config = { path = "../rustasea-config" }
 rustasea-orm = { path = "../rustasea-orm" }

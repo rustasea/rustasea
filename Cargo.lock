@@ -1974,6 +1974,7 @@ dependencies = [
  "console",
  "dialoguer",
  "indicatif",
+ "rustasea-config",
  "rustasea-foundation",
  "rustasea-macros",
  "rustasea-orm",
@@ -2127,6 +2128,7 @@ dependencies = [
 name = "rustasea-testing"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "chrono",
  "dotenvy",
  "rustasea-cache",

@@ -41,8 +41,9 @@ pub use schedule::{
 };
 
 pub use orm::{
-    Migration, Migrator, Model, OrmError, Paginator, QueryBuilder, Relation, Result as OrmResult,
-    ScopeRegistry, SoftDeletes, Timestamps, UpsertError,
+    register_migration, register_seeder, registered_migrator, Migration, MigrationError,
+    MigrationRecord, Migrator, Model, OrmError, Paginator, QueryBuilder, Relation,
+    Result as OrmResult, ScopeRegistry, Seeder, SoftDeletes, Timestamps, UpsertError,
 };
 
 /// Auth re-exports for handler ergonomics (`Auth::guard`, guards, CSRF).

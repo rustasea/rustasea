@@ -134,6 +134,15 @@ impl Transaction {
         let inner = self.inner.as_mut().ok_or(TransactionError::Closed)?;
         inner.execute_bind(sql, bindings).await
     }
+
+    /// Execute a `;`-separated SQL script on the transaction connection.
+    ///
+    /// Used for multi-statement bodies (`sqlx::query` accepts one statement
+    /// only); the script is sent verbatim — never interpolate user input.
+    pub async fn execute_script(&mut self, sql: &str) -> Result<()> {
+        let inner = self.inner.as_mut().ok_or(TransactionError::Closed)?;
+        inner.execute_script(sql).await
+    }
 }
 
 impl DbTransaction {

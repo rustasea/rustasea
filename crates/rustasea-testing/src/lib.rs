@@ -12,12 +12,14 @@
 pub mod containers;
 pub mod error;
 pub mod factory;
+pub mod migration;
 pub mod paginator;
 pub mod test_case;
 
 #[cfg(feature = "containers")]
 pub use containers::{postgres_container, redis_container, ContainerError};
 pub use error::{Result, TestError};
+pub use migration::{migrate_once, MigrateHarness};
 pub use factory::{
     factory_registry, register_sequence, reset_factory_sequences, str_factory, StrFactory,
 };

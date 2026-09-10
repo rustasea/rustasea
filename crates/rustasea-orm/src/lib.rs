@@ -28,9 +28,12 @@ pub use execution::{
     chunk_by, count_sql, raw, raw_sql, sum_sql, to_row_count_sql, transaction, Links, PageMeta,
     PaginationMeta, Paginator,
 };
-pub use factory::{Factory, Seeder, SequenceFactory, SqlSeeder, User};
+pub use factory::{Factory, FactoryState, SequenceFactory, SqlSeeder, User};
 pub use m2::{InsertBuilder, ModelScopes, UpsertBuilder};
-pub use migration::{Migration, MigrationError, Migrator};
+pub use migration::{
+    register_migration, register_seeder, registered_migrator, Migration, MigrationError,
+    MigrationRecord, Migrator, Seeder,
+};
 pub use model::{Model, Relation, RelationKind, SoftDeletes, Timestamps};
 pub use model_ops::ModelOps;
 pub use naming::snake_plural;

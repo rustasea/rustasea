@@ -2,14 +2,15 @@
 //! pause/resume, migrate.
 //!
 //! Queue and schedule surfaces read the M4 registries (in-memory dead-letter
-//! sink, scheduler singleton); `migrate` delegates SQL reporting to the ORM
-//! `Migrator` until pool execution wiring lands.
+//! sink, scheduler singleton); `migrate` opens a real pool from config and runs
+//! the ORM [`rustasea_orm::Migrator`] against it (no SQL echo).
 
 use async_trait::async_trait;
 
 use crate::artisan::{Command, Io};
 use crate::error::{CliError, CliResult};
 use crate::output;
+use rustasea_orm::{DbPool, Migrator};
 
 /// `queue:failed` — list dead-lettered jobs (FR-504 surface).
 pub struct QueueFailed;
@@ -249,11 +250,105 @@ impl Command for ScheduleRun {
     }
 }
 
-/// `migrate` — report pending migrations through the ORM [`Migrator`].
+/// Resolve the database connection URL from layered config.
 ///
-/// Pool execution is not wired in this binary; the command builds a
-/// [`rustasea_orm::Migrator`], reports each registered migration's `up` SQL
-/// (or reversed `down` SQL under `--fresh`) and notes seeder availability.
+/// Precedence: `database.url` (TOML or `DATABASE__URL`), then `DATABASE_URL`
+/// (plain env), then the `database_url` key produced by the config env overlay.
+/// Returns a typed error when nothing is configured.
+fn database_url() -> CliResult<String> {
+    let loader = rustasea_config::ConfigLoader::load_from(&["config/database", "config/app"])
+        .map_err(|error| CliError::Domain(format!("failed to load database config: {error}")))?;
+
+    if let Ok(url) = loader.get_key::<String>("database.url") {
+        if !url.trim().is_empty() {
+            return Ok(url);
+        }
+    }
+    if let Ok(url) = std::env::var("DATABASE_URL") {
+        if !url.trim().is_empty() {
+            return Ok(url);
+        }
+    }
+    if let Ok(url) = loader.get_key::<String>("database_url") {
+        if !url.trim().is_empty() {
+            return Ok(url);
+        }
+    }
+    Err(CliError::Domain(
+        "database URL not configured — set `database.url` in config/database.toml or the DATABASE_URL env var".into(),
+    ))
+}
+
+/// Shared body for `migrate` and `migrate:fresh`.
+///
+/// Opens a real pool from config and executes the process-wide registry;
+/// `fresh` drops every table first, `seed` runs the seeders afterwards.
+async fn run_migrate(fresh: bool, seed: bool, io: &mut Io) -> CliResult<()> {
+    let migrator: Migrator = rustasea_orm::registered_migrator();
+
+    if migrator.is_empty() {
+        io.line("No migrations registered in this binary — call `rustasea::orm::register_migration(..)` at application boot.");
+        if seed {
+            io.line("Seeding skipped (no seeders registered).");
+        }
+        return Ok(());
+    }
+
+    let url = database_url()?;
+    let pool = DbPool::connect(&url)
+        .await
+        .map_err(|error| CliError::Domain(error.to_string()))?;
+
+    let applied = if fresh {
+        migrator
+            .fresh(&pool)
+            .await
+            .map_err(|error| CliError::Domain(error.to_string()))?
+    } else {
+        migrator
+            .run(&pool)
+            .await
+            .map_err(|error| CliError::Domain(error.to_string()))?
+    };
+
+    if fresh {
+        io.line(format!(
+            "Dropped all tables; applied {} migration(s).",
+            applied.len()
+        ));
+    } else if applied.is_empty() {
+        io.line("Nothing to migrate.");
+    } else {
+        io.line(format!("Applied {} migration(s):", applied.len()));
+    }
+    for name in &applied {
+        io.line(format!("  migrated: {name}"));
+    }
+
+    if seed {
+        let ran = migrator
+            .seed(&pool)
+            .await
+            .map_err(|error| CliError::Domain(error.to_string()))?;
+        if ran.is_empty() {
+            io.line("No seeders registered.");
+        } else {
+            io.line(format!("Ran {} seeder(s):", ran.len()));
+            for name in &ran {
+                io.line(format!("  seeded: {name}"));
+            }
+        }
+    }
+
+    pool.close().await;
+    Ok(())
+}
+
+/// `migrate` — run pending migrations against the configured database.
+///
+/// Opens a real pool from config and executes the process-wide registry built
+/// by `register_migration`/`register_seeder` at application boot. `--fresh`
+/// drops every table first; `--seed` runs the registered seeders afterwards.
 pub struct Migrate;
 
 #[async_trait]
@@ -270,40 +365,37 @@ impl Command for Migrate {
     fn help(&self) -> Option<&'static str> {
         Some("Run pending migrations")
     }
-    /// Execute: delegate SQL reporting to the ORM Migrator.
+    /// Execute: open a pool and run the registered migrator/seeders.
     async fn run(&self, args: Vec<String>, io: &mut Io) -> CliResult<()> {
         let fresh = args.iter().any(|a| a == "--fresh");
         let seed = args.iter().any(|a| a == "--seed");
-        let migrator = rustasea_orm::Migrator::new();
-        let names = migrator.names();
+        run_migrate(fresh, seed, io).await
+    }
+}
 
-        if names.is_empty() {
-            io.line("No migrations registered in this binary — add them to `database/migrations/` and register each in the Migrator.");
-            if seed {
-                io.line("Seeding database… (no seeders registered)");
-            }
-            return Ok(());
-        }
+/// `migrate:fresh` — drop all tables then re-run every migration.
+///
+/// Equivalent to `migrate --fresh`; `--seed` additionally runs the registered
+/// seeders after the schema is rebuilt.
+pub struct MigrateFresh;
 
-        if fresh {
-            io.line("migrate:fresh — rolling back all migrations…");
-            for sql in migrator.down_sql().unwrap_or_default() {
-                for statement in sql.lines().filter(|l| !l.trim().is_empty()) {
-                    io.line(format!("rollback: {statement}"));
-                }
-            }
-        }
-
-        io.line(format!("Running {} migration(s)…", names.len()));
-        for sql in migrator.up_sql().unwrap_or_default() {
-            for statement in sql.lines().filter(|l| !l.trim().is_empty()) {
-                io.line(format!("migrate: {statement}"));
-            }
-        }
-
-        if seed {
-            io.line("Seeding database…");
-        }
-        Ok(())
+#[async_trait]
+impl Command for MigrateFresh {
+    /// Command signature.
+    fn signature(&self) -> &'static str {
+        "migrate:fresh"
+    }
+    /// Usage line rendered by `list`.
+    fn usage(&self) -> Option<&'static str> {
+        Some("migrate:fresh [--seed]")
+    }
+    /// One-line help rendered by `list`.
+    fn help(&self) -> Option<&'static str> {
+        Some("Drop all tables and re-run every migration")
+    }
+    /// Execute: drop all tables, re-migrate, optionally seed.
+    async fn run(&self, args: Vec<String>, io: &mut Io) -> CliResult<()> {
+        let seed = args.iter().any(|a| a == "--seed");
+        run_migrate(true, seed, io).await
     }
 }
