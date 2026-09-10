@@ -1,6 +1,7 @@
 //! Bind values and JSON filter primitives shared by builder and model layers.
 
 use crate::error::{OrmError, Result};
+use chrono::{DateTime, SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
 
 /// A single bind value for a prepared statement.
@@ -16,8 +17,10 @@ pub enum Value {
     Float(f64),
     /// UTF-8 text.
     Text(String),
-    /// UUID as text.
+    /// UUID.
     Uuid(uuid::Uuid),
+    /// Timestamp with time zone, bound natively by the driver.
+    Timestamp(DateTime<Utc>),
     /// JSON value.
     Json(serde_json::Value),
     /// Vector of floats (pgvector embedding).
@@ -37,6 +40,9 @@ impl Value {
             Value::Float(f) => format!("{f}"),
             Value::Text(s) => format!("'{}'", s.replace('\'', "''")),
             Value::Uuid(u) => format!("'{u}'"),
+            Value::Timestamp(t) => {
+                format!("'{}'", t.to_rfc3339_opts(SecondsFormat::Micros, true))
+            }
             Value::Json(v) => {
                 format!(
                     "'{}'",

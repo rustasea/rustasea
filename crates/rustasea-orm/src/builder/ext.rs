@@ -98,12 +98,12 @@ impl QueryBuilder {
         self.limit(per_page).offset(offset)
     }
 
-    /// OFFSET-paginate alias of [`QueryBuilder::for_page`] — `paginate(page, perPage)`.
+    /// OFFSET-paginate alias of [`QueryBuilder::for_page`] — `forPage(page, perPage)`.
     ///
-    /// Emits `LIMIT perPage OFFSET (page-1)*perPage`; assembling the full
-    /// [`crate::execution::Paginator`] envelope stays with the driver that
-    /// owns the COUNT query.
-    pub fn paginate(self, page: u64, per_page: u64) -> Self {
+    /// Emits `LIMIT perPage OFFSET (page-1)*perPage`; the async `paginate`
+    /// executor owns the COUNT + windowed SELECT and returns the full
+    /// [`crate::execution::Paginator`] envelope.
+    pub fn page_window(self, page: u64, per_page: u64) -> Self {
         self.for_page(page, per_page)
     }
 
@@ -286,10 +286,10 @@ mod tests {
         assert_eq!(qb.offset, Some(50));
     }
 
-    /// Verifies paginate aliases for_page and cursor_page binds a LIMIT.
+    /// Verifies page_window aliases for_page and cursor_page binds a LIMIT.
     #[test]
     fn paginate_aliases_for_page() {
-        let qb = QueryBuilder::table("users").paginate(2, 15);
+        let qb = QueryBuilder::table("users").page_window(2, 15);
         assert_eq!(qb.limit, Some(15));
         assert_eq!(qb.offset, Some(15));
 

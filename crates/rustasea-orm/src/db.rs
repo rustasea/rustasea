@@ -9,6 +9,8 @@ use crate::error::{OrmError, Result};
 #[cfg(any(feature = "sqlite", feature = "postgres", feature = "mysql"))]
 use std::time::Duration;
 
+mod exec;
+
 /// Maximum connections held by a pool (SQLite in-memory is capped at one).
 #[cfg(any(feature = "sqlite", feature = "postgres", feature = "mysql"))]
 const DEFAULT_MAX_CONNECTIONS: u32 = 10;
@@ -230,6 +232,10 @@ mod tests {
         let pool = DbPool::connect("sqlite::memory:").await.unwrap();
         match &pool {
             DbPool::Sqlite(inner) => assert_eq!(inner.options().get_max_connections(), 1),
+            #[cfg(feature = "postgres")]
+            DbPool::Postgres(_) => {}
+            #[cfg(feature = "mysql")]
+            DbPool::MySql(_) => {}
         }
         pool.close().await;
     }

@@ -5,7 +5,10 @@ use crate::types::{JsonFilter, Value};
 
 pub use crate::clause::{Lock, OrderDirection, Raw, SqlFragment, TransactionStub};
 
+mod exec;
 mod ext;
+
+pub(crate) use exec::json_to_model;
 
 /// Driver dialect selected via cargo features (Postgres default).
 pub fn dialect() -> &'static str {

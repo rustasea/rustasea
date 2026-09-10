@@ -1,16 +1,22 @@
 //! Query execution helpers — pagination, raw statements, aggregations,
 //! chunked iteration and transactions.
 //!
-//! In-memory stubs for M2; the sqlx pool wiring replaces the executor bodies
-//! without changing these signatures. Every helper emits SQL text so callers
-//! can verify the emitted statement before any round-trip.
+//! [`Paginator`] is the shared `{data, meta, links}` envelope; `count_sql` /
+//! `sum_sql` / the string `chunk_by` emit SQL text for callers to verify before
+//! a round-trip. The async executors live in [`crate::builder`] and
+//! [`crate::model_ops`]; the `transaction` body remains a stub until M2-C
+//! (TASK-005).
 
 use crate::builder::{QueryBuilder, Raw, TransactionStub};
 use crate::error::{OrmError, Result};
 use crate::types::Value;
 
 /// Pagination metadata and rows (offset pagination).
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+///
+/// Serializes to the shared wire envelope `{ data, meta, links }` (see
+/// `modules/data-orm/query-builder.md` §3.2) while exposing the flat fields to
+/// Rust callers.
+#[derive(Debug, Clone)]
 pub struct Paginator<T> {
     /// Rows on this page.
     pub items: Vec<T>,
@@ -22,6 +28,117 @@ pub struct Paginator<T> {
     pub total: u64,
     /// Last page number (`ceil(total / per_page)`).
     pub last_page: u64,
+    /// Navigation links for the page envelope.
+    pub links: Links,
+}
+
+/// Meta block of a paginated response envelope.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct PaginationMeta {
+    /// 1-based current page.
+    pub current_page: u64,
+    /// Rows per page.
+    pub per_page: u64,
+    /// Total matching rows.
+    pub total: u64,
+    /// Last page number.
+    pub last_page: u64,
+}
+
+/// Wire envelope for a paginated response (`data`/`meta`/`links`).
+#[derive(Debug, Clone, serde::Deserialize)]
+struct PaginatorEnvelope<T> {
+    /// Rows on this page.
+    data: Vec<T>,
+    /// Pagination metadata.
+    meta: PaginationMeta,
+    /// Navigation links.
+    links: Links,
+}
+
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Paginator<T> {
+    /// Read the `{ data, meta, links }` envelope back into flat fields.
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let envelope = PaginatorEnvelope::<T>::deserialize(deserializer)?;
+        Ok(Self {
+            items: envelope.data,
+            current_page: envelope.meta.current_page,
+            per_page: envelope.meta.per_page,
+            total: envelope.meta.total,
+            last_page: envelope.meta.last_page,
+            links: envelope.links,
+        })
+    }
+}
+
+impl<T: serde::Serialize> serde::Serialize for Paginator<T> {
+    /// Emit the `{ data, meta, links }` envelope shared across modules.
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut state = serializer.serialize_struct("Paginator", 3)?;
+        state.serialize_field("data", &self.items)?;
+        state.serialize_field(
+            "meta",
+            &PaginationMeta {
+                current_page: self.current_page,
+                per_page: self.per_page,
+                total: self.total,
+                last_page: self.last_page,
+            },
+        )?;
+        state.serialize_field("links", &self.links)?;
+        state.end()
+    }
+}
+
+/// Page navigation links emitted with a paginator envelope.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct Links {
+    /// Link to the first page.
+    pub first: String,
+    /// Link to the previous page (`None` on the first page).
+    pub prev: Option<String>,
+    /// Link to the next page (`None` on the last page).
+    pub next: Option<String>,
+    /// Link to the last page.
+    pub last: String,
+}
+
+impl Default for Links {
+    /// Empty links — the value carried by a bare [`Paginator::new`].
+    fn default() -> Self {
+        Self {
+            first: String::new(),
+            prev: None,
+            next: None,
+            last: String::new(),
+        }
+    }
+}
+
+impl Links {
+    /// Build the navigation links for a 1-based `page` of `total` rows.
+    pub fn for_page(page: u64, per_page: u64, total: u64) -> Self {
+        let page = page.max(1);
+        let last_page = if per_page == 0 {
+            1
+        } else {
+            total.div_ceil(per_page).max(1)
+        };
+        let link = |target: u64| format!("?page={target}");
+        Self {
+            first: link(1),
+            prev: (page > 1).then(|| link(page - 1)),
+            next: (page < last_page).then(|| link(page + 1)),
+            last: link(last_page),
+        }
+    }
 }
 
 impl<T> Paginator<T> {
@@ -38,7 +155,14 @@ impl<T> Paginator<T> {
             per_page,
             total,
             last_page,
+            links: Links::default(),
         }
+    }
+
+    /// Populate the navigation links from the current page metadata.
+    pub fn with_links(mut self) -> Self {
+        self.links = Links::for_page(self.current_page.max(1), self.per_page, self.total);
+        self
     }
 
     /// Recompute page metadata from a fresh COUNT (`per_page` kept).
@@ -46,7 +170,7 @@ impl<T> Paginator<T> {
     where
         T: Clone,
     {
-        Self::new(self.items.clone(), self.current_page, self.per_page, total)
+        Self::new(self.items.clone(), self.current_page, self.per_page, total).with_links()
     }
 
     /// Rows on this page (Laravel `data` alias).
@@ -80,7 +204,14 @@ impl<T> Paginator<T> {
         F: FnMut(T) -> U,
     {
         let items: Vec<U> = self.items.into_iter().map(f).collect();
-        Paginator::new(items, self.current_page, self.per_page, self.total)
+        Paginator {
+            items,
+            current_page: self.current_page,
+            per_page: self.per_page,
+            total: self.total,
+            last_page: self.last_page,
+            links: self.links,
+        }
     }
 }
 
@@ -101,8 +232,7 @@ impl PageMeta {
 }
 
 /// Execute a raw statement (stub — sqlx wiring lands with the driver crate).
-pub fn raw(sql: &str, bindings: Vec<Value>) -> Raw {
-    Raw {
+pub fn raw(sql: &str, bindings: Vec<Value>) -> Raw {    Raw {
         sql: sql.to_string(),
         bindings,
     }

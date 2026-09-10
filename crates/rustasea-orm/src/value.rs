@@ -7,14 +7,16 @@
 
 use crate::error::Result;
 pub use crate::types::{JsonFilter, Value};
+use chrono::{DateTime, SecondsFormat, Utc};
 use sqlx::query::Query;
 use sqlx::{Column, ColumnIndex, Database, Decode, Encode, Row, Type, TypeInfo};
 
 /// Bind a slice of [`Value`]s onto a `sqlx` query, in order.
 ///
-/// `Null` binds as a typed `NULL`; JSON and UUID bind natively (the `json`/`uuid`
-/// sqlx features are enabled). A vector value binds as its pgvector text literal
-/// (`[a,b,c]`) — callers cast it (`$n::vector`) on the Postgres side.
+/// `Null` binds as a typed `NULL`; JSON, UUID and timestamps bind natively (the
+/// `json`/`uuid`/`chrono` sqlx features are enabled). A vector value binds as its
+/// pgvector text literal (`[a,b,c]`) — callers cast it (`$n::vector`) on the
+/// Postgres side.
 pub fn bind_all<'q, DB>(
     mut query: Query<'q, DB, <DB as Database>::Arguments<'q>>,
     values: &[Value],
@@ -26,6 +28,7 @@ where
     bool: Encode<'q, DB> + Type<DB>,
     String: Encode<'q, DB> + Type<DB>,
     uuid::Uuid: Encode<'q, DB> + Type<DB>,
+    DateTime<Utc>: Encode<'q, DB> + Type<DB>,
     serde_json::Value: Encode<'q, DB> + Type<DB>,
     Option<i64>: Encode<'q, DB> + Type<DB>,
 {
@@ -49,6 +52,7 @@ where
     bool: Encode<'q, DB> + Type<DB>,
     String: Encode<'q, DB> + Type<DB>,
     uuid::Uuid: Encode<'q, DB> + Type<DB>,
+    DateTime<Utc>: Encode<'q, DB> + Type<DB>,
     serde_json::Value: Encode<'q, DB> + Type<DB>,
     Option<i64>: Encode<'q, DB> + Type<DB>,
 {
@@ -59,6 +63,7 @@ where
         Value::Float(v) => query.bind(v),
         Value::Text(v) => query.bind(v),
         Value::Uuid(v) => query.bind(v),
+        Value::Timestamp(v) => query.bind(v),
         Value::Json(v) => query.bind(v),
         #[cfg(feature = "vector")]
         Value::Vector(v) => query.bind(crate::vector::to_vector_literal(&v)),
@@ -92,6 +97,8 @@ where
     for<'a> bool: Decode<'a, DB> + Type<DB>,
     for<'a> String: Decode<'a, DB> + Type<DB>,
     for<'a> serde_json::Value: Decode<'a, DB> + Type<DB>,
+    for<'a> uuid::Uuid: Decode<'a, DB> + Type<DB>,
+    for<'a> DateTime<Utc>: Decode<'a, DB> + Type<DB>,
     for<'a> Option<i64>: Decode<'a, DB> + Type<DB>,
 {
     let mut object = serde_json::Map::new();
@@ -112,6 +119,8 @@ where
     for<'a> bool: Decode<'a, DB> + Type<DB>,
     for<'a> String: Decode<'a, DB> + Type<DB>,
     for<'a> serde_json::Value: Decode<'a, DB> + Type<DB>,
+    for<'a> uuid::Uuid: Decode<'a, DB> + Type<DB>,
+    for<'a> DateTime<Utc>: Decode<'a, DB> + Type<DB>,
     for<'a> Option<i64>: Decode<'a, DB> + Type<DB>,
 {
     if let Ok(None) = row.try_get::<Option<i64>, _>(index) {
@@ -119,6 +128,21 @@ where
     }
 
     let upper = type_name.to_ascii_uppercase();
+    // UUID is decoded before the numeric fallbacks: SQLite stores it as a
+    // 16-byte BLOB and MySQL as BINARY(16), which the numeric fallbacks would
+    // otherwise misread.
+    if upper.contains("UUID") || upper.contains("BLOB") || upper.contains("BINARY") {
+        if let Ok(v) = row.try_get::<uuid::Uuid, _>(index) {
+            return serde_json::Value::String(v.to_string());
+        }
+    }
+    // Datetimes are decoded to RFC3339 so models deserialize consistently
+    // across drivers (SQLite stores them as TEXT).
+    if upper.contains("DATE") || upper.contains("TIME") {
+        if let Ok(v) = row.try_get::<DateTime<Utc>, _>(index) {
+            return serde_json::Value::String(v.to_rfc3339_opts(SecondsFormat::Micros, true));
+        }
+    }
     if upper.contains("BOOL") {
         if let Ok(v) = row.try_get::<bool, _>(index) {
             return serde_json::Value::Bool(v);
