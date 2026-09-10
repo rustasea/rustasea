@@ -27,17 +27,41 @@ pub enum OrmError {
     #[error("unsupported driver: {0}")]
     UnsupportedDriver(String),
 
-    /// Underlying storage/IO failure (reserved for sqlx wiring in S03-T01 follow-up).
+    /// Underlying storage/IO failure surfaced by the driver.
     #[error("storage error: {0}")]
     Storage(String),
+
+    /// A query referenced a table that does not exist (or was not created).
+    #[error("missing table: {table}")]
+    MissingTable {
+        /// Name of the missing table.
+        table: String,
+    },
+
+    /// Connection-pool setup or acquisition failure (`connect`, `ping`).
+    #[error("connection pool error: {0}")]
+    Pool(String),
 
     /// Migration failure.
     #[error(transparent)]
     Migration(#[from] crate::migration::MigrationError),
 
-    /// Vector extension failure (dimension mismatch, missing extension).
-    #[error("vector error: {0}")]
-    Vector(String),
+    /// Vector dimension mismatch: the column expects `expected` dimensions but
+    /// the supplied embedding has `actual`.
+    #[error("vector dimension mismatch: expected {expected}, got {actual}")]
+    VectorDimensionMismatch {
+        /// Expected column dimension.
+        expected: usize,
+        /// Actual embedding length.
+        actual: usize,
+    },
+}
+
+impl From<sqlx::Error> for OrmError {
+    /// Map a raw `sqlx` failure onto the ORM's storage error.
+    fn from(error: sqlx::Error) -> Self {
+        OrmError::Storage(error.to_string())
+    }
 }
 
 /// Strict upsert errors — thrown before any round-trip.

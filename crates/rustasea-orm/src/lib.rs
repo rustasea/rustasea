@@ -6,6 +6,7 @@
 
 pub mod builder;
 pub mod clause;
+pub mod db;
 pub mod error;
 pub mod execution;
 pub mod factory;
@@ -20,6 +21,7 @@ pub mod value;
 pub mod vector;
 
 pub use builder::{Lock, OrderDirection, QueryBuilder, Raw, TransactionStub};
+pub use db::DbPool;
 pub use error::{OrmError, Result, UpsertError};
 pub use execution::{
     chunk_by, count_sql, raw, raw_sql, sum_sql, to_row_count_sql, transaction, PageMeta, Paginator,

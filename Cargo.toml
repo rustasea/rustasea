@@ -33,6 +33,9 @@ quote = "1"
 proc-macro2 = "1"
 # Async workloads (M4)
 async-trait = "0.1"
+# Database (M2) — runtime API only (no compile-time `query!` macros: CI has no
+# DATABASE_URL). Driver features are forwarded by `rustasea-orm`.
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "json", "uuid", "chrono"] }
 # DX / CLI / testing (M5)
 clap = { version = "4", features = ["derive", "env", "wrap_help"] }
 dialoguer = "0.11"

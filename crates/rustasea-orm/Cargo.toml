@@ -6,11 +6,14 @@ license.workspace = true
 description = "RustaSea ORM — models, fluent query builder, migrations, factories, vector support"
 
 [features]
-default = ["postgres"]
-# Driver dialects. Exactly one is expected; stubs keep cross-dialect SQL emission isolated.
-postgres = []
-mysql = []
-sqlite = []
+# `sqlite` is the default so `cargo test -p rustasea-orm` runs against an
+# in-memory database with no server. Postgres/MySQL are opt-in and forwarded to
+# the `sqlx` driver features.
+default = ["sqlite"]
+# Driver dialects — realised as real `sqlx` driver features.
+postgres = ["sqlx/postgres"]
+mysql = ["sqlx/mysql"]
+sqlite = ["sqlx/sqlite"]
 # pgvector support (whereVectorSimilarTo, vector column type).
 vector = []
 
@@ -21,6 +24,11 @@ tokio = { version = "1", features = ["rt", "macros"] }
 uuid = { version = "1", features = ["v4", "v7", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "1"
+async-trait = { workspace = true }
+# Runtime API only — the compile-time `query!` macros are intentionally not
+# enabled (CI has no `DATABASE_URL`). Driver features are added via `[features]`.
+sqlx = { workspace = true }
 
 [dev-dependencies]
 rustasea-macros = { path = "../rustasea-macros" }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }

@@ -49,10 +49,10 @@ impl VectorSimilarity {
     /// with the embedding length, and rejects empty/oversized vectors.
     pub fn new(embedding: Vec<f32>) -> Result<Self> {
         if embedding.is_empty() {
-            return Err(OrmError::Vector("embedding must be non-empty".into()));
+            return Err(OrmError::InvalidValue("embedding must be non-empty".into()));
         }
         if embedding.len() as u32 > MAX_DIMENSION {
-            return Err(OrmError::Vector(format!(
+            return Err(OrmError::InvalidValue(format!(
                 "embedding dimension {} exceeds pgvector maximum {MAX_DIMENSION}",
                 embedding.len()
             )));
@@ -67,13 +67,15 @@ impl VectorSimilarity {
     /// Set the expected column dimension and validate immediately.
     pub fn with_dimension(mut self, dim: u32) -> Result<Self> {
         if dim == 0 || dim > MAX_DIMENSION {
-            return Err(OrmError::Vector(format!("invalid column dimension {dim}")));
+            return Err(OrmError::InvalidValue(format!(
+                "invalid column dimension {dim}"
+            )));
         }
         if self.embedding.len() as u32 != dim {
-            return Err(OrmError::Vector(format!(
-                "dimension mismatch: column VECTOR({dim}) but embedding has {} dimensions",
-                self.embedding.len()
-            )));
+            return Err(OrmError::VectorDimensionMismatch {
+                expected: dim as usize,
+                actual: self.embedding.len(),
+            });
         }
         self.expected_dimension = Some(dim);
         Ok(self)
@@ -109,15 +111,21 @@ mod tests {
     fn dimension_mismatch_is_typed() {
         let sim = VectorSimilarity::new(vec![0.1, 0.2]).unwrap();
         let err = sim.with_dimension(1536).unwrap_err();
-        match err {
-            OrmError::Vector(msg) => assert!(msg.contains("mismatch")),
-            other => panic!("expected Vector error, got {other:?}"),
-        }
+        assert!(matches!(
+            err,
+            OrmError::VectorDimensionMismatch {
+                expected: 1536,
+                actual: 2,
+            }
+        ));
     }
 
     /// Verifies empty embeddings are rejected.
     #[test]
     fn empty_embedding_rejected() {
-        assert!(VectorSimilarity::new(vec![]).is_err());
+        assert!(matches!(
+            VectorSimilarity::new(vec![]),
+            Err(OrmError::InvalidValue(_))
+        ));
     }
 }
