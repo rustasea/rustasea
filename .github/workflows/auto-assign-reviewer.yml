@@ -1,0 +1,52 @@
+name: Auto Assign Reviewer
+
+# Requests a review from vheins on every PR that targets master.
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened, synchronize]
+    branches: [master]
+
+# Least privilege: read repository contents, write PR reviewers only.
+permissions:
+  contents: read
+  pull-requests: write
+
+# Cancel superseded runs for the same PR so re-pushes do not stack requests.
+concurrency:
+  group: auto-assign-reviewer-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  assign-reviewer:
+    name: Assign vheins as reviewer
+    runs-on: ubuntu-latest
+    # Skip draft PRs and PRs authored by vheins to avoid self-assignment.
+    if: github.event.pull_request.draft == false && github.event.pull_request.user.login != 'vheins'
+    steps:
+      - name: Request review from vheins
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reviewer = 'vheins';
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request.number;
+
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number,
+                reviewers: [reviewer],
+              });
+              core.info(`Requested review from ${reviewer} on PR #${pull_number}.`);
+            } catch (error) {
+              // 422 means the reviewer is already requested, is the PR author,
+              // or is not a collaborator. All are non-fatal for this workflow.
+              if (error.status === 422) {
+                core.notice(
+                  `Reviewer ${reviewer} already requested or ineligible for PR #${pull_number}; skipping.`,
+                );
+                return;
+              }
+              throw error;
+            }
