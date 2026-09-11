@@ -20,6 +20,12 @@ pub enum Value {
     Uuid(uuid::Uuid),
     /// JSON value.
     Json(serde_json::Value),
+    /// Non-NULL SQL value with no dialect-neutral decoder.
+    ///
+    /// Carries the driver-reported type name (for example `NUMERIC` or `TIME`)
+    /// so callers can distinguish an unmapped decode from a genuine SQL `NULL`.
+    /// Produced only by the row decoders and rejected when bound back to a query.
+    Unsupported(String),
     /// Vector of floats (pgvector embedding).
     #[cfg(feature = "vector")]
     Vector(Vec<f32>),
@@ -45,6 +51,7 @@ impl Value {
                         .replace('\'', "''")
                 )
             }
+            Value::Unsupported(type_name) => format!("'<unsupported:{type_name}>'"),
             #[cfg(feature = "vector")]
             Value::Vector(v) => {
                 let parts: Vec<String> = v.iter().map(|f| f.to_string()).collect();

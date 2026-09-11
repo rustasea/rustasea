@@ -31,6 +31,26 @@ pub enum OrmError {
     #[error("storage error: {0}")]
     Storage(String),
 
+    /// A connection to the database could not be established.
+    #[error("database connection error: {0}")]
+    Connection(String),
+
+    /// A SQL statement failed at the database.
+    #[error("query error: {0}")]
+    Query(String),
+
+    /// The connection pool is closed or an acquisition timed out.
+    #[error("database pool closed or timed out")]
+    PoolClosed,
+
+    /// Database configuration is missing or invalid.
+    #[error("database configuration error: {0}")]
+    Configuration(String),
+
+    /// Generic database failure that does not fit a more specific variant.
+    #[error("database error: {0}")]
+    Database(String),
+
     /// Migration failure.
     #[error(transparent)]
     Migration(#[from] crate::migration::MigrationError),
@@ -38,6 +58,42 @@ pub enum OrmError {
     /// Vector extension failure (dimension mismatch, missing extension).
     #[error("vector error: {0}")]
     Vector(String),
+}
+
+impl From<sqlx::Error> for OrmError {
+    /// Map a `sqlx` failure onto the closest typed ORM error.
+    ///
+    /// `RowNotFound` collapses to [`OrmError::NotFound`] so `fetch_one` keeps
+    /// the same "missing row" contract as `firstOrFail`. Transport-level
+    /// failures (`Io`, `Tls`) map to [`OrmError::Connection`] so callers can
+    /// distinguish an unreachable host from a failed query.
+    fn from(error: sqlx::Error) -> Self {
+        match error {
+            sqlx::Error::RowNotFound => OrmError::NotFound,
+            sqlx::Error::PoolClosed | sqlx::Error::PoolTimedOut => OrmError::PoolClosed,
+            sqlx::Error::Configuration(message) => OrmError::Configuration(message.to_string()),
+            sqlx::Error::Database(message) => OrmError::Query(message.to_string()),
+            sqlx::Error::Io(err) => OrmError::Connection(err.to_string()),
+            sqlx::Error::Tls(err) => OrmError::Connection(err.to_string()),
+            other => OrmError::Database(other.to_string()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Maps an I/O failure from `sqlx` onto the dedicated connection variant.
+    #[test]
+    fn io_error_maps_to_connection() {
+        let io = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "connection refused");
+        let error: OrmError = sqlx::Error::Io(io).into();
+        match error {
+            OrmError::Connection(message) => assert!(message.contains("connection refused")),
+            other => panic!("expected OrmError::Connection, got {other:?}"),
+        }
+    }
 }
 
 /// Strict upsert errors — thrown before any round-trip.

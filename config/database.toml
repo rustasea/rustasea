@@ -1,2 +1,17 @@
-# Placeholder: database connection settings (M2). Loaded by rustasea-config
-# from the process working directory (workspace root).
+# Database connection settings (M2). Loaded by rustasea-orm from the process
+# working directory (workspace root). The `DATABASE_URL` environment variable
+# overrides `url` at runtime, matching the FSD FS-M2-01 contract.
+
+[database]
+# Driver is inferred from the `url` scheme when omitted.
+# One of: postgres | mysql | sqlite
+driver = "postgres"
+url = "postgres://rustasea:secret@localhost:5432/rustasea"
+
+[database.pool]
+# Minimum idle connections kept warm.
+min = 1
+# Maximum connections the pool will open.
+max = 10
+# Seconds before an idle connection is reaped.
+idle_timeout = 600

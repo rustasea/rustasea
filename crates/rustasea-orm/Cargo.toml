@@ -8,19 +8,23 @@ description = "RustaSea ORM — models, fluent query builder, migrations, factor
 [features]
 default = ["postgres"]
 # Driver dialects. Exactly one is expected; stubs keep cross-dialect SQL emission isolated.
-postgres = []
-mysql = []
-sqlite = []
+# Each feature forwards to the matching `sqlx` driver.
+postgres = ["sqlx/postgres"]
+mysql = ["sqlx/mysql"]
+sqlite = ["sqlx/sqlite"]
 # pgvector support (whereVectorSimilarTo, vector column type).
 vector = []
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["rt", "macros"] }
+tokio = { version = "1", features = ["rt", "macros", "sync", "time"] }
 uuid = { version = "1", features = ["v4", "v7", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "1"
+sqlx = { workspace = true }
+config = { workspace = true }
+rustasea-foundation = { path = "../rustasea-foundation" }
 
 [dev-dependencies]
 rustasea-macros = { path = "../rustasea-macros" }
