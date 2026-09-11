@@ -7,8 +7,12 @@ description = "Expressive routing layer for RustaSea — Axum-backed"
 
 [dependencies]
 axum = { version = "0.7" }
-tower = "0.5"
+tower = { version = "0.5", features = ["util"] }
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 rustasea-foundation = { path = "../rustasea-foundation" }
+
+[dev-dependencies]
+serde_json = "1"
+rustasea-macros = { path = "../rustasea-macros" }

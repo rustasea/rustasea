@@ -50,7 +50,7 @@ pub fn route(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                 #[doc(hidden)]
                 #[allow(non_upper_case_globals)]
-                const #const_name: (&str, &str) = (#method, #path);
+                pub const #const_name: (&str, &str) = (#method, #path);
             };
             expanded.into()
         }
