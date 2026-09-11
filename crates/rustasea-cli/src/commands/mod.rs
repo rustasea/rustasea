@@ -7,6 +7,7 @@
 pub mod builtins;
 pub mod inspect;
 pub mod ops;
+pub mod queue;
 
 use crate::registry::CommandRegistry;
 
@@ -30,11 +31,13 @@ pub fn register_all_into(reg: &mut CommandRegistry) {
     reg.register(inspect::ShowModel);
     reg.register(ops::QueueFailed);
     reg.register(ops::QueueRetry);
+    reg.register(queue::QueueWork);
     reg.register(ops::ScheduleList);
     reg.register(ops::SchedulePause);
     reg.register(ops::ScheduleResume);
     reg.register(ops::ScheduleRun);
     reg.register(ops::Migrate);
+    reg.register(ops::MigrateFresh);
 }
 
 /// Register every built-in command into the global process registry.

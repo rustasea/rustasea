@@ -4,7 +4,9 @@ use std::sync::{Arc, OnceLock, RwLock};
 use std::time::Duration;
 
 use crate::batch::BatchId;
-use crate::driver::{record_failed, QueueDriver, SyncDriver, SYNC_CONNECTION};
+use crate::driver::{
+    record_failed, DatabaseDriver, QueueDriver, SyncDriver, DATABASE_CONNECTION, SYNC_CONNECTION,
+};
 use crate::error::{QueueError, Result};
 use crate::job::{
     run_erased, DispatchHandle, ErasedJob, FailedJob, Job, JobId, JobOutcome, JobPayload,
@@ -72,6 +74,7 @@ fn insert_route(type_key: &'static str, route: Route) -> Result<()> {
 
 /// Build the serialized payload envelope for a dispatch.
 fn to_payload(
+    job: &str,
     payload: serde_json::Value,
     queue: String,
     connection: String,
@@ -87,6 +90,8 @@ fn to_payload(
         connection,
         available_at,
         attempts: 1,
+        id: None,
+        job: Some(job.to_string()),
         payload,
     })
 }
@@ -158,8 +163,8 @@ impl Queue {
     /// The `sync` connection executes the erased job body inline (deterministic
     /// test semantics) and records permanent failures — `Failed` and (on sync)
     /// `Retrying`, which cannot re-enqueue without a real worker — into the
-    /// `failed_jobs` sink. `database`/`redis` connections buffer the serialized
-    /// payload only (driver stubs land with real workers in S05-T03 follow-ups).
+    /// `failed_jobs` sink. `database`/`redis` connections push the serialized
+    /// payload to their registered driver for a worker to drain.
     pub async fn dispatch_handle(handle: DispatchHandle) -> Result<JobId> {
         let routed = Self::resolve(handle.exec.type_key()).ok();
         let connection = match (&handle.connection, &routed) {
@@ -178,6 +183,7 @@ impl Queue {
             return Self::execute_sync(&handle).await.map(|_| JobId::new());
         }
         let payload = to_payload(
+            handle.exec.type_key(),
             handle.exec.as_json(),
             queue.clone(),
             connection.clone(),
@@ -309,6 +315,32 @@ fn driver(connection: &str) -> Result<Arc<dyn QueueDriver>> {
         .get(connection)
         .cloned()
         .ok_or_else(|| QueueError::UnknownConnection(connection.to_string()))
+}
+
+/// Register a [`DatabaseDriver`] under the canonical `database` connection.
+///
+/// Boot-time helper: wraps `pool` in a driver and installs it through the same
+/// registry path as [`Queue::register_driver`]. Returns the registered driver
+/// so callers (e.g. a worker) can hold it directly.
+pub fn register_database_driver(
+    pool: rustasea_orm::DbPool,
+) -> Arc<DatabaseDriver> {
+    let driver = Arc::new(DatabaseDriver::new(pool));
+    Queue::register_driver(DATABASE_CONNECTION, driver.clone());
+    driver
+}
+
+/// Register a [`crate::driver::RedisDriver`] under the `redis` connection.
+///
+/// Boot-time helper gated on the `redis` feature; a `None`/empty `url` installs
+/// a disabled driver so a worker can skip the connection without erroring.
+#[cfg(feature = "redis")]
+pub fn register_redis_driver(
+    url: Option<&str>,
+) -> Result<Arc<crate::driver::RedisDriver>> {
+    let driver = Arc::new(crate::driver::RedisDriver::from_url(url)?);
+    Queue::register_driver(crate::driver::REDIS_CONNECTION, driver.clone());
+    Ok(driver)
 }
 
 /// Registry facade kept for source parity with the docs' `QueueRegistry`.

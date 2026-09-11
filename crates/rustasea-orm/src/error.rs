@@ -27,72 +27,44 @@ pub enum OrmError {
     #[error("unsupported driver: {0}")]
     UnsupportedDriver(String),
 
-    /// Underlying storage/IO failure (reserved for sqlx wiring in S03-T01 follow-up).
+    /// Underlying storage/IO failure surfaced by the driver.
     #[error("storage error: {0}")]
     Storage(String),
 
-    /// A connection to the database could not be established.
-    #[error("database connection error: {0}")]
-    Connection(String),
+    /// A query referenced a table that does not exist (or was not created).
+    #[error("missing table: {table}")]
+    MissingTable {
+        /// Name of the missing table.
+        table: String,
+    },
 
-    /// A SQL statement failed at the database.
-    #[error("query error: {0}")]
-    Query(String),
-
-    /// The connection pool is closed or an acquisition timed out.
-    #[error("database pool closed or timed out")]
-    PoolClosed,
-
-    /// Database configuration is missing or invalid.
-    #[error("database configuration error: {0}")]
-    Configuration(String),
-
-    /// Generic database failure that does not fit a more specific variant.
-    #[error("database error: {0}")]
-    Database(String),
+    /// Connection-pool setup or acquisition failure (`connect`, `ping`).
+    #[error("connection pool error: {0}")]
+    Pool(String),
 
     /// Migration failure.
     #[error(transparent)]
     Migration(#[from] crate::migration::MigrationError),
 
-    /// Vector extension failure (dimension mismatch, missing extension).
-    #[error("vector error: {0}")]
-    Vector(String),
+    /// Transaction lifecycle failure (already committed or rolled back).
+    #[error(transparent)]
+    Transaction(#[from] crate::tx::TransactionError),
+
+    /// Vector dimension mismatch: the column expects `expected` dimensions but
+    /// the supplied embedding has `actual`.
+    #[error("vector dimension mismatch: expected {expected}, got {actual}")]
+    VectorDimensionMismatch {
+        /// Expected column dimension.
+        expected: usize,
+        /// Actual embedding length.
+        actual: usize,
+    },
 }
 
 impl From<sqlx::Error> for OrmError {
-    /// Map a `sqlx` failure onto the closest typed ORM error.
-    ///
-    /// `RowNotFound` collapses to [`OrmError::NotFound`] so `fetch_one` keeps
-    /// the same "missing row" contract as `firstOrFail`. Transport-level
-    /// failures (`Io`, `Tls`) map to [`OrmError::Connection`] so callers can
-    /// distinguish an unreachable host from a failed query.
+    /// Map a raw `sqlx` failure onto the ORM's storage error.
     fn from(error: sqlx::Error) -> Self {
-        match error {
-            sqlx::Error::RowNotFound => OrmError::NotFound,
-            sqlx::Error::PoolClosed | sqlx::Error::PoolTimedOut => OrmError::PoolClosed,
-            sqlx::Error::Configuration(message) => OrmError::Configuration(message.to_string()),
-            sqlx::Error::Database(message) => OrmError::Query(message.to_string()),
-            sqlx::Error::Io(err) => OrmError::Connection(err.to_string()),
-            sqlx::Error::Tls(err) => OrmError::Connection(err.to_string()),
-            other => OrmError::Database(other.to_string()),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Maps an I/O failure from `sqlx` onto the dedicated connection variant.
-    #[test]
-    fn io_error_maps_to_connection() {
-        let io = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "connection refused");
-        let error: OrmError = sqlx::Error::Io(io).into();
-        match error {
-            OrmError::Connection(message) => assert!(message.contains("connection refused")),
-            other => panic!("expected OrmError::Connection, got {other:?}"),
-        }
+        OrmError::Storage(error.to_string())
     }
 }
 

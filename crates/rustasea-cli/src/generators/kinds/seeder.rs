@@ -13,7 +13,8 @@ pub fn scaffold(root: &Path, opts: &MakeOptions) -> CliResult<Generated> {
     let source = format!(
         r#"//! Database seeder scaffold — {name}.
 //!
-//! `run` must be idempotent: re-running the seeder never duplicates rows
+//! `run` (the trait default) executes `sql` against the live pool; keep the
+//! statements idempotent so re-running never duplicates rows
 //! (`INSERT … ON CONFLICT DO NOTHING`).
 
 use rustasea::orm::migration::Seeder;
@@ -23,8 +24,13 @@ use rustasea::orm::Result;
 pub struct {name};
 
 impl Seeder for {name} {{
-    /// Emit idempotent SQL statements.
-    fn run(&self) -> Result<String> {{
+    /// Seeder name reported by `migrate --seed`.
+    fn name(&self) -> &str {{
+        "{name}"
+    }}
+
+    /// Idempotent SQL statements executed against the database.
+    fn sql(&self) -> Result<String> {{
         Ok("-- {name}: add idempotent INSERT statements here".to_string())
     }}
 }}

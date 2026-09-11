@@ -5,6 +5,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.88"
 license = "MIT"
 authors = ["RustaSea Team"]
 
@@ -21,13 +22,8 @@ serde_json = "1"
 uuid = { version = "1", features = ["v4", "v7", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "1"
-# Database / ORM (M2). Driver features are opt-in per crate; the base entry
-# enables only the runtime + type-mapping features shared by all dialects.
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "uuid", "chrono", "json"] }
-# Layered config loader (config/*.toml + env) reused by rustasea-orm.
-config = { version = "0.14", features = ["toml"] }
 # Security (M3)
-jsonwebtoken = { version = "10", default-features = false }
+jsonwebtoken = { version = "10", default-features = false, features = ["rust_crypto"] }
 argon2 = { version = "0.5", default-features = false, features = ["alloc", "password-hash", "rand", "simple", "std"] }
 tower-sessions = { version = "0.15", default-features = false, features = ["memory-store"] }
 # Validation (M3)
@@ -38,6 +34,13 @@ quote = "1"
 proc-macro2 = "1"
 # Async workloads (M4)
 async-trait = "0.1"
+# Database (M2) — runtime API only (no compile-time `query!` macros: CI has no
+# DATABASE_URL). Driver features are forwarded by `rustasea-orm`.
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "json", "uuid", "chrono"] }
+# Redis queue driver (M4) — `deadpool-redis` 0.21 pairs with `redis` 0.31 and
+# supports rustc 1.86; both are opt-in behind the queue crate's `redis` feature.
+deadpool-redis = { version = "0.21", default-features = false, features = ["rt_tokio_1"] }
+redis = { version = "0.31", default-features = false, features = ["aio", "tokio-comp"] }
 # DX / CLI / testing (M5)
 clap = { version = "4", features = ["derive", "env", "wrap_help"] }
 dialoguer = "0.11"

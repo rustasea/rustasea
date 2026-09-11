@@ -172,6 +172,7 @@ impl UpsertBuilder {
             .iter()
             .filter(|c| !self.unique_by.iter().any(|u| &u == c))
             .filter(|c| !self.exclude.iter().any(|e| &e == c))
+            .cloned()
             .map(|c| format!("{c} = EXCLUDED.{c}"))
             .collect();
         if update.is_empty() {

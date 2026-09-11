@@ -1,13 +1,22 @@
 //! Vector extension support (pgvector) — `vector` feature.
 //!
-//! Sprint 03 provides the query shape (`ORDER BY col <=> $1 LIMIT k`), the
-//! `VECTOR(n)` column type, and typed dimension errors. Execution against a real
-//! pgvector-enabled Postgres lands with the sqlx wiring and testcontainers suite.
+//! Provides the query shape (`ORDER BY col <=> $1 LIMIT k`), the `VECTOR(n)`
+//! column type, the `order_by_distance` metric switch (L2 `<->` / inner product
+//! `<#>`), typed dimension errors, and the `has_extension("vector")` migration
+//! guard. Execution runs through the normal runtime `sqlx` path.
 
+use crate::db::DbPool;
 use crate::error::{OrmError, Result};
+use crate::migration::MigrationError;
+#[cfg(feature = "vector")]
+use crate::types::Value;
 
 /// Maximum embedding dimension accepted by the ORM.
 pub const MAX_DIMENSION: u32 = 16_000;
+
+/// Remediation hint surfaced with [`MigrationError::ExtensionMissing`].
+pub const VECTOR_EXTENSION_HINT: &str = "CREATE EXTENSION IF NOT EXISTS vector;";
+
 
 /// A validated embedding vector plus similarity configuration.
 #[derive(Debug, Clone, PartialEq)]
@@ -49,10 +58,10 @@ impl VectorSimilarity {
     /// with the embedding length, and rejects empty/oversized vectors.
     pub fn new(embedding: Vec<f32>) -> Result<Self> {
         if embedding.is_empty() {
-            return Err(OrmError::Vector("embedding must be non-empty".into()));
+            return Err(OrmError::InvalidValue("embedding must be non-empty".into()));
         }
         if embedding.len() as u32 > MAX_DIMENSION {
-            return Err(OrmError::Vector(format!(
+            return Err(OrmError::InvalidValue(format!(
                 "embedding dimension {} exceeds pgvector maximum {MAX_DIMENSION}",
                 embedding.len()
             )));
@@ -67,13 +76,15 @@ impl VectorSimilarity {
     /// Set the expected column dimension and validate immediately.
     pub fn with_dimension(mut self, dim: u32) -> Result<Self> {
         if dim == 0 || dim > MAX_DIMENSION {
-            return Err(OrmError::Vector(format!("invalid column dimension {dim}")));
+            return Err(OrmError::InvalidValue(format!(
+                "invalid column dimension {dim}"
+            )));
         }
         if self.embedding.len() as u32 != dim {
-            return Err(OrmError::Vector(format!(
-                "dimension mismatch: column VECTOR({dim}) but embedding has {} dimensions",
-                self.embedding.len()
-            )));
+            return Err(OrmError::VectorDimensionMismatch {
+                expected: dim as usize,
+                actual: self.embedding.len(),
+            });
         }
         self.expected_dimension = Some(dim);
         Ok(self)
@@ -94,11 +105,52 @@ pub fn to_vector_literal(embedding: &[f32]) -> String {
 
 /// Check whether the `vector` extension is available (guarded in migrations).
 ///
+/// Executes `SELECT 1 FROM pg_extension WHERE extname = 'vector'`; a missing
+/// extension surfaces as [`MigrationError::ExtensionMissing`] carrying
+/// [`VECTOR_EXTENSION_HINT`]. Non-Postgres pools have no `pg_extension`, so the
+/// probe reports the extension as absent.
+pub async fn has_extension(pool: &DbPool) -> Result<bool> {
+    if pool.dialect() != "postgres" {
+        return Ok(false);
+    }
+    let rows = pool
+        .fetch_json(
+            "SELECT 1 AS present FROM pg_extension WHERE extname = 'vector'",
+            &[],
+        )
+        .await?;
+    Ok(!rows.is_empty())
+}
+
+/// Fail with [`MigrationError::ExtensionMissing`] when `vector` is absent.
+///
+/// Call from a migration `up` body before emitting `VECTOR`/HNSW DDL.
+pub async fn require_extension(pool: &DbPool) -> Result<()> {
+    if has_extension(pool).await? {
+        return Ok(());
+    }
+    Err(OrmError::Migration(MigrationError::ExtensionMissing {
+        extension: "vector".to_string(),
+        hint: VECTOR_EXTENSION_HINT.to_string(),
+    }))
+}
+
+/// Check whether the `vector` extension is available (guarded in migrations).
+///
 /// Real implementation executes `SELECT 1 FROM pg_extension WHERE extname='vector'`;
 /// the stub returns the would-be SQL for the Migrator to run.
 pub fn has_extension_sql() -> &'static str {
     "SELECT 1 FROM pg_extension WHERE extname = 'vector'"
 }
+
+/// Render the pgvector bind literal for an embedding (`[a,b,c]::vector`).
+///
+/// Used when a similarity query must inline the embedding as a cast parameter.
+#[cfg(feature = "vector")]
+pub fn vector_param(embedding: &[f32]) -> Value {
+    Value::Vector(embedding.to_vec())
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -109,15 +161,21 @@ mod tests {
     fn dimension_mismatch_is_typed() {
         let sim = VectorSimilarity::new(vec![0.1, 0.2]).unwrap();
         let err = sim.with_dimension(1536).unwrap_err();
-        match err {
-            OrmError::Vector(msg) => assert!(msg.contains("mismatch")),
-            other => panic!("expected Vector error, got {other:?}"),
-        }
+        assert!(matches!(
+            err,
+            OrmError::VectorDimensionMismatch {
+                expected: 1536,
+                actual: 2,
+            }
+        ));
     }
 
     /// Verifies empty embeddings are rejected.
     #[test]
     fn empty_embedding_rejected() {
-        assert!(VectorSimilarity::new(vec![]).is_err());
+        assert!(matches!(
+            VectorSimilarity::new(vec![]),
+            Err(OrmError::InvalidValue(_))
+        ));
     }
 }

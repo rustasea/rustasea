@@ -68,6 +68,13 @@ impl From<PoisonError<std::sync::RwLockReadGuard<'_, crate::registry::RegistryIn
     }
 }
 
+impl From<rustasea_orm::OrmError> for QueueError {
+    /// Map a backing-store failure onto the queue's `StoreUnavailable`.
+    fn from(error: rustasea_orm::OrmError) -> Self {
+        QueueError::StoreUnavailable(error.to_string())
+    }
+}
+
 /// Job-execution error returned by `Job::handle`.
 ///
 /// `Timeout`/`MaxAttemptsExceeded` are produced by the worker loop; user

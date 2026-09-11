@@ -26,8 +26,8 @@ section records the reason.
 
 ## Sources
 
-- Source tree at commit `1312f85` (branch `dependabot/cargo/cargo-faef625f8c`).
-- P0 gap-closure commits: `539ba18` (GAP-001 sqlx backend + pool), `1312f85` (GAP-002 router → controller dispatch).
+- Merged source tree: `origin/master` (`7807ae4`, ORM + queue) plus branch `dependabot/cargo/cargo-faef625f8c` router (`1312f85`) and docs (`6586682`).
+- P0 gap-closure commits: `688ce7f`, `d9dbfff`, `5775d16` (GAP-001 sqlx pool, async execution, transactions), `1312f85` (GAP-002 router → controller dispatch).
 - Task registry: `DOC-001`, `DOC-002`, `DOC-ROOT`, `GAP-ROOT`, `GAP-P0`…`GAP-P5`.
 - Prior research: [`docs/laravel-13-research.md`](laravel-13-research.md).
 
@@ -39,10 +39,10 @@ section records the reason.
 |---|---|---|---|
 | **M0** | Bootstrap & Core | **Partial** | Container + provider lifecycle real (`crates/rustasea-foundation/src/lib.rs:56-201`); provider/command registries empty (`bootstrap/providers.rs:11`, `bootstrap/commands.rs:11`) |
 | **M1** | Routing & HTTP | **Partial** | Router DSL + controller dispatch real (`crates/rustasea-router/src/dispatch.rs:23`); `route:list` prints an empty table (`crates/rustasea-cli/src/commands/inspect.rs:33`) |
-| **M2** | ORM & Database | **Partial** | SQL builder + sqlx pool real (`crates/rustasea-orm/src/database/pool.rs:40-229`); execution/migrations/vector/eager-loading still stubs (`execution.rs:4`, `migration.rs:3`, `vector.rs:4`) |
+| **M2** | ORM & Database | **Done** | Real sqlx pool + async execution (`crates/rustasea-orm/src/db.rs:24`, `db/exec.rs:70`); model CRUD (`model_ops.rs:25`), transactions (`tx.rs:56`), migrations/seeders (`migration.rs:190`), eager loading (`eager.rs:59`), pgvector (`vector.rs:112`) |
 | **M3** | Auth, Middleware & Validation | **Partial** | JWT/CSRF/throttle/validation real; session guard is a placeholder (`crates/rustasea-auth/src/session.rs:125`); attribute runtime enforcement pending (GAP-003) |
-| **M4** | Queue, Cache, Scheduling & Events | **Partial** | MemoryStore + SyncDriver + inline events real; Redis/database drivers are name constants / `StoreUnavailable` (`crates/rustasea-queue/src/driver.rs:12-20`, `crates/rustasea-cache/src/redis.rs:37`) |
-| **M5** | DX, CLI & Testing | **Partial** | CLI + 13 `make:*` generators real (`crates/rustasea-cli/src/commands/builtins.rs`); `xtask check-cycles` is a no-op (`xtask/src/main.rs:85`); `testcontainers` unused (`Cargo.toml:49`) |
+| **M4** | Queue, Cache, Scheduling & Events | **Partial** | MemoryStore, SyncDriver, inline events real; real database/Redis queue drivers + worker loop (`crates/rustasea-queue/src/driver/database.rs:36`, `driver/redis.rs:30`, `driver/worker.rs:78`); cache Redis still `StoreUnavailable` (`crates/rustasea-cache/src/redis.rs:37`) |
+| **M5** | DX, CLI & Testing | **Partial** | CLI + 13 `make:*` generators real (`crates/rustasea-cli/src/commands/builtins.rs`); `xtask check-cycles` is a no-op (`xtask/src/main.rs:85`); `testcontainers` unused (`Cargo.toml:52`) |
 | **M6** | Advanced (Broadcast, Search, FS, AI) | **Partial** | Broadcast WS/SSE, `object_store` storage, JSON:API real; AI providers are deterministic stubs (`crates/rustasea-ai/src/adapters.rs:50`) and vector search is in-memory only (`crates/rustasea-search/src/lib.rs:15`) |
 
 ---
@@ -121,31 +121,34 @@ not wired.
 **Goal recap:** Fluent, type-safe database layer with query builder,
 migrations, seeders, factories, and vector support.
 
-**Status: Partial** — the SQL builder and a real sqlx-backed connection pool
-landed in GAP-001 (`539ba18`), but query execution, migrations, CRUD, pgvector,
-and eager loading remain stubs (P2 backlog).
+**Status: Done** — the fluent SQL builder, real sqlx pool, async query
+execution, model CRUD, transactions, migrations/seeders/factories, eager
+loading, and pgvector support all execute through the runtime `sqlx` API. This
+landed on `origin/master` in `688ce7f` (pool), `d9dbfff` (async execution +
+model ops), `5775d16` (transactions), `baf8e1f` (migrations/seeders/factories),
+and `133f9ce` (eager loading + pgvector).
 
 **Done**
-- Fluent SQL builder — `crates/rustasea-orm/src/builder.rs`, `crates/rustasea-orm/src/clause.rs`.
-- Real sqlx backend + pool (GAP-001, commit `539ba18`) — `crates/rustasea-orm/src/database/pool.rs:40` (`DbPool`), `:57` (`connect_lazy`), `:126` (`execute`), `:147` (`fetch_all`), `:172` (`fetch_one`), `:224` (`ping`).
-- Database facade, config, service provider, container binding — `crates/rustasea-orm/src/database.rs:23`, `:85`, `:180`, `:280`.
+- Fluent SQL builder — `crates/rustasea-orm/src/builder.rs`, `crates/rustasea-orm/src/clause.rs`; async execution `crates/rustasea-orm/src/builder/exec.rs:105` (`get`), `:112` (`first`), `:145` (`paginate`).
+- Real sqlx pool + connection foundation — `crates/rustasea-orm/src/db.rs:24` (`DbPool`), `:43` (`connect`), `:70` (`ping`), `:91` (`close`); driver dispatch — `crates/rustasea-orm/src/db/exec.rs:70` (`fetch_json`), `:95` (`execute_bind`), `:116` (`execute_script`).
+- Async model operations — `crates/rustasea-orm/src/model_ops.rs:25` (`create`, `save` upsert, `update`, `delete`, `soft_delete`, `force_delete`, `refresh`, `first_for_update`).
+- Real transactions + executor dispatch — `crates/rustasea-orm/src/tx.rs:56`, `crates/rustasea-orm/src/execution.rs:324` (`transaction`).
+- Real migrations, seeders, and factory state — `crates/rustasea-orm/src/migration.rs:190` (`run`), `:241` (`rollback`), `:280` (`fresh`), `:289` (`seed`); `crates/rustasea-orm/src/factory.rs`.
+- Eager loading + relation serde round-trip — `crates/rustasea-orm/src/eager.rs:59`, `crates/rustasea-orm/src/relations.rs:22`.
+- pgvector support — `crates/rustasea-orm/src/vector.rs:112` (`has_extension`), `:128` (`require_extension`), `:150` (`vector_param`).
 - Populated `config/database.toml` (driver/url/pool settings).
 
 **Partial (reason)**
-- Query execution is still in-memory stub code — `crates/rustasea-orm/src/execution.rs:4`, `:104`.
-- Migrations are not executed against a live pool — `crates/rustasea-orm/src/migration.rs:3`, `:128`.
-- pgvector execution is deferred to the sqlx wiring — `crates/rustasea-orm/src/vector.rs:4`.
-- Eager loading has relation declarations but no loader execution.
+- `raw` / `raw_sql` emit statement fragments for display only — `crates/rustasea-orm/src/execution.rs:239`, `:246`.
 
 **Missing**
-- Real CRUD + transaction execution, real migration/seeders/factories, `pgvector` round-trip, eager-loaded relation hydration.
+- Compile-time `query!` macros (intentionally excluded: CI has no `DATABASE_URL`).
 
-**Evidence:** `crates/rustasea-orm/src/database.rs:23-294`; `crates/rustasea-orm/src/database/pool.rs:40-229`; `crates/rustasea-orm/src/execution.rs:4`; `crates/rustasea-orm/src/migration.rs:3`; `crates/rustasea-orm/src/vector.rs:4`; task `GAP-001` (completed); backlog `GAP-010`, `GAP-011`.
+**Evidence:** `crates/rustasea-orm/src/db.rs:24-130`; `crates/rustasea-orm/src/db/exec.rs:70-138`; `crates/rustasea-orm/src/model_ops.rs:25-143`; `crates/rustasea-orm/src/tx.rs:56-192`; `crates/rustasea-orm/src/migration.rs:190-296`; `crates/rustasea-orm/src/eager.rs:59`; `crates/rustasea-orm/src/vector.rs:112-152`; commits `688ce7f`, `d9dbfff`, `5775d16`, `baf8e1f`, `133f9ce`.
 
 **Next actions**
-- Execute builder output through `DbPool` (`GAP-011`).
-- Implement migration runner + seeders/factories (`GAP-010`).
-- Wire `pgvector` and eager-loading loaders (P2).
+- Wire `route:list` / `show:model` ORM introspection (`GAP-010`, `GAP-011`).
+- Add `pgvector`-backed vector index integration (M6).
 
 ---
 
@@ -167,14 +170,14 @@ consumer yet.
 
 **Partial (reason)**
 - Session guard is a placeholder ("M5 wiring target"); `store()` is `#[cfg(test)]` and `logout` is a no-op — `crates/rustasea-auth/src/session.rs:117`, `:125`, `:147`, `:207`.
-- `tower-sessions` is declared but unused in any `.rs` — `Cargo.toml:32`.
+- `tower-sessions` is declared but unused in any `.rs` — `Cargo.toml:28`.
 - `#[authorize]` / `#[middleware]` emit metadata consts that nothing consumes at runtime — `crates/rustasea-macros/src/lib.rs:74`, `:111`.
 
 **Missing**
 - Runtime enforcement of `#[middleware]` / `#[authorize]` / `#[tries]` / `#[backoff]` / `#[timeout]` (GAP-003, backlog).
 - Store-backed session guard and session persistence.
 
-**Evidence:** `crates/rustasea-auth/src/{jwt,csrf,guard,session}.rs`; `crates/rustasea-macros/src/lib.rs:74-257`; `Cargo.toml:32`; task `GAP-003` (backlog).
+**Evidence:** `crates/rustasea-auth/src/{jwt,csrf,guard,session}.rs`; `crates/rustasea-macros/src/lib.rs:74-257`; `Cargo.toml:28`; task `GAP-003` (backlog).
 
 **Next actions**
 - Implement the `tower-sessions`-backed session guard (`GAP-007`).
@@ -188,31 +191,37 @@ consumer yet.
 observable queue metrics.
 
 **Status: Partial** — in-memory cache, the sync queue driver, inline events, and
-the scheduler exist; Redis/database drivers, async listeners, and persistent
-failed jobs do not.
+the scheduler exist, and `origin/master` added real `database`/`redis` queue
+drivers with a worker loop, persistent failed jobs, and a `queue:work` command;
+the cache Redis store, `queue:failed`/`queue:retry` CLI, and queue-backed async
+listeners are still missing.
 
 **Done**
 - In-memory cache store — `crates/rustasea-cache/src/memory.rs:35`.
-- Synchronous queue driver — `crates/rustasea-queue/src/driver.rs:60`.
+- Synchronous queue driver — `crates/rustasea-queue/src/driver.rs:115`.
+- Real `database` queue driver — `crates/rustasea-queue/src/driver/database.rs:36` (`push`/`pop`/`ack`/`release`/`dead_letter` over a `jobs` table), with DB-backed failed jobs at `:71` (`failed_jobs`), `:95` (`retry_failed`).
+- Real `redis` queue driver (feature-gated) — `crates/rustasea-queue/src/driver/redis.rs:30` (list + delayed/reserved sorted sets; disabled when no URL).
+- Queue worker loop + handler registry — `crates/rustasea-queue/src/driver/worker.rs:78` (`run_worker`), `:36` (`register_job`).
+- Queue migrations for `jobs`/`failed_jobs` — `crates/rustasea-queue/src/migrations.rs:16`, `:48`, `:90`; `queue:work` CLI command — `crates/rustasea-cli/src/commands/queue.rs:18`.
 - Inline event dispatch + `dispatchAfterResponse` — `crates/rustasea-events/src/dispatcher.rs:102`, `:118`.
 - Scheduler with pause/resume — `crates/rustasea-schedule/src/lib.rs:19`.
 
 **Partial (reason)**
-- Redis store returns `StoreUnavailable` for `get`/`put` — `crates/rustasea-cache/src/redis.rs:37`.
-- `database` / `redis` queue connections are name constants only; no real drivers — `crates/rustasea-queue/src/driver.rs:12-20`.
-- Queue-backed listeners error with "no queue enqueue path is wired yet" — `crates/rustasea-events/src/dispatcher.rs:70`.
-- `failed_jobs` is an in-memory `OnceLock<Mutex<Vec<FailedJob>>>` — `crates/rustasea-queue/src/driver.rs:116`, `:127`, `:144`.
+- Redis cache store returns `StoreUnavailable` for `get`/`put` — `crates/rustasea-cache/src/redis.rs:37`.
+- The in-process `SyncDriver` still tracks failed jobs in a `OnceLock<Mutex<Vec<FailedJob>>>` — `crates/rustasea-queue/src/driver.rs:171`.
+- Queue-backed listeners error with "no queue enqueue path is wired yet" — `crates/rustasea-events/src/dispatcher.rs:71`.
 
 **Missing**
-- Real `database` / `redis` queue drivers and worker loop (`queue:work`).
-- Persistent `failed_jobs` table + `queue:failed` / `queue:retry` CLI.
+- Real Redis cache store.
+- `queue:failed` / `queue:retry` CLI commands.
 - Async event listeners via the queue.
 
-**Evidence:** `crates/rustasea-cache/src/{memory,redis}.rs`; `crates/rustasea-queue/src/driver.rs:12-144`; `crates/rustasea-events/src/dispatcher.rs:70-118`; `crates/rustasea-schedule/src/lib.rs:19`; backlog `GAP-005`.
+**Evidence:** `crates/rustasea-cache/src/{memory,redis}.rs`; `crates/rustasea-queue/src/driver.rs:115-197`; `crates/rustasea-queue/src/driver/{database,redis,worker}.rs`; `crates/rustasea-queue/src/migrations.rs`; `crates/rustasea-events/src/dispatcher.rs:71-118`; `crates/rustasea-schedule/src/lib.rs:19`; backlog `GAP-005`.
 
 **Next actions**
-- Implement Redis + database queue/cache drivers (`GAP-005`).
-- Add a queue worker command and persistent failed-job storage.
+- Implement the Redis cache store (`GAP-005`).
+- Add `queue:failed` / `queue:retry` CLI commands.
+- Wire queue-backed async listeners.
 
 ---
 
@@ -232,14 +241,14 @@ is declared but not used.
 
 **Partial (reason)**
 - `xtask check-cycles` runs `cargo metadata`, discards the output, and prints "member count OK" — no cycle detection — `xtask/src/main.rs:85`, `:92`.
-- `testcontainers` is declared in the workspace but no crate depends on it; container helpers shell out to the `docker` binary — `Cargo.toml:49`, `crates/rustasea-testing/src/containers.rs`.
+- `testcontainers` is declared in the workspace but no crate depends on it; container helpers shell out to the `docker` binary — `Cargo.toml:52`, `crates/rustasea-testing/src/containers.rs`.
 
 **Missing**
 - `cargo artisan new` (project scaffold).
 - `make:middleware`, `make:request`, and `xtask migrate` commands.
 - Real cycle detection in `xtask`.
 
-**Evidence:** `crates/rustasea-cli/src/generators/mod.rs:19`; `crates/rustasea-cli/src/commands/builtins.rs`; `xtask/src/main.rs:85`; `Cargo.toml:49`; backlog `GAP-016`, `GAP-017`, `GAP-018`.
+**Evidence:** `crates/rustasea-cli/src/generators/mod.rs:19`; `crates/rustasea-cli/src/commands/builtins.rs`; `xtask/src/main.rs:85`; `Cargo.toml:52`; backlog `GAP-016`, `GAP-017`, `GAP-018`.
 
 **Next actions**
 - Add missing CLI commands (`GAP-016`).
@@ -285,7 +294,7 @@ stubs.
 
 | Task | Title | Status | Evidence |
 |---|---|---|---|
-| **GAP-001** | Wire sqlx DB backend + connection pool into `rustasea-orm` | **Done** | Commit `539ba18`; `crates/rustasea-orm/src/database/pool.rs:40-229` |
+| **GAP-001** | Wire sqlx DB backend + connection pool into `rustasea-orm` | **Done** | Commits `688ce7f`, `d9dbfff`, `5775d16`; `crates/rustasea-orm/src/db.rs:24`, `crates/rustasea-orm/src/db/exec.rs:70` |
 | **GAP-002** | Router → controller dispatch (real handler binding) | **Done** | Commit `1312f85`; `crates/rustasea-router/src/dispatch.rs:23-83` |
 | **GAP-003** | Runtime consumer for declarative attributes (`#[middleware]`, `#[authorize]`, `#[tries]`, `#[backoff]`, `#[timeout]`) | **Pending / backlog** | `crates/rustasea-macros/src/lib.rs:74-257` (emits metadata only) |
 

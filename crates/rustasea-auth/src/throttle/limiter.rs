@@ -164,7 +164,7 @@ impl RateLimiter for MemoryRateLimiter {
         // Amortized sweep: prune fully-expired windows once per N hits so the
         // hot path stays O(1) for short-lived keys.
         let count = self.hit_counter.fetch_add(1, Ordering::Relaxed);
-        if count.is_multiple_of(PRUNE_EVERY) {
+        if count % PRUNE_EVERY == 0 {
             self.prune(&mut buckets, now);
         }
 

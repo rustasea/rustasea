@@ -8,7 +8,6 @@ use crate::naming::snake_plural;
 use crate::types::Value;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use uuid::Uuid;
 
 /// Timestamp columns managed by the ORM.
@@ -70,6 +69,12 @@ pub struct Relation {
     pub local_key: String,
     /// Relation kind.
     pub kind: RelationKind,
+    /// Pivot table for `ManyToMany` relations (`None` otherwise).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pivot_table: Option<String>,
+    /// Related-side pivot column for `ManyToMany` relations.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub related_key: Option<String>,
 }
 
 impl Relation {
@@ -82,6 +87,8 @@ impl Relation {
             foreign_key: fk,
             local_key: "id".to_string(),
             kind: RelationKind::HasMany,
+            pivot_table: None,
+            related_key: None,
         }
     }
 
@@ -94,14 +101,37 @@ impl Relation {
             foreign_key: fk,
             local_key: "id".to_string(),
             kind: RelationKind::BelongsTo,
+            pivot_table: None,
+            related_key: None,
+        }
+    }
+
+    /// Declare a ManyToMany relation through `pivot_table`.
+    ///
+    /// The pivot's parent column is `{snake(local_model)}_id` and its related
+    /// column is `{snake(related_model)}_id`, matching the Eloquent convention.
+    pub fn many_to_many(
+        name: &str,
+        related_table: &str,
+        pivot_table: &str,
+        local_model: &str,
+        related_model: &str,
+    ) -> Self {
+        let foreign_key = format!("{}_id", crate::naming::to_snake_case(local_model));
+        let related_key = format!("{}_id", crate::naming::to_snake_case(related_model));
+        Self {
+            name: name.to_string(),
+            related_table: related_table.to_string(),
+            foreign_key,
+            local_key: "id".to_string(),
+            kind: RelationKind::ManyToMany,
+            pivot_table: Some(pivot_table.to_string()),
+            related_key: Some(related_key),
         }
     }
 }
 
-/// Eager-loaded relation payloads attached to a fetched model.
-///
-/// Survives `serde` round-trips so `relations` are preserved (FS-M2-02, #13).
-pub type Relations = HashMap<String, serde_json::Value>;
+pub use crate::relations::Relations;
 
 /// Base model contract implemented by `#[derive(Model)]` (macro in a later sprint).
 pub trait Model: Send + Sync {
@@ -234,7 +264,9 @@ pub trait Model: Send + Sync {
     where
         Self: Sized,
     {
-        QueryBuilder::table(Self::table_name()).with_soft_deletes(Self::uses_soft_deletes())
+        QueryBuilder::table(Self::table_name())
+            .with_soft_deletes(Self::uses_soft_deletes())
+            .with_relations(Self::relations())
     }
 
     /// Query that includes soft-deleted rows.

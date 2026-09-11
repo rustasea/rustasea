@@ -193,7 +193,7 @@ This PRD translates the BRD's business requirements into **numbered, testable fu
 | NFR-Usa-03 | Generated code quality | Usability | Must | `rustfmt` + `clippy -- -D warnings` clean on all `make:*` output | C-04 |
 | NFR-Sca-01 | Connection pooling | Scalability | Must | `deadpool` pools sized via config; handles 100 concurrent queue workers + 1k HTTP concurrency in bench | BR-05 |
 | NFR-Sca-02 | Workspace modularity | Scalability | Must | Single-crate check (`rustasea-router` only) passes; dep tree does not pull ORM/queue/AI | BR-08 |
-| NFR-Com-01 | MSRV | Compatibility | Must | Rust 1.80+, edition 2021; `tokio` 1.x | C-01 |
+| NFR-Com-01 | MSRV | Compatibility | Must | Rust 1.88+, edition 2021; `tokio` 1.x | C-01 |
 | NFR-Com-02 | Supported DBs | Compatibility | Must | Postgres (primary), MySQL, SQLite; vectors only on Postgres/MariaDB (feature-flagged) | BR-03 |
 | NFR-Mai-01 | Observability parity | Maintainability | Should | `route:list` binding fields + `show:model` + queue metrics (#8) all via typed traits, not ad-hoc logging | #20 · #8 |
 
@@ -203,7 +203,7 @@ This PRD translates the BRD's business requirements into **numbered, testable fu
 
 | # | Constraint | Applies To |
 |---|------------|------------|
-| C-01 | Rust 1.80+ stable, `tokio` everywhere | All |
+| C-01 | Rust 1.88+ stable, `tokio` everywhere | All |
 | C-02 | No global `static mut` facades — `AppState` via `axum::extract::State` | All |
 | C-03 | No `any`/`interface{}` for domain payloads (`Job<T>`, `Event<T>`) | M4, M6 |
 | C-04 | `rustfmt` + `clippy -D warnings` clean on all generated code | M5, M6 |

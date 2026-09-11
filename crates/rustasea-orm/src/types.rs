@@ -1,6 +1,7 @@
 //! Bind values and JSON filter primitives shared by builder and model layers.
 
 use crate::error::{OrmError, Result};
+use chrono::{DateTime, SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
 
 /// A single bind value for a prepared statement.
@@ -16,16 +17,12 @@ pub enum Value {
     Float(f64),
     /// UTF-8 text.
     Text(String),
-    /// UUID as text.
+    /// UUID.
     Uuid(uuid::Uuid),
+    /// Timestamp with time zone, bound natively by the driver.
+    Timestamp(DateTime<Utc>),
     /// JSON value.
     Json(serde_json::Value),
-    /// Non-NULL SQL value with no dialect-neutral decoder.
-    ///
-    /// Carries the driver-reported type name (for example `NUMERIC` or `TIME`)
-    /// so callers can distinguish an unmapped decode from a genuine SQL `NULL`.
-    /// Produced only by the row decoders and rejected when bound back to a query.
-    Unsupported(String),
     /// Vector of floats (pgvector embedding).
     #[cfg(feature = "vector")]
     Vector(Vec<f32>),
@@ -43,6 +40,9 @@ impl Value {
             Value::Float(f) => format!("{f}"),
             Value::Text(s) => format!("'{}'", s.replace('\'', "''")),
             Value::Uuid(u) => format!("'{u}'"),
+            Value::Timestamp(t) => {
+                format!("'{}'", t.to_rfc3339_opts(SecondsFormat::Micros, true))
+            }
             Value::Json(v) => {
                 format!(
                     "'{}'",
@@ -51,7 +51,6 @@ impl Value {
                         .replace('\'', "''")
                 )
             }
-            Value::Unsupported(type_name) => format!("'<unsupported:{type_name}>'"),
             #[cfg(feature = "vector")]
             Value::Vector(v) => {
                 let parts: Vec<String> = v.iter().map(|f| f.to_string()).collect();

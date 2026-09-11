@@ -58,6 +58,9 @@ pub fn registry() -> &'static std::sync::RwLock<registry::CommandRegistry> {
 /// without subprocesses (`Artisan::call("migrate", vec![])`).
 #[cfg(feature = "cli")]
 pub fn load_default_commands() {
+    // Framework migrations (queue `jobs`/`failed_jobs`) join the process-wide
+    // registry so `cargo artisan migrate` creates the async-workload tables.
+    rustasea_queue::register_queue_migrations();
     crate::commands::register_all();
 }
 

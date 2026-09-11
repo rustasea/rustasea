@@ -27,6 +27,7 @@ thiserror = { workspace = true }
 async-trait = { workspace = true }
 strsim = { workspace = true }
 rustasea-foundation = { path = "../rustasea-foundation" }
+rustasea-config = { path = "../rustasea-config" }
 rustasea-queue = { path = "../rustasea-queue" }
 rustasea-schedule = { path = "../rustasea-schedule" }
 rustasea-macros = { path = "../rustasea-macros" }

@@ -66,7 +66,7 @@ pub enum JobOutcome {
 /// `queue`/`connection`/`available_at` are routing and timing metadata;
 /// `payload` is the JSON body of the typed job (contract
 /// `job-payload.schema.json`).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct JobPayload {
     /// Target queue (resolved from `Queue::route` or `on_queue` override).
     pub queue: String,
@@ -75,11 +75,47 @@ pub struct JobPayload {
     /// UTC instant after which the job may run (delay support).
     #[serde(default)]
     pub available_at: Option<chrono::DateTime<chrono::Utc>>,
-    /// Attempts so far (initial dispatch counts as one).
+    /// Attempts started so far (the first execution reports `1`).
     #[serde(default)]
     pub attempts: u32,
+    /// Opaque reservation token set by a driver on `pop`.
+    ///
+    /// Drivers that reserve rows (the database driver) stamp the backing row
+    /// id here so a later `ack`/`release` can address the exact reservation;
+    /// drivers without reservations (sync, redis) leave it `None`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    /// Stable job type name used to resolve a handler in a worker.
+    ///
+    /// Set from `ErasedJob::type_key()` at dispatch so a worker can look up the
+    /// deserializer registered for that type; `None` on hand-built payloads.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub job: Option<String>,
     /// JSON body of the typed job.
     pub payload: serde_json::Value,
+}
+
+impl JobPayload {
+    /// Build an immediate (no delay) payload for `queue`/`connection`.
+    ///
+    /// `payload` is the serialized job body; `job` names the type for worker
+    /// handler resolution. Attempts start at `1` (the first run).
+    pub fn new(
+        queue: impl Into<String>,
+        connection: impl Into<String>,
+        job: Option<String>,
+        payload: serde_json::Value,
+    ) -> Self {
+        Self {
+            queue: queue.into(),
+            connection: connection.into(),
+            available_at: None,
+            attempts: 1,
+            id: None,
+            job,
+            payload,
+        }
+    }
 }
 
 /// A typed queue job.
