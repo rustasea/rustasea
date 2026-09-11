@@ -16,7 +16,7 @@ RustaSea is a Rust framework that delivers Laravel-grade developer ergonomics �
 
 **Business problem:** Teams that outgrow PHP/Ruby/Node on throughput, correctness, or concurrency face a productivity cliff when moving to Rust or Go: idiomatic Rust frameworks (axum, actix) are minimal and unopinionated; Go ports (Goravel) still leak `any`/`interface{}` and global facades. No Rust framework offers Laravel parity — routing ergonomics, typed Eloquent, Artisan CLI, queue/schedule/event orchestration, and AI-native primitives — behind a single `rustasea` umbrella crate.
 
-**Why now:** Laravel 13 (2026-03-17) shipped AI SDK + vector search + expanded attributes + queue routing — the innovation frontier is now AI-native + vector + declarative DX. Rust (1.80+, edition 2021) + `tokio` + `axum` + `sqlx`/`pgvector` have stabilized enough to port these idioms natively. Goravel v1.18 proves the Laravel→compiled-language thesis commercially.
+**Why now:** Laravel 13 (2026-03-17) shipped AI SDK + vector search + expanded attributes + queue routing — the innovation frontier is now AI-native + vector + declarative DX. Rust (1.88+, edition 2021) + `tokio` + `axum` + `sqlx`/`pgvector` have stabilized enough to port these idioms natively. Goravel v1.18 proves the Laravel→compiled-language thesis commercially.
 
 ---
 
@@ -93,7 +93,7 @@ RustaSea is a Rust framework that delivers Laravel-grade developer ergonomics �
 
 ### Constraints
 
-- **C-01** Rust 1.80+ stable, edition 2021, `tokio` async throughout — no sync facade.
+- **C-01** Rust 1.88+ stable, edition 2021, `tokio` async throughout — no sync facade.
 - **C-02** Workspace per-crate feature gating — incremental adoption must stay `cargo check`-clean with a single crate.
 - **C-03** No global `static mut` facades — `AppState` via `axum::extract::State` (`OnceLock`/`Arc`), unlike Goravel `facades.*`.
 - **C-04** Generated code via `make:*` must be `rustfmt`-clean and `clippy -- -D warnings` clean.

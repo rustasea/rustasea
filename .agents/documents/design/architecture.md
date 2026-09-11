@@ -15,7 +15,7 @@
 | G-03 | Hardened security defaults (Laravel 13 #11/#12) | Security | JSON session serialization default; `serializable_classes` allow-list; `Sec-Fetch-Site` CSRF; `-cache-` hyphenated prefixes |
 | G-04 | AI/vector-native from day one (Laravel 13 #6, #1–#2) | Differentiator | `pgvector` feature-flagged but present in M2; `rustasea-ai` is `optional` but its trait is designed upfront |
 
-**Hard constraints (C-01–C-05 from PRD §5):** Rust 1.80+ stable, edition 2021, `tokio` everywhere; no `static mut` facades (`Arc<AppState>` via `axum::extract::State`); no `any`/`Box<dyn Any>` for domain payloads; `rustfmt`+`clippy -D warnings` on all `make:*` output; each crate `cargo check`-clean standalone.
+**Hard constraints (C-01–C-05 from PRD §5):** Rust 1.88+ stable, edition 2021, `tokio` everywhere; no `static mut` facades (`Arc<AppState>` via `axum::extract::State`); no `any`/`Box<dyn Any>` for domain payloads; `rustfmt`+`clippy -D warnings` on all `make:*` output; each crate `cargo check`-clean standalone.
 
 ---
 

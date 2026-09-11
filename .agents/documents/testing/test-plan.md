@@ -2,7 +2,7 @@
 
 > **Owner:** vheins/rustasea | **Phase:** Implementation P5 | **Task:** TASK-010 | **Date:** 2026-09-07
 > **Parents:** `brd.md` (BR-01..09) · `prd.md` (FR-000..612, NFR-*) · `fsd.md` (FS-M0-01..M6-07) · `bdd-scenarios.md` (33 features)
-> **Stack:** Rust 1.80+, edition 2021, `tokio`, `axum`+`tower`, `sqlx`/`sea-orm`, `deadpool`, `validator`, `jsonwebtoken`+`argon2`, `serde`, `config`+`dotenvy`, `clap`+`xtask`, `syn`/`quote`, `moka`+`deadpool-redis`, `askama`, `reqwest`, `object_store`, `pgvector`+`async-openai`, `testcontainers`, `cargo test`
+> **Stack:** Rust 1.88+, edition 2021, `tokio`, `axum`+`tower`, `sqlx`/`sea-orm`, `deadpool`, `validator`, `jsonwebtoken`+`argon2`, `serde`, `config`+`dotenvy`, `clap`+`xtask`, `syn`/`quote`, `moka`+`deadpool-redis`, `askama`, `reqwest`, `object_store`, `pgvector`+`async-openai`, `testcontainers`, `cargo test`
 > **Reference:** `docs/laravel-13-research.md` (20 Laravel 13 features) · `README.md` §Milestones · `test-architecture.md` (4-concern rule)
 
 ---

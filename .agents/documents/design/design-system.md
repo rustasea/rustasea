@@ -14,7 +14,7 @@
 | **Brand name** | RustaSea |
 | **Primary concept** | Laravel ergonomics × Rust safety — the DX *is* the brand |
 | **Style direction** | Minimal, convention-over-configuration, zero-cost ergonomics — same values as the brief. Scaffold must feel "Laravel `artisan make:*`" to an ex-Laravel developer, and feel "idiomatic Rust" to a Rustacean on first `cargo run`. |
-| **Target framework** | Rust workspace (edition 2021, MSRV 1.80+) — `tokio` + `axum` + `sqlx` via `cargo xtask` + `clap` (derive) |
+| **Target framework** | Rust workspace (edition 2021, MSRV 1.88+) — `tokio` + `axum` + `sqlx` via `cargo xtask` + `clap` (derive) |
 | **Dark mode** | Not applicable (no browser UI). CLI respects `NO_COLOR` (https://no-color.org) and `FORCE_COLOR` for terminal theming — see §4. |
 
 ---

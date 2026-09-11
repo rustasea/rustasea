@@ -5,6 +5,7 @@
 > **Deciders:** Tech Lead, Platform  
 > **Milestone:** M0 (Foundation; spans all milestones)  
 > **Related:** FR-004 · FS-M0-04 · BR-08/C-01 · NFR-Per-01/NFR-Rel-01
+> **MSRV superseded:** ADR-0001 raises the workspace MSRV 1.80 → 1.88 (`jsonwebtoken` 10, edition 2024). The `tokio` single-runtime decision below is unchanged.
 
 ## Context
 

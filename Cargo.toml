@@ -5,6 +5,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.88"
 license = "MIT"
 authors = ["RustaSea Team"]
 
@@ -22,7 +23,7 @@ uuid = { version = "1", features = ["v4", "v7", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "1"
 # Security (M3)
-jsonwebtoken = { version = "9", default-features = false }
+jsonwebtoken = { version = "10", default-features = false, features = ["rust_crypto"] }
 argon2 = { version = "0.5", default-features = false, features = ["alloc", "password-hash", "rand", "simple", "std"] }
 tower-sessions = { version = "0.15", default-features = false, features = ["memory-store"] }
 # Validation (M3)

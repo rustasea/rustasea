@@ -28,7 +28,7 @@
 
 ## 3. Capacity Assumptions (per roadmap §6)
 
-- Team: **2 developers**, Rust 1.80+ stable, edition 2021, `tokio` everywhere.
+- Team: **2 developers**, Rust 1.88+ stable, edition 2021, `tokio` everywhere.
 - Wall-clock: **~13–18 weeks** at 2 devs (26–36 dev-weeks) +20% contingency (30–40% on M6).
 - Sprint velocity is calibrated after Sprint 01; `NFR-Per-04` (`cargo check` after `make:*` <10s incremental) and `NFR-Per-01` (cold boot <2s) are CI gates each sprint.
 
