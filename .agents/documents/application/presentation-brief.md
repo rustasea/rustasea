@@ -120,7 +120,7 @@ All 20 Laravel 13.0.0 features (2026-03-17, PHP 8.3+) mapped to milestones — 1
 | **TAM** | Web backend where Rust is viable (perf-sensitive APIs, platforms, infra) | **~450k devs** (1.5M Rust devs × ~30% web/backend) | Rust Survey 2025–2026, GitHub/Stack Overflow — proxy |
 | **SAM** | Values perf **and** ergonomics (would choose batteries-included over raw crates) | **~110k–160k devs** (25–35% of TAM; ex-Laravel/Rails/Django or Goravel teams) | Goravel traction + Laravel "most loved" + `axum`/`actix` download ratios |
 | **SOM (3yr)** | RustaSea's realistic capture if M0–M2 ship with strong DX | **~600–2,000 active projects** (0.5–1.5% of SAM) | Analog: Goravel ~1.8k stars in Go; Loco/Rocket <5k each |
-| **Model** | MIT/Apache-2.0 OSS — adoption, not revenue, is the near-term metric; paid Cloud/support/vector are post-M6 options mirroring Laravel Cloud (#8) | — | `README.md` §License |
+| **Model** | MIT OSS — adoption, not revenue, is the near-term metric; paid Cloud/support/vector are post-M6 options mirroring Laravel Cloud (#8) | — | `README.md` §License |
 
 ### Competitor Matrix (7)
 

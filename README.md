@@ -3,7 +3,7 @@
 > A Rust framework with Laravel ergonomics — expressive syntax, convention over configuration, and Rust-grade safety and performance.
 
 [![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](https://www.rust-lang.org)
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](#license)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](#license)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg)](#roadmap)
 
 ---
@@ -342,7 +342,7 @@ Questions? Open a [Discussion](https://github.com/vheins/rustasea/discussions) o
 
 ## License
 
-Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE) at your option — matching the Rust ecosystem convention.
+Licensed under the [MIT License](LICENSE-MIT).
 
 ---
 

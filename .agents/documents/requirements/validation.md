@@ -100,21 +100,23 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 | **SAM** | Subset that values both performance **and** framework ergonomics (would choose a batteries-included framework over raw crates) | ~25–35% of TAM = **~110k–160k devs**; teams of 2–50 eng that previously used Laravel/Rails/Django or Goravel | Goravel traction + Laravel's "most loved framework" signal + `axum`/`actix` download ratios |
 | **SOM (3yr)** | RustaSea's realistic capture if M0–M2 ship with strong DX | **0.5–1.5% of SAM = ~600–2,000 active projects** | Analog: Goravel reached ~1.8k stars in Go (larger TAM) without Rust's safety advantage; Loco/Rocket are <5k stars each |
 
-**Monetization note:** Framework is MIT/Apache-2.0 (README license). Direct revenue is not the near-term metric — adoption, ecosystem, and hiring signal are. Future options (paid Cloud, support, hosted vector/AI) mirror Laravel Cloud (research #8) but are explicitly post-M6.
+**Monetization note:** Framework is MIT (README license). Direct revenue is not the near-term metric — adoption, ecosystem, and hiring signal are. Future options (paid Cloud, support, hosted vector/AI) mirror Laravel Cloud (research #8) but are explicitly post-M6.
 
 ### 3.2 Competitor Matrix (7)
 
-| Competitor | Language | Positioning | Core Strengths | Pricing / License | Weakness vs. RustaSea Thesis |
+| Competitor | Language | Positioning | Core Strengths | Pricing / License (upstream project) | Weakness vs. RustaSea Thesis |
 |------------|----------|-------------|---------------|-------------------|------------------------------|
 | **Laravel 13** | PHP 8.3+ | Batteries-included DX king; 20 features in 13.0.0 (AI SDK, vector, JSON:API, queue routing, declarative attributes) | Unmatched ergonomics, ecosystem, hiring pool; AI-native headline (research #1–#10) | MIT | Dynamic typing, runtime errors, GC, concurrency limits — the ceiling RustaSea escapes |
 | **Goravel** (v1.18) | Go | Laravel port for Go; closest prior art | Proves service providers, container, ORM facades, Artisan CLI translate to compiled language; 1.8k+ stars | MIT | `any`/`interface{}` payloads, global facades, `gin` router, stringly-typed config — all fixed by RustaSea's typed design (README §Goravel Inspiration) |
-| **Axum** | Rust | Modular HTTP framework on `tokio`/`tower` | `tower` middleware, extractor ergonomics, `tokio` alignment; RustaSea's chosen base (README Tech Stack) | MIT/Apache-2.0 | Deliberately unopinionated — no ORM, auth, queue, CLI, or conventions; requires assembly |
-| **Actix Web** | Rust | High-performance actor-based HTTP | Benchmark leader, mature | MIT/Apache-2.0 | Actor model diverges from Laravel mental model; steeper learning curve; Tower ecosystem gap |
-| **Rocket** | Rust | Ergonomic, codegen-heavy web framework | Attribute macros, batteries-included feel (closest to Laravel DX in Rust) | MIT/Apache-2.0 | Historically tied to nightly, slower `tokio` alignment; smaller ecosystem than `axum`; no ORM/queue story |
-| **Loco** | Rust | Rails-like Rust framework (ActiveRecord-inspired) | Most direct "Rails for Rust" attempt; conventions, background jobs, ORM via `sea-orm` | MIT | Opinionated Rails mapping (not Laravel/Goravel); younger, smaller community; no AI/vector headline |
-| **Dioxus** | Rust | Fullstack / frontend-first (CSR/SSR) | Excellent for UI-heavy Rust apps | MIT/Apache-2.0 | Frontend-centric; not a backend framework competitor — included as **indirect** (validates Rust DX appetite) |
+| **Axum** | Rust | Modular HTTP framework on `tokio`/`tower` | `tower` middleware, extractor ergonomics, `tokio` alignment; RustaSea's chosen base (README Tech Stack) | MIT | Deliberately unopinionated — no ORM, auth, queue, CLI, or conventions; requires assembly |
+| **Actix Web** | Rust | High-performance actor-based HTTP | Benchmark leader, mature | MIT OR Apache-2.0 | Actor model diverges from Laravel mental model; steeper learning curve; Tower ecosystem gap |
+| **Rocket** | Rust | Ergonomic, codegen-heavy web framework | Attribute macros, batteries-included feel (closest to Laravel DX in Rust) | MIT OR Apache-2.0 | Historically tied to nightly, slower `tokio` alignment; smaller ecosystem than `axum`; no ORM/queue story |
+| **Loco** | Rust | Rails-like Rust framework (ActiveRecord-inspired) | Most direct "Rails for Rust" attempt; conventions, background jobs, ORM via `sea-orm` | Apache-2.0 | Opinionated Rails mapping (not Laravel/Goravel); younger, smaller community; no AI/vector headline |
+| **Dioxus** | Rust | Fullstack / frontend-first (CSR/SSR) | Excellent for UI-heavy Rust apps | MIT OR Apache-2.0 | Frontend-centric; not a backend framework competitor — included as **indirect** (validates Rust DX appetite) |
 
 > Gate satisfied: ≥4 competitors compared (7 total, direct + indirect + cross-language reference).
+>
+> **License semantics:** the *Pricing / License (upstream project)* column records each **competitor/upstream project's** own license — it is **not** RustaSea's license. RustaSea's own license is **MIT** (see §3.1 and §4.1). Upstream values are recorded per the crate's crates.io SPDX expression (Actix Web, Rocket, Dioxus: `MIT OR Apache-2.0`; Loco: `Apache-2.0`; Axum: `MIT`). Do not flatten dual-licensed or Apache-licensed upstream projects to `MIT`.
 
 ### 3.3 Feature Gap Analysis
 
@@ -154,7 +156,7 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 | Dimension | Score (1–10) | Key Risk | Mitigation |
 |-----------|-------------|----------|------------|
 | **Technical** | 6.5 | Ergonomic Rust APIs (container DI, provider DAG, `#[derive(Model)]`, route macros) risk trait-complexity or lifetime friction that erodes DX | M0 spike: prototype `Container::bind/singleton/instance` + `ServiceProvider` lifecycle before committing to full milestone; prefer `OnceLock`/`Arc<AppState>` over global `static mut` |
-| **Financial** | 9 | Low infra cost (OSS, no paid dependencies required for M0–M2); risk is contributor time | Workspace crates are MIT/Apache-2.0; CI uses `testcontainers` (ephemeral) not hosted infra |
+| **Financial** | 9 | Low infra cost (OSS, no paid dependencies required for M0–M2); risk is contributor time | Workspace crates are MIT; CI uses `testcontainers` (ephemeral) not hosted infra |
 | **Timeline** | 6 | M0–M2 in ~6 months (README roadmap: M0 Q4 2026 → M2 Q1 2027) with small team is tight but dependency-ordered (no circular deps) | Strict M0→M1→M2 sequencing; defer M6 AI/broadcast until M5 DX is solid; each milestone is a tagged release |
 
 **Technical deep-dive flags:**
@@ -238,7 +240,7 @@ Teams that built their product on a batteries-included dynamic framework (Larave
 | 3 | Developers will accept Rust's learning curve if DX matches Laravel velocity | **Medium** | Landing page + `cargo rustasea new` try-out; measure time-to-first-route | Median time-to-first-route >30 min or >50% abandon during setup → onboarding failure |
 | 4 | Vector/semantic search as a day-one primitive is a differentiator (Laravel 13 #6) | **Medium** | Feature-flag `whereVectorSimilarTo` demo with `pgvector` in M2 | Zero interest / no usage in early feedback → demote to M6-only |
 | 5 | `pgvector` + Postgres is acceptable as the default vector backend | **Low** | M2 supports Postgres + MySQL + SQLite; vector is opt-in | Users demand non-Postgres vector and refuse feature flag → add abstraction |
-| 6 | MIT/Apache-2.0 OSS will attract contributors without paid incentives | **Medium** | Public M0–M1 release + RFC process (README Contributing) | No external PRs/issues in 60 days → invest in docs/examples before more code |
+| 6 | MIT OSS will attract contributors without paid incentives | **Medium** | Public M0–M1 release + RFC process (README Contributing) | No external PRs/issues in 60 days → invest in docs/examples before more code |
 | 7 | Laravel 13's 20 features are a stable target (not churn) | **Low** | Cross-check `docs/laravel-13-research.md` against `laravel.com/docs` + framework changelog (research §Verification) | Laravel 14 redefines AI/vector surface → M6 scope revisits |
 
 > Highest-risk assumptions are #1 (demand) and #2 (technical ergonomics) — both validated before heavy M2 investment.

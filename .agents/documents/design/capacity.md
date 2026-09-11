@@ -139,7 +139,7 @@ Health endpoints: `GET /health` (liveness, always 200 when process alive), `GET 
 
 - Load profile for `whereVectorSimilarTo` under mixed read/write must be re-benched after M2 HNSW vs IVFFLAT decision (see `database.md §4`).
 - AI provider token/rate budgets require per-provider `RPM`/`TPM` config once `rustasea-ai` adapters land (M6).
-- Cost model (infra $) deferred — framework is OSS MIT/Apache-2.0; operator infra is caller-owned.
+- Cost model (infra $) deferred — framework is OSS MIT; operator infra is caller-owned.
 
 ---
 
