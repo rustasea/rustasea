@@ -53,17 +53,17 @@ It is the API-surface parity layer. It is intentionally **not** a 1:1 inventory 
 | `Illuminate\Config` | `rustasea-config` (`ConfigLoader`) | **Partial** | TOML + env overlay real; only `config/app` is auto-loaded today. |
 | `Illuminate\Console` | `rustasea-cli` (`Artisan`, `Command`, `CommandRegistry`) | **Adopted** | `cargo artisan` registry + generators are real. |
 | `Illuminate\Console\Scheduling` | `rustasea-schedule` (`Schedule`, `Scheduler`, `ScheduleCommand`) | **Partial** | Pause/resume + ticks real; cron-cache mutexes / background tasks absent. |
-| `Illuminate\Database` | `rustasea-orm` (`Database`, `DbPool`, `DatabaseServiceProvider`) | **Partial** | sqlx pool real; query execution / migrations still stubs (P2). |
-| `Illuminate\Database\Eloquent` | `rustasea-orm` (`Model`, `QueryBuilder`, `Relation`, `SoftDeletes`, `Timestamps`) | **Partial** | `#[derive(Model)]` real; eager-loading hydration pending. |
-| `Illuminate\Database\Migrations` | `rustasea-orm` (`Migration`, `Migrator`, `MigrationRecord`) | **Partial** | Traits + records exist; runner not yet executed against a live pool. |
-| `Illuminate\Database\Query` | `rustasea-orm` (`QueryBuilder`, `Value`, `JsonFilter`) | **Partial** | Fluent builder real; execution path stub. |
+| `Illuminate\Database` | `rustasea-orm` (`DbPool`, `Executor`, `Migrator`) | **Adopted** | Real sqlx pool + async query execution + transactions + migrations/seeders/factories (`crates/rustasea-orm/src/db.rs:24`, `db/exec.rs:70`, `migration.rs:190`). |
+| `Illuminate\Database\Eloquent` | `rustasea-orm` (`Model`, `QueryBuilder`, `Relation`, `SoftDeletes`, `Timestamps`) | **Partial** | `#[derive(Model)]` + eager loading and relation serde round-trip real (`crates/rustasea-orm/src/eager.rs:59`); attribute casting pending. |
+| `Illuminate\Database\Migrations` | `rustasea-orm` (`Migration`, `Migrator`, `MigrationRecord`) | **Adopted** | Runner executes against the live pool — `run`/`rollback`/`fresh`/`seed` (`crates/rustasea-orm/src/migration.rs:190`). |
+| `Illuminate\Database\Query` | `rustasea-orm` (`QueryBuilder`, `Value`, `JsonFilter`) | **Adopted** | Fluent builder + async execution real (`crates/rustasea-orm/src/builder/exec.rs:105`). |
 | `Illuminate\Events` | `rustasea-events` (`Dispatcher`, `Event`, `Listener`) | **Partial** | Inline dispatch real; queue-backed listeners unwired. |
 | `Illuminate\Routing` | `rustasea-router` (`Router`, `RouteEntry`, `ControllerRef`) | **Partial** | DSL + controller dispatch real; `route:list` introspection empty. |
 | `Illuminate\Http` | `rustasea-http` (`AppState`, `JsonResponse`, `HttpError`) | **Partial** | Request/response + CORS real; idle timeout declared, not enforced. |
 | `Illuminate\Http\Client` | `rustasea-http` (`HttpClient`) | **Adopted** | reqwest wrapper with `throw` / `try_throw` semantics. |
 | `Illuminate\Http\Resources\JsonApi` | `rustasea-jsonapi` (`JsonApiResource`, `Document`, `ResourceBuilder`) | **Adopted** | Sparse fieldsets, links, JSON:API content type real. |
 | `Illuminate\Cache` | `rustasea-cache` (`Store`, `CacheManager`, `Repository`, `Lock`) | **Partial** | Memory store real; Redis store returns `StoreUnavailable`. |
-| `Illuminate\Queue` | `rustasea-queue` (`Queue`, `QueueDriver`, `Job`, `QueueRegistry`) | **Partial** | Sync driver real; database/redis drivers are name constants. |
+| `Illuminate\Queue` | `rustasea-queue` (`Queue`, `QueueDriver`, `Job`, `QueueRegistry`) | **Adopted** | Sync + real database/Redis drivers + worker loop (`crates/rustasea-queue/src/driver/{database,redis,worker}.rs`). |
 | `Illuminate\Bus` | `rustasea-queue` (`BatchHandle`, `BatchId`) | **Partial** | Batch handles exist; no durable batch repository. |
 | `Illuminate\Auth` | `rustasea-auth` (`AuthManager`, `Guard`, `JwtGuard`, `SessionGuard`) | **Partial** | JWT/CSRF/throttle real; session guard placeholder. |
 | `Illuminate\Auth\Access` | `rustasea-macros` (`#[authorize]` metadata) | **Planned** | No runtime Gate/Policy evaluation (GAP-003). |
@@ -73,7 +73,7 @@ It is the API-surface parity layer. It is intentionally **not** a 1:1 inventory 
 | `Illuminate\Cookie` | `rustasea-http` (CORS + `SecurityConfig`) | **Partial** | No queued-cookie jar / cookie encryption layer yet. |
 | `Illuminate\Filesystem` | `rustasea-storage` (`Storage`, `StorageManager`, `LocalDisk`, `ObjectDisk`, `ReadThrough`) | **Adopted** | `object_store`-backed disks + read-through with path confinement. |
 | `Illuminate\Broadcasting` | `rustasea-broadcast` (`ShouldBroadcast`, `BroadcastEvent`, `Channel`, `BroadcastHub`) | **Partial** | WS + SSE real; driver matrix (Pusher/Ably/Redis) absent. |
-| `Illuminate\Pagination` | `rustasea-orm` (`Paginator`, `PageMeta`) | **Partial** | Paginator type real; not wired into query execution. |
+| `Illuminate\Pagination` | `rustasea-orm` (`Paginator`, `PageMeta`) | **Adopted** | Paginator wired into query execution (`crates/rustasea-orm/src/builder/exec.rs:145`). |
 | `Illuminate\Pipeline` | — | **N-A** | Tower middleware chains replace the PHP pipeline; no `Illuminate\Pipeline` analogue required. |
 | `Illuminate\Encryption` | — | **Planned** | No encrypter / key-rotation service. |
 | `Illuminate\Translation` | — | **Planned** | No translator / locale loader. |
@@ -115,19 +115,19 @@ It is the API-surface parity layer. It is intentionally **not** a 1:1 inventory 
 | Laravel interface/trait | RustaSea equivalent | Status | Rationale |
 |---|---|---|---|
 | `Illuminate\Contracts\Database\Eloquent\Builder` | `rustasea-orm::QueryBuilder` | **Partial** | Fluent builder real; no Eloquent-level model hydration. |
-| `Illuminate\Contracts\Database\Query\Builder` | `rustasea-orm::QueryBuilder` | **Partial** | Clause compilation real; execution stub (`execution.rs`). |
+| `Illuminate\Contracts\Database\Query\Builder` | `rustasea-orm::QueryBuilder` | **Adopted** | Clause compilation + async execution real (`crates/rustasea-orm/src/builder/exec.rs`). |
 | `Illuminate\Contracts\Database\Eloquent\CastsAttributes` | — | **Planned** | Attribute casting not implemented (serde only). |
 | `Illuminate\Contracts\Database\Eloquent\Castable` | — | **Planned** | No castable type contract. |
 | `Illuminate\Contracts\Database\Eloquent\SupportsPartialRelations` | `rustasea-orm::Relation` | **Partial** | Relation declarations exist; partial-relation loading pending. |
 | `Illuminate\Database\Eloquent\Scope` | `rustasea-orm::ScopeRegistry` | **Partial** | Global-scope registry real; not applied during execution. |
-| `Illuminate\Database\Eloquent\SoftDeletes` (trait) | `rustasea-orm::SoftDeletes` | **Partial** | Marker/inference via `#[derive(Model)]`; query filtering not enforced. |
+| `Illuminate\Database\Eloquent\SoftDeletes` (trait) | `rustasea-orm::SoftDeletes` | **Adopted** | Marker/inference via `#[derive(Model)]`; soft-delete query filtering enforced (`crates/rustasea-orm/src/model_ops.rs`). |
 | `Illuminate\Database\Eloquent\Concerns\HasTimestamps` | `rustasea-orm::Timestamps` | **Partial** | Timestamp inference real; write-path population pending. |
-| `Illuminate\Database\Eloquent\Concerns\HasRelationships` | `rustasea-orm::{Relation, RelationKind}` | **Partial** | Relation declarations exist; eager-loading loader absent. |
+| `Illuminate\Database\Eloquent\Concerns\HasRelationships` | `rustasea-orm::{Relation, RelationKind}` | **Adopted** | Relation declarations + eager-loading loader real (`crates/rustasea-orm/src/eager.rs:59`). |
 | `Illuminate\Database\Eloquent\Concerns\HasUuids` | `#[derive(Model)]` + `uuid::Uuid` `id` | **Partial** | UUID `id` enforced at derive time; no ULID variant. |
-| `Illuminate\Database\Eloquent\Factories\HasFactory` | `rustasea-orm::Factory` / `SqlSeeder` | **Partial** | Factory + seeder traits exist; not executed against a pool. |
-| `Illuminate\Database\ConnectionInterface` | `rustasea-orm::{Database, DbPool}` | **Partial** | Pool connect/ping real; CRUD round-trip pending (GAP-011). |
-| `Illuminate\Database\ConnectionResolverInterface` | `rustasea-orm::Database` | **Partial** | Single-manager resolution; multi-connection resolver thinner. |
-| `Illuminate\Database\Migrations\MigrationRepositoryInterface` | `rustasea-orm::{Migrator, MigrationRecord}` | **Partial** | Repository records modelled; migration runner stubbed. |
+| `Illuminate\Database\Eloquent\Factories\HasFactory` | `rustasea-orm::Factory` / `SqlSeeder` | **Adopted** | Factory + seeder traits execute against the pool (`crates/rustasea-orm/src/factory.rs`, `migration.rs:289`). |
+| `Illuminate\Database\ConnectionInterface` | `rustasea-orm::DbPool` | **Adopted** | Pool connect/ping + model CRUD round-trip real (`crates/rustasea-orm/src/db.rs:24`, `model_ops.rs:25`). |
+| `Illuminate\Database\ConnectionResolverInterface` | `rustasea-orm::DbPool` | **Partial** | Single-pool resolution; multi-connection resolver thinner. |
+| `Illuminate\Database\Migrations\MigrationRepositoryInterface` | `rustasea-orm::{Migrator, MigrationRecord}` | **Adopted** | Repository records + migration runner real (`crates/rustasea-orm/src/migration.rs:190`). |
 | `Illuminate\Database\Eloquent\Relations\Concerns\InteractsWithPivotTable` | `rustasea-orm::Relation` | **Planned** | Pivot-table interaction not implemented. |
 
 ### Routing / Http
@@ -153,12 +153,12 @@ It is the API-surface parity layer. It is intentionally **not** a 1:1 inventory 
 | `Illuminate\Contracts\Cache\Repository` | `rustasea-cache::{Repository, RepositoryLike}` | **Adopted** | Repository wrapper + trait implemented. |
 | `Illuminate\Contracts\Cache\Lock` | `rustasea-cache::{Lock, LockGuard}` | **Partial** | In-memory lock/guard real; distributed locks absent. |
 | `Illuminate\Contracts\Cache\Factory` | `rustasea-cache::CacheManager` | **Partial** | Manager selects stores; driver matrix incomplete. |
-| `Illuminate\Contracts\Queue\Queue` | `rustasea-queue::Queue` | **Partial** | Push/dispatch surface real; only sync driver wired. |
-| `Illuminate\Contracts\Queue\Job` | `rustasea-queue::{Job, ErasedJob}` | **Partial** | Job + erased-job traits real; worker loop absent. |
+| `Illuminate\Contracts\Queue\Queue` | `rustasea-queue::Queue` | **Adopted** | Push/dispatch surface real; sync + database + Redis drivers wired. |
+| `Illuminate\Contracts\Queue\Job` | `rustasea-queue::{Job, ErasedJob}` | **Adopted** | Job + erased-job traits real; worker loop real (`crates/rustasea-queue/src/driver/worker.rs:78`). |
 | `Illuminate\Contracts\Queue\ShouldQueue` | `rustasea-queue::Job` | **Partial** | Implemented via trait; no queue-backed listener wiring. |
 | `Illuminate\Contracts\Queue\ShouldBeUnique` | — | **Planned** | No unique-job locking. |
 | `Illuminate\Contracts\Queue\Factory` | `rustasea-queue::QueueRegistry` | **Partial** | Registry + routing real; connection factory thinner. |
-| `Illuminate\Queue\Connectors\ConnectorInterface` | `rustasea-queue::QueueDriver` | **Partial** | Driver trait real; redis/database drivers are constants. |
+| `Illuminate\Queue\Connectors\ConnectorInterface` | `rustasea-queue::QueueDriver` | **Partial** | Driver trait real; database + Redis drivers implemented (`crates/rustasea-queue/src/driver/{database,redis}.rs`). |
 | `Illuminate\Contracts\Events\Dispatcher` | `rustasea-events::Dispatcher` | **Partial** | Inline dispatch + `dispatchAfterResponse` real; queue path unwired. |
 | `Illuminate\Events\Dispatcher` (class) | `rustasea-events::Dispatcher` | **Partial** | Concrete dispatcher present with the same caveat. |
 
@@ -242,9 +242,9 @@ The dominant pattern: **RustaSea already has the shape of most Laravel surfaces 
 |---|---|---|---|
 | 1 | **M0** Bootstrap & Core | Contextual bindings + provider DAG + auto-construction; populate provider/command registries | `Contracts\Container\ContextualBindingBuilder`, `SelfBuilding`, `Contracts\Foundation\Application` |
 | 2 | **M1** Routing & HTTP | Wire `route:list` to the live router; enforce idle timeout; add URL generation + implicit binding | `Contracts\Routing\Registrar`, `UrlGenerator`, `UrlRoutable`, `Contracts\Http\Kernel` |
-| 3 | **M2** ORM & Database | Execute builder through `DbPool`; real migrations/seeders/factories; casts; eager loading | `Contracts\Database\Eloquent\Builder`, `CastsAttributes`, `ConnectionInterface`, `MigrationRepositoryInterface` |
+| 3 | **M2** ORM & Database | Attribute casts; ORM introspection wiring (`route:list` / `show:model`) | `CastsAttributes`, `Castable` |
 | 4 | **M3** Auth, Middleware & Validation | Runtime `#[authorize]`/Gate; store-backed session guard; password broker/reset | `Contracts\Auth\Access\Gate`, `Authorizable`, `StatefulGuard`, `PasswordBroker` |
-| 5 | **M4** Queue, Cache, Scheduling & Events | Redis/database drivers; worker loop; persistent failed jobs; queue-backed listeners; distributed locks | `Contracts\Queue\Factory`, `ShouldBeUnique`, `Contracts\Cache\Lock`, `Contracts\Events\Dispatcher` |
+| 5 | **M4** Queue, Cache, Scheduling & Events | Redis cache store; queue-backed listeners; distributed locks; `queue:failed` / `queue:retry` CLI | `Contracts\Queue\Factory`, `ShouldBeUnique`, `Contracts\Cache\Lock`, `Contracts\Events\Dispatcher` |
 | 6 | **M5** DX, CLI & Testing | `make:middleware`/`make:request`, `artisan new`, real cycle detection; DB refresh test traits | `Contracts\Console\Kernel`, `Foundation\Testing\RefreshDatabase`, `WithFaker` |
 | 7 | **M6** Advanced | Real AI adapters; pgvector index; template engine; encryption/translation/mail surfaces | `rustasea-ai` adapters; `Illuminate\Encryption`, `Translation`, `View`, `Mail` analogues |
 
