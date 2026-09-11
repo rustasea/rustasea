@@ -35,7 +35,7 @@ pub trait UserLookup: Send + Sync {
 /// Fail-closed lookup: never yields credentials.
 ///
 /// The real database-backed lookup replaces this via `JwtGuard::with_lookup`
-/// at boot (ADR-005 explicit AppState wiring).
+/// at boot (ADR-0007 explicit AppState wiring).
 #[derive(Debug, Default)]
 pub struct StaticLookup;
 

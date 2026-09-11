@@ -181,7 +181,7 @@ impl GuardRegistrar {
     /// The factory is invoked lazily on first `guard(name)` resolve; a
     /// duplicate registration of the same guard name is rejected with
     /// `GuardMismatch` (`expected` = existing default, `actual` = duplicate)
-    /// instead of silently replacing the first guard (ADR-005 first-wins).
+    /// instead of silently replacing the first guard (ADR-0007 first-wins).
     pub fn register(
         &self,
         factory: impl Fn() -> Arc<dyn Guard> + Send + Sync + 'static,
@@ -216,7 +216,7 @@ impl std::fmt::Debug for GuardRegistrar {
 
 /// Thread-safe registry of named guards.
 ///
-/// Per ADR-005 there are no global facades: an `AuthManager` lives inside
+/// Per ADR-0007 there are no global facades: an `AuthManager` lives inside
 /// `AppState` and is injected explicitly via `axum::extract::State`.
 #[derive(Default)]
 pub struct AuthManager {
@@ -282,7 +282,7 @@ impl AuthManager {
     /// ```
     ///
     /// `Auth::extend` fails with `AuthError::GuardMismatch` when the name is
-    /// already registered (first-wins registry, ADR-005).
+    /// already registered (first-wins registry, ADR-0007).
     pub fn extend(
         &self,
         name: impl Into<String>,

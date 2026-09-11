@@ -8,7 +8,7 @@
 //! - Session/cache hardening: JSON serialization, hyphenated prefixes,
 //!   `serializable_classes` allow-list
 //!
-//! Per ADR-005 there are no global facades: an `AuthManager`/`SessionPolicy`
+//! Per ADR-0007 there are no global facades: an `AuthManager`/`SessionPolicy`
 //! lives inside `AppState` and flows through `axum::extract::State`.
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
