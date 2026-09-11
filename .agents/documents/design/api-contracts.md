@@ -98,7 +98,7 @@ See `tdd.md §3 BC-2` for `Model`/`QueryBuilder` trait signatures and `database.
 
 ### 4.1 Auth
 
-```
+```text
 POST /login            Body: { email, password } -> 200 { access_token, refresh_token, token_type: "Bearer", expires_in } | 401 BadCredentials
 POST /loginUsingId     Body: { user_id: UUID }  -> 200 { access_token, ... }   (internal / testing)
 POST /refresh          Header: Authorization: Bearer <token> -> 200 { access_token, refresh_token }
@@ -166,7 +166,7 @@ Job::batch([Job{1}, Job{2}]).dispatch().await?;                  // -> BatchId
 
 **CLI:**
 
-```
+```bash
 cargo rustasea queue:work [--connection=redis] [--queue=podcasts] [--max-jobs=100]
 cargo rustasea queue:failed
 cargo rustasea queue:retry <id>
@@ -207,7 +207,7 @@ Schedule::command("emails:send").daily().at("08:00").skip_if_still_running().on_
 Schedule::command("report").cron("0 * * * *").register();
 ```
 
-```
+```bash
 cargo rustasea schedule:list
 cargo rustasea schedule:run        // tick every 60s; respects paused flag
 cargo rustasea schedule:pause     // sets schedule_paused=true; emits SchedulePaused
@@ -229,7 +229,7 @@ Queue::creation_time_of_oldest_pending_job("redis", "podcasts").await?;  // Opti
 
 ### CLI
 
-```
+```bash
 cargo rustasea list [--json] [--all]        # enumerates commands with usage/help/hidden
 cargo rustasea make:controller UserController [--resource]
 cargo rustasea make:model Post -m           # + migration

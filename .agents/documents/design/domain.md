@@ -143,7 +143,7 @@ All events are `Event` trait objects dispatched via `Dispatcher`. Persistent eve
 
 Flow example — `schedule:pause`:
 
-```
+```text
 Platform operator -> rustasea-cli: `schedule:pause`
   -> BC-4 Scheduler: set flag `schedule_paused=true` in Cache/DB
   -> Dispatcher::dispatch(SchedulePaused)
@@ -155,7 +155,7 @@ Platform operator -> rustasea-cli: `schedule:pause`
 
 ## 5. Context Map Detail
 
-```
+```text
 [BC-0]  Shared Kernel — consumed by every context; no upstream deps
 [BC-1]  Customer / Supplier -> BC-0
 [BC-2]  Customer / Supplier -> BC-0

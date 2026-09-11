@@ -210,7 +210,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 
 Workspace with one crate per milestone domain. Application code lives in `app/` (mirrors Laravel/Goravel conventions).
 
-```
+```text
 rustasea/                          # workspace root
 ├── Cargo.toml                     # [workspace] — members = ["crates/*"]
 ├── rustasea.toml                  # framework config (optional)

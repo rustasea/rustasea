@@ -5,7 +5,7 @@
 > **Parents:** `brd.md` (BR-01 … BR-09) + `prd.md` (FR-000 … FR-612, NFRs)  
 > **Research base:** `docs/laravel-13-research.md` (Laravel 13.0.0 + patches thru v13.30.1) + `README.md` §Laravel 13 Feature Map + Goravel v1.18 mapping  
 > **Milestone coverage:** M0 – M6. Each feature spec below lists inputs → processing → outputs → errors → NFR linkage → Laravel 13 trace → PRD FR tags.
-> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003). **File-size exception:** exceeds the 500-line standard; documented in [ADR-0009](../../../docs/adr/ADR-0009-fsd-500-line-exception.md) (stable `path:line` citations preserved).
 
 ---
 
@@ -447,7 +447,7 @@ No code blocks. Interfaces are described in terms of traits/structs/attributes a
 
 ## 5. Dependency Graph (Features → Prerequisites)
 
-```
+```text
 M0: FS-M0-01..04 (no prereq)
   → M1: FS-M1-01 (→FS-M1-02..06)
   → M2: FS-M2-01..06 (requires FS-M0-03 for DB config)

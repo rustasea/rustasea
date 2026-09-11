@@ -185,7 +185,7 @@ gantt
 
 **Delivery DAG** (overlap is intentional — Sprint N+1 may scaffold once its dependency's sub-crate is stable, but cannot **close** before dependencies are tagged):
 
-```
+```text
 M0 ─┬─► M1 ─┬─► M3 ─┬─► M4 ─► M5 ─► M6
     │      │      │      ▲      ▲
     │      └─► M2 ┘      │      │

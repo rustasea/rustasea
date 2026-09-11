@@ -10,7 +10,7 @@ This tree is the **application-level deep documentation** produced at P8. It tur
 
 ## 2. Documentation Tree
 
-```
+```text
 .agents/documents/application/
 ├── README.md                          ← you are here
 ├── modules/

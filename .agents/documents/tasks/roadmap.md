@@ -23,7 +23,7 @@
 
 ## 2. Dependency DAG (Delivery Order)
 
-```
+```text
 M0 ─┬─► M1 ─┬─► M3 ─┬─► M4 ─► M5 ─► M6
     │      │      │      ▲      ▲
     │      └─► M2 ┘      │      │

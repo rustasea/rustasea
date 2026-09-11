@@ -7,7 +7,7 @@
 
 ## Header & Navigation
 
-- [Module manifest](../manifest.md) · [Application README](../../README.md#3-module-index-7-modules--20-crates)
+- [Module manifest](../manifest.md) · [Application README](../../README.md#3-module-index-7-modules)
 - API: [api-bootstrap](../../api/foundation/api-bootstrap.md) · Testing: [testing/foundation/overview.md](../../testing/foundation/overview.md)
 
 ## 1. Module Introduction

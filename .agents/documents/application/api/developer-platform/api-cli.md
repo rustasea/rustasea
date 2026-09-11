@@ -29,7 +29,7 @@
 
 **Sukses (human table — default):**
 
-```
+```text
 Available commands:
   make:controller  Make a new controller class
   migrate          Run pending migrations

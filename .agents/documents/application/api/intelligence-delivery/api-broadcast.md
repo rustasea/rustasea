@@ -51,7 +51,7 @@
 
 - WS close `4403`:
 
-```
+```text
 CloseCode 4403 (Forbidden) "BroadcastError::Unauthorized"
 ```
 
@@ -80,7 +80,7 @@ npx wscat -c ws://localhost:3000/broadcasting/auth -H "Authorization: Bearer $JW
 
 **Headers:**
 
-```
+```text
 Content-Type: text/event-stream
 Cache-Control: no-cache
 Connection: keep-alive
@@ -88,7 +88,7 @@ Connection: keep-alive
 
 **Body frames:**
 
-```
+```text
 data: hello
 
 data: world

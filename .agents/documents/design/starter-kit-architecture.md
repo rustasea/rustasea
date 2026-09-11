@@ -86,7 +86,7 @@ flowchart TB
 
 **Crate dependency additions** (no cycles; all hang off the existing M0–M6 DAG in `architecture.md:107-145`):
 
-```
+```text
 rustasea-scaffold  --> rustasea-cli (generator primitives), rustasea-foundation, rustasea-config
 rustasea-view      --> rustasea-http, rustasea-foundation, rustasea-config
 rustasea-inertia   --> rustasea-view, rustasea-http, rustasea-foundation
@@ -232,7 +232,7 @@ Behavior:
 
 `cargo rustasea new my-app --variant react` emits:
 
-```
+```text
 my-app/
 ├── Cargo.toml                     # rustasea umbrella + variant feature (e.g. inertia, wasm)
 ├── rustasea.toml                  # app name / MSRV hint

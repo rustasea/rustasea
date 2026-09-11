@@ -18,7 +18,7 @@ Example app-level endpoints are shown here — the true contract is the Rust tra
 
 #### `text` (common via `Ai::provider("openai").text(prompt).send().await -> AiResponse{ text, usage, tool_calls }`)
 
-```
+```text
 POST /ai/text  { provider: "openai"|"anthropic"|..., prompt: "hello" } -> { text, usage }
 ```
 
@@ -93,7 +93,7 @@ let r: AiResponse = Ai::provider("anthropic").text("hello").send().await?; // sa
 
 #### Frames
 
-```
+```text
 event: token
 data: Hello
 

@@ -46,7 +46,7 @@ Degraded-mode SLOs: with AI providers throttled (429 from provider), HTTP+queue 
 
 ### 3.1 Connection Pools (`deadpool` / `sqlx`)
 
-```
+```text
 config.database.pool:
   max: 20          # PgPool; covers HTTP + queue + schedule sharing one pool
   min: 2
@@ -68,7 +68,7 @@ Sizing rule: pool_max = peak_concurrency × avg_query_time / target_utilization(
 
 ### 3.3 Queue Workers
 
-```
+```text
 Default: 10 workers per queue (configurable per queue)
 Max tested: 100 concurrent workers (NFR-Sca-01 bench)
 Backpressure: QueueBusy { connectionName } emitted when pending > high-water-mark

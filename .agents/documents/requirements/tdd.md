@@ -19,7 +19,7 @@ This TDD turns the FSD's feature specs into implementation contracts: concrete t
 
 Single `tokio` binary with three task groups sharing `AppState: Arc<AppState>`:
 
-```
+```text
 AppState { app: Application, config: ConfigRegistry, container: Container, db: Db, cache: CacheManager, queue: QueueRegistry, ... }
 main
  ├─ axum::Server (Router from rustasea-router)
@@ -280,7 +280,7 @@ Security gates enumerated in `architecture.md §5` and `prd.md NFR-Sec-*`; path 
 
 Strict milestone DAG (no cycles) — see `fsd.md §5` and `architecture.md §3`:
 
-```
+```text
 M0 (BC-0) — no prereq → M1 (BC-1) + M2 (BC-2) → M3 (BC-3) → M4 (BC-4) → M5 (BC-5) → M6 (BC-6)
 Tagged releases: 0.1 (M0) → 0.2 (M1) → 0.3 (M2) → 0.4 (M3) → 0.5 (M4) → 0.6 (M5) → 1.0 (M6)
 ```

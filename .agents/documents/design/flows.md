@@ -26,7 +26,7 @@ Every flow below lists **Node Table** and **Edge Table** with consistent IDs, pl
 
 ### 2.1 Route Tree (CLI command tree)
 
-```
+```text
 cargo rustasea [Public — no running app required]
 ├── new <app>                         [Public]  scaffold new workspace  (FR-005 / FS-M0-01)
 ├── list [--json] [--all]             [Public]  enumerate commands      (FR-500)
@@ -440,7 +440,7 @@ Prompts are modal overlays in the terminal — see `design-system.md` prompt spe
 
 Any long-running command (`queue:work`, `schedule:run`, `serve`) implements `Shutdownable`:
 
-```
+```text
 signal SIGTERM/SIGINT → stop accepting new work → drain in-flight up to shutdown_timeout_secs (config.app.shutdown_timeout_secs, default 10s) → exit 0
 timeout expiry → log outstanding task count → exit 1
 ```
@@ -449,7 +449,7 @@ timeout expiry → log outstanding task count → exit 1
 
 Every `stderr` error follows `NFR-Usa-02`:
 
-```
+```text
 error[E<CODE>]: <title>
   --> <file>:<line>  (when file/line known)
   hint: <actionable hint>

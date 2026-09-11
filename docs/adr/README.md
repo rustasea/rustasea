@@ -16,6 +16,7 @@ are recorded in a new ADR that references the old one.
 | ADR-0006 | Workspace Crate Boundaries per FR Domain | Accepted | 2026-09-07 | [ADR-0006-workspace-crates.md](ADR-0006-workspace-crates.md) |
 | ADR-0007 | Facades Replaced by AppState Arc | Accepted | 2026-09-07 | [ADR-0007-appstate-over-facades.md](ADR-0007-appstate-over-facades.md) |
 | ADR-0008 | Vector as Feature-Flagged Postgres Extension | Accepted | 2026-09-07 | [ADR-0008-vector-feature-flag.md](ADR-0008-vector-feature-flag.md) |
+| ADR-0009 | FSD Exceeds the 500-Line File Limit (Documented Exception) | Accepted | 2026-09-11 | [ADR-0009-fsd-500-line-exception.md](ADR-0009-fsd-500-line-exception.md) |
 
 ## Legacy ID mapping
 

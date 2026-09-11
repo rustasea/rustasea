@@ -55,7 +55,7 @@ Teams that outgrew dynamic-language frameworks on performance, correctness, or c
 
 ## Document Skeleton
 
-```
+```text
 .agents/documents/
 ├── requirements/brief.md   # this file
 ├── design/

@@ -34,7 +34,7 @@
 
 ## 4. Sprint Boundaries & Dependencies
 
-```
+```text
 S01 (M0) ─┬─► S02 (M1) ─┬─► S04 (M3) ─┬─► S05 (M4) ─► S06 (M5) ─► S07 (M6)
           │             │             │      ▲               ▲
           │             └─► S03 (M2) ─┘      │               │
