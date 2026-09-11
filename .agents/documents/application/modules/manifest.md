@@ -1,14 +1,46 @@
 # RustaSea — Application Module Manifest
 
 > **Status:** P8 Final — 2026-09-07 | **Task:** TASK-013 | **Audit:** D1-W01 resolved
-> **Parents:** `requirements/brd.md` (BR-01..BR-09) · `requirements/prd.md` (FR-000..FR-612) · `requirements/fsd.md` (FS-M0-01..FS-M6-07) · `requirements/tdd.md` (BC-0..BC-6) · `design/architecture.md` · `design/domain.md` · `design/database.md` · `design/api-contracts.md` · `design/component-inventory.md` · `design/decisions/ADR-00*.md` · `application/testing/` · `design/capacity.md` · `application/README.md`
+> **Parents:** `requirements/brd.md` (BR-01..BR-09) · `requirements/prd.md` (FR-000..FR-612) · `requirements/fsd.md` (FS-M0-01..FS-M6-07) · `requirements/tdd.md` (BC-0..BC-6) · `design/architecture.md` · `design/domain.md` · `design/database.md` · `design/api-contracts.md` · `design/component-inventory.md` · [ADR index](../../../../docs/adr/README.md) · `application/testing/` · `design/capacity.md` · `application/README.md`
 > **Conformance:** `technical-documentation/rules/api-module.md` Part B — manifest-driven module docs (B-FSM G1b manifest gate passed; B-Gate verified). Every `User Story → FS → FR → Module → API → Test` linkage is enumerated here; full archetypes under `application/modules/<module>/` (M0–M6) are now materialized.
+
+## Canonical Crate Inventory (Source of Truth)
+
+> **Verified 2026-09-11** against `Cargo.toml` (`members = ["crates/*", "xtask"]`) and the `crates/` tree.
+> **Count: 21 crates under `crates/` + `xtask` (22 workspace packages total).** Every crate count or list in any other document MUST agree with this table.
+
+| # | Crate | Kind | Milestone | Owning module |
+|---|-------|------|-----------|---------------|
+| 1 | `rustasea` | umbrella (re-exports only) | M0+ | foundation |
+| 2 | `rustasea-foundation` | framework (contains the `Container` type) | M0 | foundation |
+| 3 | `rustasea-config` | framework | M0 | foundation |
+| 4 | `rustasea-router` | framework | M1 | http-routing |
+| 5 | `rustasea-http` | framework | M1 | http-routing |
+| 6 | `rustasea-orm` | framework | M2 | data-orm |
+| 7 | `rustasea-macros` | proc-macro | M2/M5 | http-routing · data-orm · developer-platform |
+| 8 | `rustasea-auth` | framework | M3 | identity-access |
+| 9 | `rustasea-validation` | framework | M3 | identity-access |
+| 10 | `rustasea-queue` | framework | M4 | async-workloads |
+| 11 | `rustasea-cache` | framework | M4 | async-workloads |
+| 12 | `rustasea-events` | framework | M4 | async-workloads |
+| 13 | `rustasea-schedule` | framework | M4 | async-workloads |
+| 14 | `rustasea-cli` | framework | M5 | developer-platform |
+| 15 | `rustasea-testing` | framework | M5 | developer-platform |
+| 16 | `rustasea-broadcast` | framework | M6 | intelligence-delivery |
+| 17 | `rustasea-storage` | framework | M6 | intelligence-delivery |
+| 18 | `rustasea-search` | framework | M6 | intelligence-delivery |
+| 19 | `rustasea-ai` | framework (feature-gated) | M6 | intelligence-delivery |
+| 20 | `rustasea-jsonapi` | framework | M6 | intelligence-delivery |
+| 21 | `rustasea-app` | runnable example app (not published) | — | — |
+| — | `xtask` | workspace dev tooling (not a framework crate) | — | developer-platform |
+
+**Note:** `rustasea-container` is **not** a crate — `Container` is a type inside `rustasea-foundation` (`crates/rustasea-foundation/src/lib.rs:35-41`).
 
 ## 1. Module Index
 
 | # | Module slug | Module (PascalCase) | Crate(s) | Milestone | BR | FRs | FSD Features | BC | Stories | API Specs (in `api-contracts.md`) | Test Tags (BDD) | QA Artifacts | Output Paths | Archetype |
 |---|-------------|---------------------|----------|-----------|----|-----|--------------|----|---------|-----------------------------------|-----------------|--------------|--------------|-----------|
-| 1 | `foundation` | `Foundation` | `rustasea-foundation` + `rustasea-config` + `rustasea-container` (+ `rustasea` umbrella) | M0 | BR-01 | FR-000..008 | FS-M0-01..04 | BC-0 | US-M0-01..03 | api-contracts.md §1 (M0) — builder/trait contracts | @foundation, @container, @observability-tooling | stubs/m0-foundation.stub.rs | `application/modules/foundation/overview.md` + `application/modules/foundation/boot.md` | foundation |
+| 1 | `foundation` | `Foundation` | `rustasea-foundation` (includes `Container`) + `rustasea-config` (+ `rustasea` umbrella) | M0 | BR-01 | FR-000..008 | FS-M0-01..04 | BC-0 | US-M0-01..03 | api-contracts.md §1 (M0) — builder/trait contracts | @foundation, @container, @observability-tooling | stubs/m0-foundation.stub.rs | `application/modules/foundation/overview.md` + `application/modules/foundation/boot.md` | foundation |
 | 2 | `http-routing` | `HttpRouting` | `rustasea-router` + `rustasea-http` + `rustasea-macros` (route/middleware) | M1 | BR-02 | FR-100..109 | FS-M1-01..06 | BC-1 | US-M1-01..03 | api-contracts.md §1 (routes, middleware, Http client, route:list) | @routing, @routing-validation, @observability-tooling, @http-client-process | contracts/route-list.schema.json + snapshots | `application/modules/http-routing/overview.md` + `.../routing.md`, `middleware.md`, `http-client.md` | http-routing |
 | 3 | `data-orm` | `DataOrm` | `rustasea-orm` + `rustasea-macros` (Model) | M2 | BR-03 | FR-200..210 | FS-M2-01..06 | BC-2 | US-M2-01..03 | api-contracts.md §1 (builder) + tdd.md BC-2 | @orm, @query-builder-additions, @upsert-delete, @collection-serialization, @vector-search | fixtures/vector-dim.json, fixtures/allowlist-corpus.json, stubs/m2-orm.stub.rs | `application/modules/data-orm/overview.md` + `.../model-relations.md`, `query-builder.md`, `migrations.md`, `vector.md` | data |
 | 4 | `identity-access` | `IdentityAccess` | `rustasea-auth` + `rustasea-validation` | M3 | BR-04 | FR-300..311 | FS-M3-01..06 | BC-3 | US-M3-01..03 | api-contracts.md §2 (auth, CSRF, validation) | @auth, @csrf-origin, @cache-session-hardening, @attributes, @throttle | jwt-claims.schema.json, fixtures/csrf-matrix.json, allowlist-corpus.json | `application/modules/identity-access/overview.md` + `.../auth.md`, `csrf.md`, `validation.md` | security |

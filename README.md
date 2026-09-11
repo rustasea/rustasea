@@ -152,7 +152,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 | **Success Criteria** | Dispatch a typed job to a routed queue and assert it executes; `Cache::touch` extends TTL without re-reading; `schedule:pause` halts the scheduler and emits `SchedulePaused`; event listener runs async when `Queue { enable: true }`. |
 | **Laravel 13 features** | #4 queue routing, #5 `Cache::touch`, #8 Cloud queue metrics, #10 schedule pause/resume, #16 event/queue contracts. |
 
-> **Status:** `MemoryStore` + `SyncDriver` + inline event dispatch are live, and `origin/master` (`7807ae4`) added real `database` + `redis` queue drivers with a worker loop and DB-backed failed jobs (`crates/rustasea-queue/src/driver/{database,redis,worker}.rs`; `queue:work` at `crates/rustasea-cli/src/commands/queue.rs:18`). Still pending: the Redis **cache** store returns `Err(StoreUnavailable("redis not wired"))` (`crates/rustasea-cache/src/redis.rs:37`), queue-backed listeners error, and `queue:failed`/`queue:retry` CLI are absent. Tracked in `GAP-005` (P1).
+> **Status:** `MemoryStore` + `SyncDriver` + inline event dispatch are live, and `origin/master` added real `database` + `redis` queue drivers with a worker loop and DB-backed failed jobs (`crates/rustasea-queue/src/driver/{database,redis,worker}.rs`; `queue:work` at `crates/rustasea-cli/src/commands/queue.rs:18`). Still pending: the Redis **cache** store returns `Err(StoreUnavailable("redis not wired"))` (`crates/rustasea-cache/src/redis.rs:37`), queue-backed listeners error, and `queue:failed`/`queue:retry` CLI are absent. Tracked in `GAP-005` (P1).
 
 ### M5 — DX, CLI & Testing
 
@@ -282,6 +282,10 @@ rustasea/                          # workspace root
 ```
 
 ---
+
+The [canonical crate inventory](.agents/documents/application/modules/manifest.md#canonical-crate-inventory-source-of-truth)
+records **21 crates under `crates/` + `xtask` (22 workspace packages total)**;
+the directory tree above mirrors that inventory.
 
 ## Roadmap
 

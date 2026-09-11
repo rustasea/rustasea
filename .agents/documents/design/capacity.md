@@ -4,6 +4,8 @@
 > **Date:** 2026-09-07  
 > **Parents:** `brd.md` · `prd.md` (NFRs §4, Risks §7) · `fsd.md` · `architecture.md`  
 > **Scope:** Capacity model, SLOs/SLIs, pooling, queue concurrency, storage quotas, AI provider budgets, degradation modes, scaling guidance for operators deploying the single-binary `tokio` app (HTTP + queue workers + scheduler) per `architecture.md §7`.
+> **Lineage (P3 → P6):** Authored as a P3 draft and adopted as the design parent by the P6 blueprint (`fsd.md` §8, `tdd.md` §8; `blueprint-audit.md` D4 PASS). The "P3" label records provenance, not unfinished status.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 

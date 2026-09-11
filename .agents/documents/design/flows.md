@@ -4,6 +4,7 @@
 > **Date:** 2026-09-07 | **Task:** TASK-009 (parent TASK-001)  
 > **Parents:** `requirements/brief.md` + `requirements/brd.md` + `requirements/prd.md` (FR-500 … FR-509, FR-501, FR-103, FR-208, FR-402, FR-408) + `requirements/fsd.md` (FS-M5-01, FS-M5-02, FS-M0-03) + `requirements/user-stories.md` (US-M5-01 … US-M5-04) + `requirements/bdd-scenarios.md`  
 > **Adaptation note:** RustaSea has no browser UI. This document adapts `design-specification` wireframe/user-flow rules to **CLI DX** — every diagram is a terminal interaction flow, not a screen wireframe. Scaffold layout replaces screen layout. Navigation = command hierarchy.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 

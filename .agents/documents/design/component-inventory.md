@@ -4,19 +4,22 @@
 > **Date:** 2026-09-07 | **Task:** TASK-009 (parent TASK-001)  
 > **Parents:** `requirements/brd.md` + `requirements/prd.md` (FR-000 … FR-612) + `requirements/fsd.md` (FS-M0-01 … FS-M6-07) + `requirements/bdd-scenarios.md`  
 > **Adaptation note:** This inventory adapts `design-specification` component-spec rules to a **Rust workspace / framework DX** context. "Components" are **crates, proc-macros, CLI commands, and prompt/output primitives** — not browser UI components. Each entry has PascalCase name, states (implemented as Rust states/errors), and reuse level.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 
 ## 1. Inventory — Workspace Crates (Umbrella + Milestone Crates)
+
+The [canonical crate inventory](../application/modules/manifest.md#canonical-crate-inventory-source-of-truth) defines the current set: **21 crates under `crates/` + `xtask`**. This table records design responsibilities, not implementation status.
 
 Reuse levels: `P0 shared` (used by ≥3 milestones) · `P1 domain` (1–2 milestones) · `P2 feature-flagged` (opt-in).
 
 | # | Crate (PascalCase) | Crate slug | Milestone | Reuse | Status | Depends On | Provides (public API surface) |
 |---|--------------------|------------|-----------|-------|--------|------------|-------------------------------|
 | 1 | `RustaSea` | `rustasea` | M0 | P0 shared | planned | all below (re-export) | Umbrella re-export — `pub use rustasea_foundation::*` etc. (like `laravel/framework`); feature-gated per domain |
-| 2 | `RustaSeaFoundation` | `rustasea-foundation` | M0 | P0 shared | planned | `rustasea-config`, `rustasea-container` | `Application`, `ServiceProvider` (register→boot DAG), `Runner` (HTTP/Queue/Schedule), `AppState(Arc)` |
+| 2 | `RustaSeaFoundation` | `rustasea-foundation` | M0 | P0 shared | planned | `rustasea-config` (the `Container` type lives inside foundation) | `Application`, `ServiceProvider` (register→boot DAG), `Runner` (HTTP/Queue/Schedule), `AppState(Arc)` |
 | 3 | `RustaSeaConfig` | `rustasea-config` | M0 | P0 shared | planned | — | Layered loader `config/*.toml` + env overlay + `.env` via `dotenvy`; typed `Config` via `serde`; `ConfigError` |
-| 4 | `RustaSeaContainer` | `rustasea-container` | M0 | P0 shared | planned | — | `Container { Bind, Singleton, Instance, Make<T> }`, `Manager::extend` closure binding, `ContainerError` |
+| 4 | `RustaSeaApp` | `rustasea-app` | — | Example | exists (`publish = false`) | See `crates/rustasea-app/Cargo.toml` | Runnable example application; not a separate framework domain |
 | 5 | `RustaSeaRouter` | `rustasea-router` | M1 | P0 shared | planned | `rustasea-foundation`, `rustasea-http` | `Route::get/post/.../any`, group `prefix/name/middleware`, `resource` helper, domain-route prioritization, route table + binding fields |
 | 6 | `RustaSeaHttp` | `rustasea-http` | M1 | P0 shared | planned | `rustasea-foundation` | Typed extractors `Json<T>/Query<T>/Path<T>/State`, responses `Json/View/Redirect`, middleware `Throttle/Cors`, HTTP client `Http::get(...).throw(...).timeout(...)`, `HttpError` |
 | 7 | `RustaSeaOrm` | `rustasea-orm` | M2 | P0 shared | planned | `rustasea-config`, `rustasea-macros` | Query builder (`where/orWhere/chunkBy/...`), `Model` trait, `Db/Transaction`, relations, `vector` column + `whereVectorSimilarTo`, migrations, seeders, `QueryError` |
@@ -41,7 +44,7 @@ Reuse levels: `P0 shared` (used by ≥3 milestones) · `P1 domain` (1–2 milest
 | Primitive | Lives In | Reused By |
 |-----------|----------|-----------|
 | `AppState(Arc)` | `rustasea-foundation` | Every HTTP handler, middleware, test, CLI command that needs app context |
-| `ContainerError` / `ConfigError` | `rustasea-container` / `rustasea-config` | Boot diagnostics; surfaced by every `M0` flow |
+| `ContainerError` / `ConfigError` | `rustasea-foundation` / `rustasea-config` | Boot diagnostics; surfaced by every `M0` flow |
 | `ErrorBag` | `rustasea-validation` | HTTP extractors + `show:model` + any `#[validate]` handler |
 | `Store` trait | `rustasea-cache` | Cache, session, schedule `onOneServer` lock, queue metrics backend |
 | `Job<T>` generic | `rustasea-queue` | Queue, events (async listeners), AI tool calls queued as jobs, notifications |

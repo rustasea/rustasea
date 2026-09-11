@@ -1,8 +1,9 @@
 # RustaSea — Presentation Brief
 
 > **Purpose:** Stakeholder-facing overview of the RustaSea SDLC blueprint — for investors, leadership, and engineering review. Concise synthesis; prior docs are the source of truth.
-> **Date:** 2026-09-07 | **Status:** Discovery Complete — Conditional Pass (Blueprint Audit P8A)
+> **Date:** 2026-09-07 | **Status:** Discovery Complete — Conditional Pass (Blueprint Audit P8A) — planning-phase verdict; as-built status in [`docs/milestones.md`](../../../docs/milestones.md)
 > **Sources:** `README.md` · `docs/laravel-13-research.md` · `requirements/{brief,brd,prd,validation}.md` · `design/architecture.md` · `tasks/{roadmap.md,sprints/manifest.md}` · `application/blueprint-audit.md`
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 
@@ -14,7 +15,7 @@
 
 | Dimension | Answer |
 |-----------|--------|
-| **What** | Workspace framework: 18 crates (`rustasea-*`) + umbrella `rustasea` — incremental adoption, pay-for-crates-you-use |
+| **What** | Workspace framework: 21 crates under `crates/` (including umbrella `rustasea` and example `rustasea-app`) + `xtask` — see the [canonical crate inventory](modules/manifest.md#canonical-crate-inventory-source-of-truth); incremental adoption, pay-for-crates-you-use |
 | **Why now** | Laravel 13 shipped AI SDK + vector + declarative attributes as headlines (2026-03-17, 20 features); `tokio`/`axum`/`sqlx`/`pgvector` stabilized; Goravel v1.18 proves Laravel→compiled-language thesis |
 | **Scope** | 7 dependency-ordered milestones M0–M6; 76 FRs (FR-000–FR-612), 9 BRs, 20/20 Laravel 13 features traced; 37 blueprint docs + 6 ADRs + 134 test cases |
 | **Horizon** | Q4 2026 → Q4 2027 · 7 sprints (1:1 with milestones) · ~13–18 weeks wall-clock @2 devs +20% contingency (30–40% M6) |
@@ -151,6 +152,8 @@ All 20 Laravel 13.0.0 features (2026-03-17, PHP 8.3+) mapped to milestones — 1
 
 ### Roadmap at a Glance
 
+> **Planning baseline:** the "Status" column below is the 2026-09 plan, not as-built. Live status: [`docs/milestones.md`](../../../docs/milestones.md) (TASK-003).
+
 | Milestone | Focus | Target Window | Depends On | Sprint | FRs | Status |
 |-----------|-------|---------------|------------|--------|-----|--------|
 | **M0** | Bootstrap & Core | Q4 2026 (2026-10-01 → 2026-12-31) | — | Sprint 01 | FR-000–FR-008 (9) | Planned |
@@ -235,6 +238,8 @@ Critical path: M0 → M1 → M2 → M3 → M4 → M5 → M6. Slack: M4 can start
 
 ### Crate Dependency DAG (No Cycles)
 
+This historical design diagram is not the complete workspace inventory; use the [canonical crate inventory](modules/manifest.md#canonical-crate-inventory-source-of-truth) for the current crate set.
+
 > Validated via `cargo metadata | jq` and `xtask check-cycles`. `architecture.md` §3 — image below is the Mermaid source for the deck.
 
 ```mermaid
@@ -279,20 +284,20 @@ flowchart TB
 
 **Why acyclic:** M0 (foundation/config/macros) is root. M1 depends only on M0. M2 on M0+M1. M3 on M1+M2. M4 on M0+M2+M3. M5 aggregates M0–M4. M6 is feature-flagged leaf — no M0–M5 crate imports M6, so no back-edge.
 
-**Workspace invariant:** `[workspace] members = ["crates/*"]`, `resolver = "2"`, single `workspace.dependencies` — each crate `cargo check`-clean standalone (incremental adoption gate `cargo tree --depth 1` in CI).
+**Workspace invariant:** `[workspace] members = ["crates/*", "xtask"]`, `resolver = "2"`, single `workspace.dependencies` — each crate `cargo check`-clean standalone (incremental adoption gate `cargo tree --depth 1` in CI).
 
 ### Architecture Decisions (ADRs)
 
 | ADR | Title | Status | One-line |
 |-----|-------|--------|----------|
-| ADR-001 | HTTP framework: `axum` over `actix-web` | **Accepted** — M1 | Tower-native, `tokio`-aligned, simpler ownership |
-| ADR-002 | ORM: `sqlx` primary, `sea-orm` optional | **Accepted** — M2 | Compile-time SQL + `pgvector`; `sea-orm` shim behind flag |
-| ADR-003 | Async stack: single `tokio` runtime | **Accepted** — M0 | One executor, `select!` shutdown, shared pools |
-| ADR-004 | Workspace crate boundaries per FR domain | **Accepted** — M0 | One crate per milestone domain; umbrella re-export |
-| ADR-005 | Facades replaced by `AppState: Arc` | **Accepted** — M0 | `axum::extract::State` + `OnceLock`; no `static mut` |
-| ADR-006 | Vector as feature-flagged Postgres extension | **Accepted** — M2/M6 | `pgvector` behind `vector` feature; MariaDB as second flag |
+| [ADR-0003](../../../docs/adr/ADR-0003-axum-vs-actix.md) | HTTP framework: `axum` over `actix-web` | **Accepted** — M1 | Tower-native, `tokio`-aligned, simpler ownership |
+| [ADR-0004](../../../docs/adr/ADR-0004-sqlx-vs-sea-orm.md) | ORM: `sqlx` primary, `sea-orm` optional | **Accepted** — M2 | Compile-time SQL + `pgvector`; `sea-orm` shim behind flag |
+| [ADR-0005](../../../docs/adr/ADR-0005-tokio-stack.md) | Async stack: single `tokio` runtime | **Accepted** — M0 | One executor, `select!` shutdown, shared pools |
+| [ADR-0006](../../../docs/adr/ADR-0006-workspace-crates.md) | Workspace crate boundaries per FR domain | **Accepted** — M0 | One crate per milestone domain; umbrella re-export |
+| [ADR-0007](../../../docs/adr/ADR-0007-appstate-over-facades.md) | Facades replaced by `AppState: Arc` | **Accepted** — M0 | `axum::extract::State` + `OnceLock`; no `static mut` |
+| [ADR-0008](../../../docs/adr/ADR-0008-vector-feature-flag.md) | Vector as feature-flagged Postgres extension | **Accepted** — M2/M6 | `pgvector` behind `vector` feature; MariaDB as second flag |
 
-Full ADRs: `design/decisions/ADR-00*.md`. New cross-crate decisions **MUST** add an ADR and update `architecture.md` §4.
+Full ADRs: [canonical ADR index](../../../docs/adr/README.md). New cross-crate decisions **MUST** add an ADR and update `architecture.md` §4.
 
 ### Security & Reliability (Cross-Cutting)
 
@@ -371,7 +376,7 @@ Full ADRs: `design/decisions/ADR-00*.md`. New cross-crate decisions **MUST** add
 | Laravel 13 features | 20/20 traced (10 NEW + 10 IMPROVED) | `prd.md` §8 matrix + `user-stories.md` checklist + `allocation-audit.md` §4 |
 | Gherkin features | 33 + 9 outlines | `bdd-scenarios.md` |
 | Test cases | 134 (M0 12 … M6 26 + cross 7) | `test-cases.md` |
-| ADRs | 6 Accepted | `design/decisions/ADR-001..006` |
+| ADRs | 6 Accepted | [ADR-0003–ADR-0008](../../../docs/adr/README.md) |
 | Blueprint docs | 37 md + 5 schemas + 3 snapshots + 4 fixtures + 9 stubs | `blueprint-audit.md` §1 |
 | Audit verdict | **CONDITIONAL PASS** — 1 FAIL (D2 ASCII DAG) + 1 WARN (D1 deferred to TASK-013) | `blueprint-audit.md` §10 |
 

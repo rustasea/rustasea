@@ -1,4 +1,4 @@
-# ADR-006 — Vector as Feature-Flagged Postgres Extension
+# ADR-0008 — Vector as Feature-Flagged Postgres Extension
 
 > **Status:** Accepted
 > **Date:** 2026-09-07
@@ -28,7 +28,7 @@ Constraints: BR-08 incremental adoption; `cargo check -p rustasea-orm --no-defau
 |--------|------|------|---------|
 | **Feature-flagged pgvector + guard (chosen)** | Works on MySQL/SQLite without vector; managed-DB diagnostic is explicit; `cargo tree` isolation preserved | Consumers must enable `features=["vector"]` to use vectors | **Chosen** |
 | Mandatory pgvector | Simplest API — no cfg | Breaks MySQL/SQLite consumers; filters target audience to Postgres-only | Rejected — violates FR-200 multi-driver |
-| Separate `rustasea-vector` crate | Clean isolation | Adds 19th crate; vector queries need ORM builder — cross-crate coupling anyway | Rejected — flag isolation is sufficient per ADR-004 |
+| Separate `rustasea-vector` crate | Clean isolation | Adds 19th crate; vector queries need ORM builder — cross-crate coupling anyway | Rejected — flag isolation is sufficient per ADR-0006 |
 | Runtime driver detection (no compile flag) | No Cargo feature matrix | Runtime branching hides missing-extension errors until query time | Rejected — migration guard needs compile-time cfg |
 
 ## Consequences

@@ -1,4 +1,4 @@
-# ADR-005 — Facades Replaced by AppState Arc
+# ADR-0007 — Facades Replaced by AppState Arc
 
 > **Status:** Accepted
 > **Date:** 2026-09-07

@@ -5,6 +5,7 @@
 > **Parent:** `brd.md` (BR-01 … BR-09)  
 > **Research base:** `docs/laravel-13-research.md` (Laravel 13.0.0 2026-03-17; patches thru v13.30.1) + `README.md` §Laravel 13 Feature Map  
 > **Coverage:** 20 Laravel 13 features → FR mapping; milestones M0–M6; MoSCoW priority
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 

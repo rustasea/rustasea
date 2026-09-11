@@ -1,8 +1,8 @@
 # Module: Foundation (M0 — Bootstrap & Core)
 
 > **Status:** P8 Final — 2026-09-07 | **Task:** TASK-013
-> **Parents:** `requirements/{brd,prd,fsd,tdd}.md` · `design/{architecture,domain,database,api-contracts}.md` · `decisions/ADR-003,ADR-004,ADR-005` · `application/modules/manifest.md` · `tasks/sprints/sprint-01.md`
-> **Crates:** `rustasea` (umbrella re-exports) · `rustasea-foundation` · `rustasea-config` · `rustasea-container` (inside foundation)
+> **Parents:** `requirements/{brd,prd,fsd,tdd}.md` · `design/{architecture,domain,database,api-contracts}.md` · [ADR-0005](../../../../../docs/adr/ADR-0005-tokio-stack.md), [ADR-0006](../../../../../docs/adr/ADR-0006-workspace-crates.md), [ADR-0007](../../../../../docs/adr/ADR-0007-appstate-over-facades.md) · `application/modules/manifest.md` · `tasks/sprints/sprint-01.md`
+> **Crates:** `rustasea` (umbrella re-exports) · `rustasea-foundation` (includes `Container`) · `rustasea-config` — see the [canonical crate inventory](../manifest.md#canonical-crate-inventory-source-of-truth)
 > **Milestone:** M0 | **BR:** BR-01 | **FR:** FR-000..008 | **FSD:** FS-M0-01..04 | **BC:** BC-0 | **Stories:** US-M0-01..02
 
 ## Header & Navigation
@@ -56,7 +56,7 @@ flowchart TB
 ## 4. Global Dependencies
 
 - **Database:** none (M0). Migration table `migrations` scaffolded but not executed until M2.
-- **Services:** `tokio` 1.x (single runtime per ADR-003), `config` + `dotenvy`, `serde`, `thiserror`, `axum::extract::State`, `cargo xtask` scaffold.
+- **Services:** `tokio` 1.x (single runtime per ADR-0005), `config` + `dotenvy`, `serde`, `thiserror`, `axum::extract::State`, `cargo xtask` scaffold.
 - **Internal crate DAG:** `rustasea-config` ← `rustasea-foundation`; umbrella `rustasea` re-exports both. Verified acyclic via `cargo metadata | xtask check-cycles`.
 
 ## 5. Skill Reference

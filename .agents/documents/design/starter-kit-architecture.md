@@ -6,6 +6,7 @@
 > **Milestones:** spans **M3** (auth core), **M5** (scaffolder + generators), **M6** (view engine, Inertia-analogue, real-time).
 > **Parents:** `README.md` §Milestones · `docs/milestones.md` · `docs/laravel-parity.md` §8 · TASK-004 enrichment comment.
 > **ADR:** [`docs/adr/ADR-0002-rustasea-starter-kit-architecture.md`](../../../docs/adr/ADR-0002-rustasea-starter-kit-architecture.md)
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 

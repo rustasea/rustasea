@@ -4,6 +4,7 @@
 > **Date:** 2026-09-07 | **Task:** TASK-009 (parent TASK-001)  
 > **Parents:** `requirements/brief.md` + `requirements/brd.md` + `requirements/prd.md` (C-04, NFR-Usa-02/03, FR-501, FR-103) + `requirements/fsd.md` (FS-M5-02, FS-M0-03) + `docs/laravel-13-research.md`  
 > **Adaptation note:** RustaSea has no browser UI. This design system defines **scaffold tokens** (file naming, directory layout, generated code style) and **CLI DX tokens** (colours, spacing, typography for terminal output, error codes). It adapts `design-specification` design-system rules — the "brand" is the framework's developer experience. There is no Figma/MCP tool setup — `cargo` + `xtask` is the design tool.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 

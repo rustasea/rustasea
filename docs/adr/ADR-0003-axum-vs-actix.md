@@ -1,4 +1,4 @@
-# ADR-001 — HTTP Framework: axum over actix-web
+# ADR-0003 — HTTP Framework: axum over actix-web
 
 > **Status:** Accepted  
 > **Date:** 2026-09-07  
@@ -30,7 +30,7 @@ RustaSea needs an HTTP layer that feels like Laravel routing (prose-like `Route:
 ## Consequences
 
 - `rustasea-router` and `rustasea-http` depend only on `axum`/`tower`/`tower-http` + `rustasea-foundation`; no `actix` in `Cargo.lock`.
-- Single `tokio` runtime covers HTTP, queue workers, scheduler ticker, and `tokio::signal` shutdown (ADR-003).
+- Single `tokio` runtime covers HTTP, queue workers, scheduler ticker, and `tokio::signal` shutdown (ADR-0005).
 - NFR-Per-02 (`<50ms p95` at 1k RPS, no DB) is met on `axum` in bench; bench delta vs actix is not user-visible at this envelope.
 - Testing uses `axum::Router` directly with `tower::ServiceExt::oneshot` in `cargo test` — no test server needed.
 
@@ -42,7 +42,7 @@ RustaSea needs an HTTP layer that feels like Laravel routing (prose-like `Route:
 ## References
 
 - README Tech Stack table (HTTP row) — `axum + tower + tower-http` rationale.
-- ADR-003 (tokio stack) — `axum` choice reinforces single-runtime decision.
+- ADR-0005 (tokio stack) — `axum` choice reinforces single-runtime decision.
 
 ---
 

@@ -4,6 +4,8 @@
 > **Date:** 2026-09-07  
 > **Parents:** `prd.md` (FR-200–210, FR-402, FR-602) · `fsd.md` (FS-M2-01–06, FS-M4-02/04/05) · `architecture.md` · `domain.md`  
 > **Drivers:** Postgres (primary, with `pgvector`), MySQL, SQLite. ORM: `sqlx` primary (+ `sea-orm` optional). Pools: `deadpool`. Migrations: `sqlx::migrate!` / `sea-orm-migration`. Success criteria per M2 (see README M2 table).
+> **Lineage (P3 → P6):** Authored as a P3 draft and adopted as the design parent by the P6 blueprint (`fsd.md` §8, `tdd.md` §8; `blueprint-audit.md` D4 PASS). The "P3" label records provenance, not unfinished status.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 

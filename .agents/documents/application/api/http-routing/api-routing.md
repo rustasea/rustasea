@@ -1,7 +1,7 @@
 # API: HttpRouting — Routes, Middleware, Introspection
 
 > **Status:** P8 — 2026-09-07 | **Task:** TASK-013
-> **Parents:** `design/api-contracts.md §1` · `requirements/prd FR-100..106, FR-102..103, FR-109` · `requirements/fsd FS-M1-01..05` · `requirements/tdd BC-1` · `architecture.md BC-1` · ADR-001
+> **Parents:** `design/api-contracts.md §1` · `requirements/prd FR-100..106, FR-102..103, FR-109` · `requirements/fsd FS-M1-01..05` · `requirements/tdd BC-1` · `architecture.md BC-1` · [ADR-0003](../../../../../docs/adr/ADR-0003-axum-vs-actix.md)
 > **Crates:** `rustasea-router` · `rustasea-http` · `rustasea-macros`
 > **Module:** [modules/http-routing/overview.md](../../modules/http-routing/overview.md) · [routing](../../modules/http-routing/routing.md) · [middleware](../../modules/http-routing/middleware.md) · **Testing:** [testing/http-routing/overview.md](../../testing/http-routing/overview.md)
 
@@ -338,7 +338,7 @@ components:
 ## 5. Cross-References
 
 - Module: [routing.md](../../modules/http-routing/routing.md) · [middleware.md](../../modules/http-routing/middleware.md) · [http-client.md](../../modules/http-routing/http-client.md)
-- Design: `api-contracts.md §1`, `tdd.md BC-1`, ADR-001
+- Design: `api-contracts.md §1`, `tdd.md BC-1`, [ADR-0003](../../../../../docs/adr/ADR-0003-axum-vs-actix.md)
 - Testing: [testing/http-routing/test-routing.md](../../testing/http-routing/test-routing.md) · `contracts/route-list.schema.json`
 
 ## 6. Skill Reference

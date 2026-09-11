@@ -4,7 +4,7 @@
 > **Date:** 2026-09-11
 > **Deciders:** Tech Lead, Platform
 > **Milestone:** M3 (Auth; spans workspace toolchain)
-> **Related:** PR #1 (`dependabot/cargo/cargo-faef625f8c`) · `prd.md` C-01 / NFR-Com-01 · ADR-003
+> **Related:** PR #1 (Dependabot `jsonwebtoken` 10 bump) · `prd.md` C-01 / NFR-Com-01 · ADR-0005
 
 ## Context
 
@@ -47,7 +47,7 @@ so no CI runner change is needed.
   `ed25519-dalek`, `p256`, `p384`, `rsa`) in `Cargo.lock`.
 - The workspace itself stays on `edition = "2021"`; no source migration to
   edition 2024 is implied.
-- ADR-003's "MSRV 1.80+" statement is superseded by this ADR; its single-`tokio`
+- ADR-0005's "MSRV 1.80+" statement is superseded by this ADR; its single-`tokio`
   runtime decision is unaffected.
 - The declarative `rust-version` key lives in `[workspace.package]`; member
   crates do not currently inherit it, so the value is documentation/policy
@@ -65,7 +65,7 @@ so no CI runner change is needed.
 
 ## References
 
-- PR #1 — `dependabot/cargo/cargo-faef625f8c`.
+- PR #1 — Dependabot `jsonwebtoken` 10 bump.
 - `Cargo.toml` — `[workspace.package] rust-version`, `jsonwebtoken` feature.
 - `Cargo.lock` — `jsonwebtoken` 10.4.0 dependency list.
-- ADR-003 — async stack (MSRV clause superseded here).
+- ADR-0005 — async stack (MSRV clause superseded here).

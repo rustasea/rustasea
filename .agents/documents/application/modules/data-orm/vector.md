@@ -106,7 +106,7 @@ enum VectorError { ExtensionMissing { extension: &'static str, hint: String }, V
 ## 10. Cross-References
 - API: [api-query-builder](../../api/data-orm/api-query-builder.md) — vector section
 - Tests: [test-orm](../../testing/data-orm/test-orm.md) · BDD `@vector-search` · `fixtures/vector-dim.json` · `stubs/m2-orm.stub.rs`
-- Decisions: ADR-002, ADR-006
+- Decisions: [ADR-0004](../../../../../docs/adr/ADR-0004-sqlx-vs-sea-orm.md), [ADR-0008](../../../../../docs/adr/ADR-0008-vector-feature-flag.md)
 - M6 full: [intelligence-delivery/ai-agents.md](../intelligence-delivery/ai-agents.md)
 
 ## 11. Skill Reference

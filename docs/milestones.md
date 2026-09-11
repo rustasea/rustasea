@@ -26,10 +26,12 @@ section records the reason.
 
 ## Sources
 
-- Merged source tree: `origin/master` (`7807ae4`, ORM + queue) plus branch `dependabot/cargo/cargo-faef625f8c` router (`1312f85`) and docs (`6586682`).
-- P0 gap-closure commits: `688ce7f`, `d9dbfff`, `5775d16` (GAP-001 sqlx pool, async execution, transactions), `1312f85` (GAP-002 router → controller dispatch).
+- Merged source tree: `origin/master` (ORM + queue) plus the PR #1 Dependabot branch (router) and docs.
+- P0 gap-closure work: `GAP-001` (sqlx pool, async execution, transactions) and `GAP-002` (router → controller dispatch).
+- Commit-reference policy: [`docs/documentation-conventions.md`](documentation-conventions.md) — milestones, task IDs, and `path:line` only; no raw commit SHAs.
 - Task registry: `DOC-001`, `DOC-002`, `DOC-ROOT`, `GAP-ROOT`, `GAP-P0`…`GAP-P5`.
 - Prior research: [`docs/laravel-13-research.md`](laravel-13-research.md).
+- Workspace inventory: **21 crates under `crates/` + `xtask` (22 workspace packages total)**; see the [canonical crate inventory](../.agents/documents/application/modules/manifest.md#canonical-crate-inventory-source-of-truth), verified against `Cargo.toml:2` and package manifests.
 
 ---
 
@@ -88,13 +90,13 @@ there is no provider DAG or project scaffolder.
 ergonomics, and an HTTP client.
 
 **Status: Partial** — the router DSL and real controller dispatch landed in
-GAP-002 (`1312f85`), and the HTTP client `throw` semantics are implemented, but
+GAP-002, and the HTTP client `throw` semantics are implemented, but
 CLI introspection (`route:list`, `show:model`) and idle-timeout enforcement are
 not wired.
 
 **Done**
 - Router DSL: `get`/`post`/`put`/`delete`/`patch`/`options`/`any`, `group`, prefix/name/domain/resource — `crates/rustasea-router/src/router.rs:136`, `:288`.
-- Controller dispatch to real handlers (GAP-002, commit `1312f85`) — `crates/rustasea-router/src/dispatch.rs:23`, `:62`.
+- Controller dispatch to real handlers (`GAP-002`) — `crates/rustasea-router/src/dispatch.rs:23`, `:62`.
 - `#[route]` metadata consumed at registration — `crates/rustasea-router/src/router.rs:218`; Laravel→Axum path params translated — `crates/rustasea-router/src/dispatch.rs`.
 - HTTP client `throw` / `try_throw` callbacks and typed `HttpError` — `crates/rustasea-http/src/lib.rs:286`, `:298`, `:207`.
 - Runnable app serves real handlers from `routes/web.rs`.
@@ -124,9 +126,9 @@ migrations, seeders, factories, and vector support.
 **Status: Done** — the fluent SQL builder, real sqlx pool, async query
 execution, model CRUD, transactions, migrations/seeders/factories, eager
 loading, and pgvector support all execute through the runtime `sqlx` API. This
-landed on `origin/master` in `688ce7f` (pool), `d9dbfff` (async execution +
-model ops), `5775d16` (transactions), `baf8e1f` (migrations/seeders/factories),
-and `133f9ce` (eager loading + pgvector).
+landed on `origin/master` as the M2 ORM implementation: pool, async execution
+and model ops, transactions, migrations/seeders/factories, and eager loading +
+pgvector (tracked by `GAP-001`).
 
 **Done**
 - Fluent SQL builder — `crates/rustasea-orm/src/builder.rs`, `crates/rustasea-orm/src/clause.rs`; async execution `crates/rustasea-orm/src/builder/exec.rs:105` (`get`), `:112` (`first`), `:145` (`paginate`).
@@ -144,7 +146,7 @@ and `133f9ce` (eager loading + pgvector).
 **Missing**
 - Compile-time `query!` macros (intentionally excluded: CI has no `DATABASE_URL`).
 
-**Evidence:** `crates/rustasea-orm/src/db.rs:24-130`; `crates/rustasea-orm/src/db/exec.rs:70-138`; `crates/rustasea-orm/src/model_ops.rs:25-143`; `crates/rustasea-orm/src/tx.rs:56-192`; `crates/rustasea-orm/src/migration.rs:190-296`; `crates/rustasea-orm/src/eager.rs:59`; `crates/rustasea-orm/src/vector.rs:112-152`; commits `688ce7f`, `d9dbfff`, `5775d16`, `baf8e1f`, `133f9ce`.
+**Evidence:** `crates/rustasea-orm/src/db.rs:24-130`; `crates/rustasea-orm/src/db/exec.rs:70-138`; `crates/rustasea-orm/src/model_ops.rs:25-143`; `crates/rustasea-orm/src/tx.rs:56-192`; `crates/rustasea-orm/src/migration.rs:190-296`; `crates/rustasea-orm/src/eager.rs:59`; `crates/rustasea-orm/src/vector.rs:112-152`; task `GAP-001`.
 
 **Next actions**
 - Wire `route:list` / `show:model` ORM introspection (`GAP-010`, `GAP-011`).
@@ -294,8 +296,8 @@ stubs.
 
 | Task | Title | Status | Evidence |
 |---|---|---|---|
-| **GAP-001** | Wire sqlx DB backend + connection pool into `rustasea-orm` | **Done** | Commits `688ce7f`, `d9dbfff`, `5775d16`; `crates/rustasea-orm/src/db.rs:24`, `crates/rustasea-orm/src/db/exec.rs:70` |
-| **GAP-002** | Router → controller dispatch (real handler binding) | **Done** | Commit `1312f85`; `crates/rustasea-router/src/dispatch.rs:23-83` |
+| **GAP-001** | Wire sqlx DB backend + connection pool into `rustasea-orm` | **Done** | `crates/rustasea-orm/src/db.rs:24`, `crates/rustasea-orm/src/db/exec.rs:70` |
+| **GAP-002** | Router → controller dispatch (real handler binding) | **Done** | `crates/rustasea-router/src/dispatch.rs:23-83` |
 | **GAP-003** | Runtime consumer for declarative attributes (`#[middleware]`, `#[authorize]`, `#[tries]`, `#[backoff]`, `#[timeout]`) | **Pending / backlog** | `crates/rustasea-macros/src/lib.rs:74-257` (emits metadata only) |
 
 **Other gap phases (all backlog):** `GAP-004`–`GAP-009` (P1), `GAP-010`–`GAP-013`
@@ -312,3 +314,4 @@ stubs.
 - [`README.md`](../README.md) — milestone goals, scope, deliverables, success criteria.
 - [`docs/laravel-13-research.md`](laravel-13-research.md) — Laravel 13 feature research.
 - [`docs/laravel-parity.md`](laravel-parity.md) — Laravel 13.x API adoption mapping (maintained separately).
+- [`docs/documentation-conventions.md`](documentation-conventions.md) — commit-reference policy (milestone + date, no raw SHAs).

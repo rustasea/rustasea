@@ -125,7 +125,7 @@ CLI `route:list` shows middleware column per route as `["throttle:60,1","cors"]`
 | F-M1-MW-04 | Tests | Todo | throttle 61st, CORS matrix, ErrorBag dual-field |
 
 ## 11. Cross-References
-- Design: `domain.md BC-1` · `tdd.md BC-1` · `api-contracts.md §1` · ADR-001
+- Design: `domain.md BC-1` · `tdd.md BC-1` · `api-contracts.md §1` · [ADR-0003](../../../../../docs/adr/ADR-0003-axum-vs-actix.md)
 - API: [api-routing](../../api/http-routing/api-routing.md) — middleware & extractors sections
 - Tests: [test-routing](../../testing/http-routing/test-routing.md) · BDD `@routing-validation`, `@throttle` adjacency · `fixtures/csrf-matrix.json` adjacency
 

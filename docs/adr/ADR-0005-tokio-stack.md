@@ -1,4 +1,4 @@
-# ADR-003 — Async Stack: Single tokio Runtime
+# ADR-0005 — Async Stack: Single tokio Runtime
 
 > **Status:** Accepted  
 > **Date:** 2026-09-07  
@@ -27,7 +27,7 @@ Every RustaSea workload is async: `axum` HTTP serving, `sqlx` queries, `deadpool
 | **tokio single** | De-facto ecosystem (axum/sqlx/deadpool/reqwest all tokio-native); `select!` for shutdown; work-stealing scheduler; largest talent pool | Pinning contracts must be respected by `async fn` in handlers/Tools | **Chosen** |
 | async-std primary | Simpler `async` syntax in some crates | Requires bridging every tokio-native crate (`axum`, `sqlx`, `deadpool-redis`) via compatibility layers | Rejected |
 | Dual runtimes | Could pick best-of for niche crate | Two executors, signal/shutdown split, pool incompatibility, `cargo tree` fragmentation | Rejected |
-| actix-rt | Matches if actix-web chosen | Coupled to actor model; incompatible with `axum`/`sqlx`/`deadpool` graph per ADR-001 | Rejected with actix-web |
+| actix-rt | Matches if actix-web chosen | Coupled to actor model; incompatible with `axum`/`sqlx`/`deadpool` graph per ADR-0003 | Rejected with actix-web |
 
 ## Consequences
 
@@ -45,7 +45,7 @@ Every RustaSea workload is async: `axum` HTTP serving, `sqlx` queries, `deadpool
 ## References
 
 - README Tech Stack — `tokio` row: "De-facto async runtime; powers axum, sqlx, deadpool…"
-- ADR-001 — axum choice depends on tokio; ADR-002 — sqlx/deadpool are tokio-native.
+- ADR-0003 — axum choice depends on tokio; ADR-0004 — sqlx/deadpool are tokio-native.
 - `tdd.md §4–5` — budgets and deployment topology assuming single runtime.
 
 ---

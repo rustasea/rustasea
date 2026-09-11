@@ -102,7 +102,7 @@ enum BootError { Cycle { chain: Vec<String> }, MissingDependency { provider: Str
 Errors: `BootError::Cycle` / `MissingDependency`, `ConfigError::Parse { file, line, source }` (see `config.md`).
 
 ## 6. Dependencies
-- **Upstream:** none (root). `tokio` 1.x single runtime (ADR-003).
+- **Upstream:** none (root). `tokio` 1.x single runtime (ADR-0005).
 - **Downstream:** every other module registers here.
 - **External:** `config` + `dotenvy`, `serde`, `thiserror`, `axum::extract::State`.
 
@@ -132,7 +132,7 @@ CLI scaffold output tree (see `architecture.md §2` skeleton). No browser UI.
 - API: [api-bootstrap](../../api/foundation/api-bootstrap.md) — trait contracts
 - Tests: [testing/foundation/test-boot-container.md](../../testing/foundation/test-boot-container.md) · BDD `@foundation` · `testing/stubs/m0-foundation.stub.rs`
 - Capacity: `design/capacity.md S-08` (shutdown)
-- Decisions: ADR-003 tokio stack, ADR-004 workspace crates, ADR-005 AppState over facades
+- Decisions: [ADR-0005 tokio stack](../../../../../docs/adr/ADR-0005-tokio-stack.md), [ADR-0006 workspace crates](../../../../../docs/adr/ADR-0006-workspace-crates.md), [ADR-0007 AppState over facades](../../../../../docs/adr/ADR-0007-appstate-over-facades.md)
 
 ## 12. Skill Reference
 | Layer | Skill | Rule |

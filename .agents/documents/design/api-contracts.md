@@ -4,6 +4,8 @@
 > **Date:** 2026-09-07  
 > **Source:** `brd.md` · `prd.md` (FR-000–FR-612) · `fsd.md` · `architecture.md` · `domain.md` · `bdd-scenarios.md`  
 > **Conventions:** `AppState = Arc<AppState>` via `axum::extract::State`; JSON uses `serde_json`; errors are typed per-domain with `code`+`hint` (FSD §4.1).
+> **Lineage (P3 → P6):** Authored as a P3 draft and adopted as the design parent by the P6 blueprint (`fsd.md` §8, `tdd.md` §8; `blueprint-audit.md` D4 PASS). The "P3" label records provenance, not unfinished status.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 

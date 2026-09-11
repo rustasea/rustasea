@@ -1,7 +1,7 @@
 # Module: HttpRouting (M1 — Routing & HTTP)
 
 > **Status:** P8 Final — 2026-09-07 | **Task:** TASK-013
-> **Parents:** `requirements/{prd §M1,fsd §3.2,tdd BC-1,bdd-scenarios §2.2,user-stories US-M1-01..06}.md` · `design/{architecture BC-1,domain BC-1,api-contracts §1}` · `decisions/ADR-001 axum` · `modules/manifest.md` · `sprints/sprint-02.md`
+> **Parents:** `requirements/{prd §M1,fsd §3.2,tdd BC-1,bdd-scenarios §2.2,user-stories US-M1-01..06}.md` · `design/{architecture BC-1,domain BC-1,api-contracts §1}` · [ADR-0003 axum](../../../../../docs/adr/ADR-0003-axum-vs-actix.md) · `modules/manifest.md` · `sprints/sprint-02.md`
 > **Crates:** `rustasea-router` · `rustasea-http` · `rustasea-macros` (#[route], #[middleware])
 > **Milestone:** M1 | **BR:** BR-02 | **FR:** FR-100..109 | **FSD:** FS-M1-01..06 | **BC:** BC-1 | **Stories:** US-M1-01..06
 

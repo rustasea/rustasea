@@ -1,10 +1,11 @@
 # RustaSea — BDD Scenarios (Gherkin)
 
-> **Status:** Draft — P2 Requirements Phase  
-> **Date:** 2026-09-07  
+> **Status:** Final — P6 Planning Docs Finalization (verified from P2)  
+> **Date:** 2026-09-07 · **Finalized:** 2026-09-07  
 > **Parents:** `brd.md` + `prd.md` (FR-000 … FR-612) + `fsd.md` (FS-M0-01 … FS-M6-07) + `user-stories.md` (US-M0-01 … US-M6-07)  
 > **Research base:** `docs/laravel-13-research.md` (Laravel 13.0.0 2026-03-17) + `README.md` §Laravel 13 Feature Map  
 > **Conventions:** Per `test-generation/rules/bdd-gherkin.md` — business language only (no "click", "API", "database", "endpoint", "button"), one behavior per scenario, `Background` for shared preconditions, `Scenario Outline` + `Examples` for data-driven cases. Tags `@milestone-{m0…m6}` + per-feature tags (`@vector-search`, etc.) match `prd.md` §8 traceability.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 > **Implementation hint:** Steps in comments map to Rust handlers but are written in business language. Shared step definitions are described in §1. Each Feature traces to ≥1 FR and ≥1 user story.
 

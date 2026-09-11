@@ -1,9 +1,10 @@
 # Sprint 06 — M5 DX, CLI & Testing
 
-> **Milestone:** M5 · **Window:** 2027-05-15 → 2027-08-31 · **Status:** In Progress — core surfaces landed (M5 generators, M6 broadcast/search/storage/ai), drivers/SDKs pending · Delivered ahead of 2027 window per 2026-09 automation (core at bdcb18c/63c9e66)
+> **Milestone:** M5 · **Window:** 2027-05-15 → 2027-08-31 · **Status:** In Progress — core surfaces landed (M5 generators, M6 broadcast/search/storage/ai), drivers/SDKs pending · Delivered ahead of 2027 window per 2026-09 automation (core landed 2026-09-09)
 > **Parents:** `../roadmap.md` · `prd.md` FR-500–FR-509 · `fsd.md` FS-M5-01–FS-M5-07 · `design/architecture.md`
 > **Depends On:** M0–M4 (Sprints 01–05)
 > **Crates:** `rustasea-cli`, `rustasea-macros` (generators + attrs), `rustasea-testing`
+> **Planning vs as-built:** Sprint scope/window is the plan. Live status: [`docs/milestones.md`](../../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 

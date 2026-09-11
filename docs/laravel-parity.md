@@ -49,7 +49,7 @@ It is the API-surface parity layer. It is intentionally **not** a 1:1 inventory 
 | `Illuminate\Contracts\Container` | `rustasea-foundation` (`Container`) | **Partial** | No separate contracts crate; contextual binding / `SelfBuilding` auto-wiring absent. |
 | `Illuminate\Contracts` (general) | per-crate traits (no `rustasea-contracts` crate) | **Partial** | Contracts are expressed as Rust traits co-located with each crate (ADR-driven), not a mirrored namespace tree. |
 | `Illuminate\Support` | `rustasea` facade re-exports; `rustasea-search::Str` | **Partial** | `Arrayable`/`Jsonable` map to `serde`; collections map to `Vec`/`Iterator`. |
-| `Illuminate\Support\Facades` | — | **N-A** | ADR-005: no global facades; managers live in `AppState` and flow through `axum::extract::State`. |
+| `Illuminate\Support\Facades` | — | **N-A** | ADR-0007: no global facades; managers live in `AppState` and flow through `axum::extract::State`. |
 | `Illuminate\Config` | `rustasea-config` (`ConfigLoader`) | **Partial** | TOML + env overlay real; only `config/app` is auto-loaded today. |
 | `Illuminate\Console` | `rustasea-cli` (`Artisan`, `Command`, `CommandRegistry`) | **Adopted** | `cargo artisan` registry + generators are real. |
 | `Illuminate\Console\Scheduling` | `rustasea-schedule` (`Schedule`, `Scheduler`, `ScheduleCommand`) | **Partial** | Pause/resume + ticks real; cron-cache mutexes / background tasks absent. |

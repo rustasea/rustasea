@@ -1,6 +1,7 @@
 # RustaSea — Project Brief
 
 > A Rust framework with Laravel ergonomics — expressive syntax, convention over configuration, and Rust-grade safety and performance.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ## Vision
 
@@ -64,7 +65,7 @@ Teams that outgrew dynamic-language frameworks on performance, correctness, or c
 
 ## Status
 
-Discovery phase — no code. This brief is the S0 context for blueprint planning (idea-to-blueprint S1/S2).
+Discovery-phase snapshot (S0, 2026-09-07) — "no code" reflects authoring time; this brief is the S0 context for blueprint planning (idea-to-blueprint S1/S2). Live implementation status: [`docs/milestones.md`](../../../docs/milestones.md) (TASK-003).
 
 ---
 

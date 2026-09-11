@@ -72,7 +72,7 @@ Full detail, the generated directory tree, per-variant deltas, the request flow,
 
 ## Note — ADR-location consolidation (finding C5)
 
-This ADR lives under `docs/adr/` using the 4-digit convention established by `docs/adr/ADR-0001-jsonwebtoken-10-msrv-bump.md`. The repository currently carries a **dual ADR location**: `docs/adr/` (4-digit) and `.agents/documents/design/decisions/` (`ADR-001`…`ADR-006`, e.g. `ADR-001-axum-vs-actix.md`). That inconsistency is finding **C5** and is **tracked separately** — it is not resolved by this ADR. Until consolidation, new ADRs follow the `docs/adr/ADR-XXXX-*.md` convention.
+This ADR lives under `docs/adr/` using the 4-digit convention established by `docs/adr/ADR-0001-jsonwebtoken-10-msrv-bump.md`. The former **dual ADR location** (`docs/adr/` 4-digit vs `.agents/documents/design/decisions/` `ADR-001`…`ADR-006`) was finding **C5**; it is now **resolved** by TASK-005 — all ADRs live under `docs/adr/` and the legacy `ADR-001`…`ADR-006` are renumbered `ADR-0003`…`ADR-0008` (see `docs/adr/README.md`). New ADRs follow the `docs/adr/ADR-XXXX-*.md` convention.
 
 ## References
 

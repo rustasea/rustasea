@@ -5,6 +5,7 @@
 > **Parents:** `brd.md` (BR-01 … BR-09) + `prd.md` (FR-000 … FR-612, NFRs)  
 > **Research base:** `docs/laravel-13-research.md` (Laravel 13.0.0 + patches thru v13.30.1) + `README.md` §Laravel 13 Feature Map + Goravel v1.18 mapping  
 > **Milestone coverage:** M0 – M6. Each feature spec below lists inputs → processing → outputs → errors → NFR linkage → Laravel 13 trace → PRD FR tags.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 
@@ -492,11 +493,11 @@ Same as `brd.md` §4 + `prd.md` §1. Any out-of-scope item requires an ADR to pr
 | FS | PRD FRs | Architecture (crate / design doc) | Tests (BDD tag → QA artifacts) |
 |----|---------|-----------------------------------|--------------------------------|
 | FS-M0-01 | FR-000/003/008 | `rustasea-foundation`: `architecture.md §2-3` (BC-0, DAG, `Application::configure`) · `tdd.md BC-0` | `@foundation` · `application/testing/stubs/m0-foundation.stub.rs` + `test-plan.md` BC-0 |
-| FS-M0-02 | FR-002/006 | `rustasea-container` / `architecture.md §3` + `tdd.md BC-0` + `ADR-005 AppState` | `@container` · same M0 stub |
+| FS-M0-02 | FR-002/006 | `rustasea-foundation::Container` (part of foundation, not a separate crate; see the [canonical crate inventory](../application/modules/manifest.md#canonical-crate-inventory-source-of-truth)) / `architecture.md §3` + `tdd.md BC-0` + [ADR-0007 AppState](../../../docs/adr/ADR-0007-appstate-over-facades.md) | `@container` · same M0 stub |
 | FS-M0-03 | FR-001/007 | `rustasea-config` · `architecture.md §5` (layered config) | `@foundation` (layered config scenario) |
 | FS-M0-04 | FR-004 | `rustasea-foundation` Runner/Shutdown · `capacity.md §2 S-08` | `@foundation` graceful shutdown |
-| FS-M1-01..06 | FR-100..109 | `rustasea-router`/`rustasea-http`/`rustasea-macros` · `architecture.md BC-1` · `tdd.md BC-1` · `ADR-001 axum` · `api-contracts.md §1` | `@routing`, `@routing-validation`, `@observability-tooling`, `@http-client-process` · `contracts/route-list.schema.json` + snapshot |
-| FS-M2-01..06 | FR-200..210 | `rustasea-orm` · `architecture.md BC-2` · `tdd.md BC-2` · `database.md §2-5` · `ADR-002 sqlx/sea-orm` + `ADR-006 vector` | `@orm`, `@query-builder-additions`, `@upsert-delete`, `@collection-serialization`, `@vector-search` · `fixtures/vector-dim.json` + `m2-orm.stub.rs` |
+| FS-M1-01..06 | FR-100..109 | `rustasea-router`/`rustasea-http`/`rustasea-macros` · `architecture.md BC-1` · `tdd.md BC-1` · [ADR-0003 axum](../../../docs/adr/ADR-0003-axum-vs-actix.md) · `api-contracts.md §1` | `@routing`, `@routing-validation`, `@observability-tooling`, `@http-client-process` · `contracts/route-list.schema.json` + snapshot |
+| FS-M2-01..06 | FR-200..210 | `rustasea-orm` · `architecture.md BC-2` · `tdd.md BC-2` · `database.md §2-5` · [ADR-0004 sqlx/sea-orm](../../../docs/adr/ADR-0004-sqlx-vs-sea-orm.md) + [ADR-0008 vector](../../../docs/adr/ADR-0008-vector-feature-flag.md) | `@orm`, `@query-builder-additions`, `@upsert-delete`, `@collection-serialization`, `@vector-search` · `fixtures/vector-dim.json` + `m2-orm.stub.rs` |
 | FS-M3-01..06 | FR-300..311 | `rustasea-auth`/`rustasea-validation` · `architecture.md BC-3` · `tdd.md BC-3` · `api-contracts.md §2` · `fixtures/csrf-matrix.json` + `allowlist-corpus.json` + `jwt-claims.schema.json` | `@auth`, `@csrf-origin`, `@cache-session-hardening`, `@attributes`, `@throttle` |
 | FS-M4-01..05 | FR-400..410 | `rustasea-queue`/`rustasea-cache`/`rustasea-events`/`rustasea-schedule` · `architecture.md BC-4` · `tdd.md BC-4` · `database.md §2 (jobs/failed_jobs/cache)` · `api-contracts.md §3` · `capacity.md §3` · `contracts/job-payload.schema.json` | `@queue-routing`, `@queue`, `@cache-touch`, `@contracts-expansion`, `@schedule`, `@queue-metrics` + `job-payload` snapshot |
 | FS-M5-01..04 | FR-500..509 | `rustasea-cli`/`rustasea-testing` · `architecture.md BC-5` · `component-inventory.md` · `tdd.md BC-5` · `api-contracts.md §4` | `@cli`, `@generators`, `@testing` · full CLI matrix in `test-cases.md` |

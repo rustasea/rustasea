@@ -1,4 +1,4 @@
-# ADR-002 — ORM: sqlx Primary, sea-orm Optional
+# ADR-0004 — ORM: sqlx Primary, sea-orm Optional
 
 > **Status:** Accepted  
 > **Date:** 2026-09-07  

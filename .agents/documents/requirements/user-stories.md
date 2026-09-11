@@ -1,11 +1,12 @@
 # RustaSea — User Stories
 
-> **Status:** Draft — P2 Requirements Phase  
-> **Date:** 2026-09-07  
+> **Status:** Final — P6 Planning Docs Finalization (verified from P2)  
+> **Date:** 2026-09-07 · **Finalized:** 2026-09-07  
 > **Parents:** `brd.md` + `prd.md` (FR-000 … FR-612) + `fsd.md` (FS-M0-01 … FS-M6-07)  
 > **Research base:** `docs/laravel-13-research.md` (Laravel 13.0.0 2026-03-17) + `README.md`  
 > **Format:** `As a <role>, I want <goal> so that <benefit>.` — one role per story, ≥3 EARS Given/When/Then per story (happy + error + edge/NFR as `product-planning/rules/requirements.md` requires).  
 > **Coverage gate:** every milestone M0–M6 has ≥1 story; every Laravel 13 feature #1–#20 is traced.
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 

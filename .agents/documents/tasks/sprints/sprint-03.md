@@ -39,7 +39,7 @@ Fluent, type-safe database layer with migrations, seeders, factories, and initia
 
 ## 4. Dependencies
 
-- **Upstream:** S01 (M0) + S02 (M1) must be stable; `sqlx` primary vs `sea-orm` shim decision (ADR-002) finalized in this sprint's spike if not already — gates S03-T03.
+- **Upstream:** S01 (M0) + S02 (M1) must be stable; `sqlx` primary vs `sea-orm` shim decision ([ADR-0004](../../../../docs/adr/ADR-0004-sqlx-vs-sea-orm.md)) finalized in this sprint's spike if not already — gates S03-T03.
 - **Downstream:** Blocks S04 (M3 — auth needs `users` table), S05 (M4 — `jobs`/`failed_jobs`/`cache` tables), S07 (M6 full vector/search).
 
 ## 5. Deliverables
@@ -53,7 +53,7 @@ Fluent, type-safe database layer with migrations, seeders, factories, and initia
 - [ ] `User` model → `migrate` → `Factory::create(&user)` → `whereVectorSimilarTo` top-10 cosine → `serde` round-trip preserves eager relations — all green in `cargo test` (isolated via `sqlx::test`).
 - [ ] `chunkBy("id", 500)` over 10k rows without OOM; `paginate`/`cursor` correct.
 - [ ] `upsert` with empty `uniqueBy` throws; `migrate` re-run is no-op; `migrate:fresh` reversible.
-- [ ] R-01 resolved: `sqlx` primary committed, `sea-orm` shim behind flag; ADR-002 updated if needed.
+- [ ] R-01 resolved: `sqlx` primary committed, `sea-orm` shim behind flag; [ADR-0004](../../../../docs/adr/ADR-0004-sqlx-vs-sea-orm.md) updated if needed.
 - [ ] `cargo check -p rustasea-orm` does not pull `async-openai`; `cargo tree` audit green.
 
 ## 7. Risks

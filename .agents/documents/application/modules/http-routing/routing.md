@@ -134,7 +134,7 @@ CLI `route:list` human table columns: `METHOD | PATH | NAME | MIDDLEWARE`.
 | F-M1-RTE-05 | Tests | Todo | resource 7, group prefix, conflict, domain precedence |
 
 ## 11. Cross-References
-- Design: `architecture.md BC-1` · `domain.md BC-1` · `tdd.md BC-1` · `api-contracts.md §1` · ADR-001
+- Design: `architecture.md BC-1` · `domain.md BC-1` · `tdd.md BC-1` · `api-contracts.md §1` · [ADR-0003](../../../../../docs/adr/ADR-0003-axum-vs-actix.md)
 - API: [api-routing](../../api/http-routing/api-routing.md)
 - Tests: [testing/http-routing/test-routing.md](../../testing/http-routing/test-routing.md) · BDD `@routing`, `@routing-validation`, `@observability-tooling`
 - Fixtures: `testing/contracts/route-list.schema.json` + `__snapshots__/route-list.json.snap`

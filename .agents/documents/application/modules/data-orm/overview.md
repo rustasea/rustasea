@@ -1,7 +1,7 @@
 # Module: DataOrm (M2 — ORM & Database)
 
 > **Status:** P8 Final — 2026-09-07 | **Task:** TASK-013
-> **Parents:** `requirements/{prd §M2,fsd §3.3,tdd BC-2,bdd-scenarios §2.3,user-stories US-M2-01..06}.md` · `design/{architecture BC-2,domain BC-2,database §2,api-contracts §2}` · `decisions/ADR-002 sqlx/sea-orm, ADR-006 vector` · `modules/manifest.md` · `sprints/sprint-03.md`
+> **Parents:** `requirements/{prd §M2,fsd §3.3,tdd BC-2,bdd-scenarios §2.3,user-stories US-M2-01..06}.md` · `design/{architecture BC-2,domain BC-2,database §2,api-contracts §2}` · [ADR-0004 sqlx/sea-orm](../../../../../docs/adr/ADR-0004-sqlx-vs-sea-orm.md), [ADR-0008 vector](../../../../../docs/adr/ADR-0008-vector-feature-flag.md) · `modules/manifest.md` · `sprints/sprint-03.md`
 > **Crates:** `rustasea-orm` · `rustasea-macros` (`#[derive(Model)]`) · `pgvector` (feature-flag)
 > **Milestone:** M2 | **BR:** BR-03 | **FR:** FR-200..210 | **FSD:** FS-M2-01..06 | **BC:** BC-2 | **Stories:** US-M2-01..06
 
@@ -61,7 +61,7 @@ flowchart TB
 ```
 
 - `chunkBy` cursor-paginates (no OFFSET OOM). `upsert` requires non-empty `uniqueBy` or `UpsertError::EmptyUniqueBy` before any round-trip.
-- `pgvector` guarded by `vector` feature flag + `has_extension("vector")` in migration (ADR-006).
+- `pgvector` guarded by `vector` feature flag + `has_extension("vector")` in migration (ADR-0008).
 
 ## 4. Global Dependencies
 

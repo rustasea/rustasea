@@ -3,8 +3,9 @@
 > **Task:** TASK-014 | **Date:** 2026-09-07 | **Auditor:** executor
 > **Scope:** `.agents/documents/` entire tree + project root orphan scan
 > **Method:** `review-audit` skill — Blueprint Audit FSM A0→A5, 6 dimensions
-> **Parents:** `brd.md` · `prd.md` (FR-000–FR-612) · `fsd.md` (FS-M0-01–FS-M6-07) · `tdd.md` (BC-0–BC-6) · `architecture.md` · `domain.md` · `database.md` · `api-contracts.md` · `capacity.md` · `flows.md` · `design-system.md` · `component-inventory.md` · `decisions/ADR-00*.md` · `user-stories.md` · `bdd-scenarios.md` · `validation.md` · `test-plan.md` · `test-cases.md` · `qa-design.md` · `application/modules/manifest.md` · `application/testing/{README,contracts,fixtures,stubs}` · `tasks/{roadmap.md,sprints/*,allocation-audit.md}`
+> **Parents:** `brd.md` · `prd.md` (FR-000–FR-612) · `fsd.md` (FS-M0-01–FS-M6-07) · `tdd.md` (BC-0–BC-6) · `architecture.md` · `domain.md` · `database.md` · `api-contracts.md` · `capacity.md` · `flows.md` · `design-system.md` · `component-inventory.md` · [ADR index](../../../docs/adr/README.md) · `user-stories.md` · `bdd-scenarios.md` · `validation.md` · `test-plan.md` · `test-cases.md` · `qa-design.md` · `application/modules/manifest.md` · `application/testing/{README,contracts,fixtures,stubs}` · `tasks/{roadmap.md,sprints/*,allocation-audit.md}`
 > **P8 note:** Audit runs even if P8 not yet complete — gaps noted as findings with remediation.
+> **Planning vs as-built:** This is a point-in-time blueprint audit (P8A, 2026-09-07). Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 
@@ -27,7 +28,7 @@
 **Total `.agents/documents/**/*.md`:** 37 (excl. `application/testing` non-md) — breakdown:
 
 - `requirements/` 8: `brief.md`, `brd.md`, `prd.md`, `fsd.md`, `tdd.md`, `user-stories.md`, `bdd-scenarios.md`, `validation.md`
-- `design/` 8 + 6 ADRs: `architecture.md`, `domain.md`, `database.md`, `api-contracts.md`, `capacity.md`, `flows.md`, `design-system.md`, `component-inventory.md`, `decisions/ADR-001..006`
+- `design/` 8: `architecture.md`, `domain.md`, `database.md`, `api-contracts.md`, `capacity.md`, `flows.md`, `design-system.md`, `component-inventory.md`; the 6 audited ADRs are now `docs/adr/ADR-0003`–`ADR-0008` (repository-root-relative).
 - `testing/` 3: `test-plan.md`, `test-cases.md`, `qa-design.md`
 - `tasks/` 9: `roadmap.md`, `sprints/manifest.md`, `sprints/sprint-01..07.md`, `sprints/allocation-audit.md`
 - `application/` 5+: `modules/manifest.md`, `testing/README.md`, `testing/contracts/*.schema.json`, `testing/fixtures/*.json`, `testing/stubs/*.stub.rs`
@@ -62,38 +63,40 @@
 
 | Check | Expected | Actual | Verdict |
 |---|---|---|---|
-| `requirements/brief.md` | required | ✅ 67 lines | PASS |
-| `requirements/brd.md` | required | ✅ 178 lines | PASS |
-| `requirements/prd.md` | required | ✅ 317 lines | PASS |
-| `requirements/fsd.md` | required | ✅ 509 lines | PASS |
-| `requirements/tdd.md` | required | ✅ 315 lines | PASS |
-| `requirements/user-stories.md` | required | ✅ 838 lines | PASS |
-| `requirements/bdd-scenarios.md` | required | ✅ 1145 lines | PASS |
-| `requirements/validation.md` | required | ✅ 299 lines | PASS |
-| `design/architecture.md` | required | ✅ 244 lines | PASS |
-| `design/domain.md` | required | ✅ 176 lines | PASS |
-| `design/database.md` | required | ✅ 331 lines | PASS |
-| `design/api-contracts.md` | required | ✅ 338 lines | PASS |
-| `design/capacity.md` | required | ✅ 140 lines | PASS |
-| `design/flows.md` | required | ✅ 491 lines | PASS |
-| `design/design-system.md` | required | ✅ 232 lines | PASS |
-| `design/component-inventory.md` | required | ✅ 131 lines | PASS |
-| `design/decisions/ADR-00*.md` (6) | required | ✅ 6 files | PASS |
-| `testing/test-plan.md` | required | ✅ 268 lines | PASS |
-| `testing/test-cases.md` | required | ✅ 272 lines | PASS |
-| `testing/qa-design.md` | required | ✅ 249 lines | PASS |
-| `tasks/roadmap.md` | required | ✅ 185 lines | PASS |
-| `tasks/sprints/manifest.md` | required | ✅ 73 lines | PASS |
+| `requirements/brief.md` | required | ✅ present | PASS |
+| `requirements/brd.md` | required | ✅ present | PASS |
+| `requirements/prd.md` | required | ✅ present | PASS |
+| `requirements/fsd.md` | required | ✅ present | PASS |
+| `requirements/tdd.md` | required | ✅ present | PASS |
+| `requirements/user-stories.md` | required | ✅ present | PASS |
+| `requirements/bdd-scenarios.md` | required | ✅ present | PASS |
+| `requirements/validation.md` | required | ✅ present | PASS |
+| `design/architecture.md` | required | ✅ present | PASS |
+| `design/domain.md` | required | ✅ present | PASS |
+| `design/database.md` | required | ✅ present | PASS |
+| `design/api-contracts.md` | required | ✅ present | PASS |
+| `design/capacity.md` | required | ✅ present | PASS |
+| `design/flows.md` | required | ✅ present | PASS |
+| `design/design-system.md` | required | ✅ present | PASS |
+| `design/component-inventory.md` | required | ✅ present | PASS |
+| `docs/adr/` — ADR-0003–ADR-0008 (repository-root-relative) | required | ✅ 6 audited decisions, now at the canonical location | PASS |
+| `testing/test-plan.md` | required | ✅ present | PASS |
+| `testing/test-cases.md` | required | ✅ present | PASS |
+| `testing/qa-design.md` | required | ✅ present | PASS |
+| `tasks/roadmap.md` | required | ✅ present | PASS |
+| `tasks/sprints/manifest.md` | required | ✅ present | PASS |
 | `tasks/sprints/sprint-01..07.md` (7) | required | ✅ 7 files | PASS |
-| `tasks/sprints/allocation-audit.md` | required | ✅ 180 lines | PASS |
-| `application/modules/manifest.md` | required (P6/P8) | ✅ 33 lines | PASS |
-| `application/testing/README.md` | required (P5/P8) | ✅ 53 lines | PASS |
+| `tasks/sprints/allocation-audit.md` | required | ✅ present | PASS |
+| `application/modules/manifest.md` | required (P6/P8) | ✅ present | PASS |
+| `application/testing/README.md` | required (P5/P8) | ✅ present | PASS |
 | `application/testing/contracts/*.schema.json` (5) | required | ✅ 5 schemas | PASS |
 | `application/testing/contracts/__snapshots__/*.snap` (3) | required | ✅ 3 snapshots | PASS |
 | `application/testing/fixtures/*.json` (4) | required | ✅ 4 fixtures | PASS |
 | `application/testing/stubs/*.stub.rs` (9) | required | ✅ 9 stubs | PASS |
 | `application/modules/<slug>/overview.md` ×7 | required (P8) | ❌ deferred | **WARN** |
 | `application/modules/<slug>/*.md` deep docs | required (P8) | ❌ deferred | **WARN** |
+
+**Note (C17, TASK-010):** Inline line counts were removed because they drift on every edit (each doc gained an archive note; `architecture.md` and `modules/manifest.md` also grew) and this table asserts path **existence**, not file size. Recompute on demand with `wc -l`; do not reintroduce volatile counts.
 
 **Gaps (D1):**
 
@@ -115,7 +118,7 @@
 | Milestone DAG across `brd.md` §4, `prd.md` §3, `fsd.md` §5, `tdd.md` §5, `architecture.md` §3, `domain.md` §5, `roadmap.md` §2 | ✅ No cycles; `M0 → M1/M2 → M3 → M4 → M5 → M6` consistent everywhere |
 | Tech stack (`tokio`, `axum`, `sqlx`, `deadpool`, `pgvector`, `testcontainers`, etc.) | ✅ Identical in `brd.md` §4, `brief.md`, `architecture.md` §3, `tdd.md` §2, `test-plan.md` §3 |
 | Laravel 13 feature #1–#20 mapping | ✅ 20/20 traced in `prd.md` §8, mirrored in `fsd.md` §6, `user-stories.md` Coverage Checklist, `bdd-scenarios.md` §3, `test-cases.md` Traceability Summary, `allocation-audit.md` §4 |
-| Crate names vs `component-inventory.md` vs `architecture.md` §3 vs `domain.md` BC table | ✅ 22 crates + `xtask` consistent; slug `rustasea-*` kebab-case |
+| Crate inventory (TASK-006 correction, 2026-09-11) | 21 crates under `crates/` + `xtask` (22 workspace packages total), verified against `Cargo.toml:2` and package manifests; see the [canonical crate inventory](modules/manifest.md#canonical-crate-inventory-source-of-truth). Earlier planning diagrams are not complete inventories. |
 | `vector` feature flag (M2 initial vs M6 full) | ✅ Split FR-207 (M2) / FR-602 (M6) documented in `prd.md` §8, `allocation-audit.md` Note A, `tdd.md` BC-2/BC-6 |
 | Error codes `E####` | ✅ `flows.md` §5.4 + `design-system.md` §4 consistent (20 codes) |
 | NFR targets (Per-01..04, Sec-01.., Rel-01..) | ✅ Same values in `prd.md` §4, `tdd.md` §4, `capacity.md` §2, `test-plan.md` §7 |
@@ -162,7 +165,7 @@
 
 | Check | Finding | Verdict |
 |---|---|---|
-| ADRs for major choices | ADR-001 `axum` over `actix-web` (benchmark + Tower alignment), ADR-002 `sqlx` primary + `sea-orm` shim, ADR-003 single `tokio` runtime, ADR-004 workspace crates per domain, ADR-005 `AppState: Arc` over facades, ADR-006 `vector` feature-flag — all `Accepted` with alternatives + consequences | PASS |
+| ADRs for major choices | ADR-0003 `axum` over `actix-web` (benchmark + Tower alignment), ADR-0004 `sqlx` primary + `sea-orm` shim, ADR-0005 single `tokio` runtime, ADR-0006 workspace crates per domain, ADR-0007 `AppState: Arc` over facades, ADR-0008 `vector` feature-flag — all `Accepted` with alternatives + consequences | PASS |
 | Dependency DAG realizability | Workspace DAG acyclic per `architecture.md` §3 proof sketch; M0 root → M6 feature-flagged leaf ensures no reverse edge; `xtask check-cycles` gate in `roadmap.md` §5 | PASS |
 | Estimates vs capacity | `prd.md` §7 + `roadmap.md` §6 + `sprints/allocation-audit.md` §5: 26–36 dev-weeks → 13–18 wks @2 devs, +20% contingency (30–40% M6); 7 sprints sized to estimates; no sprint overloaded | PASS |
 | Contracts realizable in Rust | `tdd.md` §3 trait signatures use stable Rust 1.88+ (`Arc`, `OnceLock`, `async_trait`, `serde`, `jsonwebtoken`, `pgvector`); no `unsafe`, no `any`, no `static mut`; proc-macros via `syn`/`quote` | PASS |

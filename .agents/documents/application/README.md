@@ -1,7 +1,7 @@
 # RustaSea — Application Documentation
 
 > **Status:** P8 Complete — 2026-09-07 | **Task:** TASK-013
-> **Parents:** `requirements/{brd,prd,fsd,tdd,bdd-scenarios,user-stories}.md` · `design/{architecture,domain,database,api-contracts,component-inventory,flows}.md` · `design/decisions/ADR-00*.md` · `tasks/sprints/{manifest,sprint-0*.md}`
+> **Parents:** `requirements/{brd,prd,fsd,tdd,bdd-scenarios,user-stories}.md` · `design/{architecture,domain,database,api-contracts,component-inventory,flows}.md` · [ADR index](../../../docs/adr/README.md) · `tasks/sprints/{manifest,sprint-0*.md}`
 > **Conformance:** `technical-documentation/rules/api-module.md` Part A (OpenAPI) + Part B (Module Deep Docs) · `test-planning/qa-design` · `test-generation/bdd-gherkin+api-contract-test` · `security-audit` · `non-functional-testing/chaos`
 
 ## 1. Purpose
@@ -37,11 +37,16 @@ This tree is the **application-level deep documentation** produced at P8. It tur
     └── {module}/overview.md + test-*.md  (one testing doc per module)
 ```
 
-## 3. Module Index (7 modules → 20 crates)
+<!-- Preserve inbound links to the former inventory heading. -->
+<a id="3-module-index-7-modules--20-crates"></a>
+
+## 3. Module Index (7 modules)
+
+The [canonical crate inventory](modules/manifest.md#canonical-crate-inventory-source-of-truth) lists **21 crates under `crates/` + `xtask` (22 workspace packages total)**; the module mappings below are a navigation aid.
 
 | # | Module slug | Crate(s) | Milestone | BR | Overview |
 |---|-------------|----------|-----------|----|----------|
-| 1 | `foundation` | `rustasea-foundation`, `rustasea-config`, `rustasea-container`, `rustasea` umbrella | M0 | BR-01 | [modules/foundation/overview.md](modules/foundation/overview.md) |
+| 1 | `foundation` | `rustasea-foundation` (includes `Container`), `rustasea-config`, `rustasea` umbrella | M0 | BR-01 | [modules/foundation/overview.md](modules/foundation/overview.md) |
 | 2 | `http-routing` | `rustasea-router`, `rustasea-http`, `rustasea-macros` (route/middleware) | M1 | BR-02 | [modules/http-routing/overview.md](modules/http-routing/overview.md) |
 | 3 | `data-orm` | `rustasea-orm`, `rustasea-macros` (Model) | M2 | BR-03 | [modules/data-orm/overview.md](modules/data-orm/overview.md) |
 | 4 | `identity-access` | `rustasea-auth`, `rustasea-validation` | M3 | BR-04 | [modules/identity-access/overview.md](modules/identity-access/overview.md) |
@@ -49,11 +54,11 @@ This tree is the **application-level deep documentation** produced at P8. It tur
 | 6 | `developer-platform` | `rustasea-cli`, `rustasea-macros`, `rustasea-testing`, `xtask` | M5 | BR-06 | [modules/developer-platform/overview.md](modules/developer-platform/overview.md) |
 | 7 | `intelligence-delivery` | `rustasea-broadcast`, `rustasea-storage`, `rustasea-search`, `rustasea-ai`, `rustasea-jsonapi` | M6 | BR-07 | [modules/intelligence-delivery/overview.md](modules/intelligence-delivery/overview.md) |
 
-**Crate coverage:** every workspace crate appears in exactly one module row; see [modules/manifest.md](modules/manifest.md) for the FR→FS→FR→Module→API→Test trace.
+**Crate coverage:** framework crates map to the seven modules; shared `rustasea-macros` appears in multiple rows, and `rustasea-app` is the runnable example outside those module rows. See [modules/manifest.md](modules/manifest.md) for the complete inventory and FR→FS→FR→Module→API→Test trace.
 
 ## 4. API Catalog
 
-All HTTP endpoints use `Content-Type: application/vnd.api+json` (JSON:API 1.1) unless noted. Auth is `Bearer JWT` (HS256 via `jsonwebtoken`). Pagination envelope: `data[] + meta{current_page,per_page,total,last_page} + links{first,prev,next,last}`.
+JSON:API resources use `Content-Type: application/vnd.api+json` (JSON:API 1.1); auth/validation endpoints use `Content-Type: application/json` unless a spec explicitly says otherwise. Auth is `Bearer JWT` (HS256 via `jsonwebtoken`). Pagination envelope: `data[] + meta{current_page,per_page,total,last_page} + links{first,prev,next,last}`.
 
 | Module | Spec | Endpoints / Contracts | Auth |
 |--------|------|-----------------------|------|

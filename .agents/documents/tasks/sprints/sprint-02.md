@@ -42,7 +42,7 @@ Expressive HTTP layer with routing, middleware, typed extractors, and introspect
 ## 4. Dependencies
 
 - **Upstream:** S01 (M0) — `Application`, `AppState`, config — must be tagged `v0.1.0` before close; S02 may start scaffolding in parallel once `rustasea-foundation` is stable.
-- **Downstream:** Blocks S03 (M2), S04 (M3), S07 (M6). `axum` choice locked by ADR-001.
+- **Downstream:** Blocks S03 (M2), S04 (M3), S07 (M6). `axum` choice locked by [ADR-0003](../../../../docs/adr/ADR-0003-axum-vs-actix.md).
 
 ## 5. Deliverables
 

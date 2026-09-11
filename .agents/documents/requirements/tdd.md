@@ -5,6 +5,7 @@
 > **Type:** Technical Design — implementation contract for M0–M6  
 > **Parents:** `brd.md` · `prd.md` (FR-000–FR-612, NFRs) · `fsd.md` (FS-M0-01–FS-M6-07) · `architecture.md` · `domain.md` · `database.md` · `api-contracts.md`  
 > **Audience:** Engineering, Security, Platform/SRE. This is the buildable handshake between product (BRD/PRD/FSD) and code (workspace crates).
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 
@@ -305,8 +306,8 @@ See `prd.md §7` (9 risks with L×I scoring; top-5 R-01 ORM duality, R-05 queue 
 | BC | TDD Contract | FSD FS | PRD FRs | BR | Architecture | Design | API Contract | Tests (BDD tag) | QA Artifacts |
 |----|--------------|--------|---------|----|--------------|--------|--------------|-----------------|--------------|
 | BC-0 | Application, Container, ServiceProvider, Runner, Shutdown | FS-M0-01..04 | FR-000..008 | BR-01 | architecture.md §2-3 (BC-0 DAG) | domain.md BC-0 | api-contracts.md §1 (M0) | @foundation, @container, @observability-tooling | application/testing/stubs/m0-foundation.stub.rs |
-| BC-1 | Route, RouteRegistry, Middleware, Extractors, Http client, HttpError | FS-M1-01..06 | FR-100..109 | BR-02 | BC-1 + ADR-001 | domain.md BC-1 | api-contracts.md §1 | @routing, @routing-validation, @observability-tooling, @http-client-process | contracts/route-list.schema.json + snapshot |
-| BC-2 | Model, QueryBuilder, vector, migrations, factories | FS-M2-01..06 | FR-200..210 | BR-03 | BC-2 + ADR-002 + ADR-006 | domain.md BC-2 + database.md | api-contracts.md §2 | @orm, @query-builder-additions, @upsert-delete, @collection-serialization, @vector-search | fixtures/vector-dim.json, allowlist, csrf-matrix |
+| BC-1 | Route, RouteRegistry, Middleware, Extractors, Http client, HttpError | FS-M1-01..06 | FR-100..109 | BR-02 | BC-1 + [ADR-0003](../../../docs/adr/ADR-0003-axum-vs-actix.md) | domain.md BC-1 | api-contracts.md §1 | @routing, @routing-validation, @observability-tooling, @http-client-process | contracts/route-list.schema.json + snapshot |
+| BC-2 | Model, QueryBuilder, vector, migrations, factories | FS-M2-01..06 | FR-200..210 | BR-03 | BC-2 + [ADR-0004](../../../docs/adr/ADR-0004-sqlx-vs-sea-orm.md) + [ADR-0008](../../../docs/adr/ADR-0008-vector-feature-flag.md) | domain.md BC-2 + database.md | api-contracts.md §2 | @orm, @query-builder-additions, @upsert-delete, @collection-serialization, @vector-search | fixtures/vector-dim.json, allowlist, csrf-matrix |
 | BC-3 | Guard, AuthManager, PreventRequestForgery, Validatable, ErrorBag | FS-M3-01..06 | FR-300..311 | BR-04 | BC-3 | domain.md BC-3 | api-contracts.md §2 | @auth, @csrf-origin, @cache-session-hardening, @attributes, @throttle | jwt-claims.schema.json, fixtures/csrf-matrix, allowlist-corpus |
 | BC-4 | Job, QueueRegistry, Store, Lock, Event, Dispatcher, Schedule | FS-M4-01..05 | FR-400..410 | BR-05 | BC-4 | domain.md BC-4 + database.md (jobs/cache) + capacity.md | api-contracts.md §3 | @queue-routing, @queue, @cache-touch, @contracts-expansion, @schedule, @queue-metrics | job-payload.schema.json, cross-nfr stub |
 | BC-5 | CLI, generators make:*, Artisan::call, TestCase | FS-M5-01..04 | FR-500..509 | BR-06 | BC-5 + component-inventory.md | domain.md BC-5 | api-contracts.md §4 | @cli, @generators, @testing | stubs/m5-cli-testing |

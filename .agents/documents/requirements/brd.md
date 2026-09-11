@@ -5,6 +5,7 @@
 > **Source research:** `docs/laravel-13-research.md` (Laravel 13.0.0, 2026-03-17) + `README.md` + Goravel v1.18 reference  
 > **Milestone coverage:** M0 – M6 (dependency-ordered, no circular deps)  
 > **Laravel 13 parity:** 20 headline features traced → requirements → milestones
+> **Planning vs as-built:** This document records planning intent, not implementation status. Live status: [`docs/milestones.md`](../../../docs/milestones.md) — the authoritative as-built status source (TASK-003).
 
 ---
 
@@ -174,7 +175,7 @@ Every BR → FR → Feature → Milestone linkage is catalogued in `prd.md` §8 
 | Engineering | Tech Lead | — |
 | Security | Security reviewer (for BR-04 / NFR-Sec) | — |
 
-**Change control:** Any BR scope change (add/remove milestone feature, MoSCoW reprioritization, M6 deferral) requires a `decisions/ADR-*.md` and `TASK-007` comment update.
+**Change control:** Any BR scope change (add/remove milestone feature, MoSCoW reprioritization, M6 deferral) requires a `docs/adr/ADR-*.md` (repository-root-relative) and `TASK-007` comment update.
 
 
 ---
