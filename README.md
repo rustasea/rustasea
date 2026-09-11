@@ -100,6 +100,8 @@ Laravel 13.0.0 shipped 2026-03-17 (PHP 8.3+, 20 headline features). Every featur
 
 Milestones are **dependency-ordered**: each builds only on predecessors. No circular dependencies.
 
+> **Status:** See [`docs/milestones.md`](docs/milestones.md) for the authoritative, evidence-backed done/partial/missing recap of M0–M6, and [`docs/laravel-parity.md`](docs/laravel-parity.md) for the Laravel 13.x API adoption mapping.
+
 ### M0 — Bootstrap & Core
 
 | Field | Detail |
@@ -150,7 +152,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 | **Success Criteria** | Dispatch a typed job to a routed queue and assert it executes; `Cache::touch` extends TTL without re-reading; `schedule:pause` halts the scheduler and emits `SchedulePaused`; event listener runs async when `Queue { enable: true }`. |
 | **Laravel 13 features** | #4 queue routing, #5 `Cache::touch`, #8 Cloud queue metrics, #10 schedule pause/resume, #16 event/queue contracts. |
 
-> **Status:** in-memory + sync drivers live; Redis/database drivers are in-process stubs until `deadpool-redis` + migrations land (tracked in S05-T03). `RedisStore::get`/`put` now return `Err(StoreUnavailable("redis not wired"))` instead of silent miss/no-op; `SyncDriver` + `MemoryStore` are the live paths.
+> **Status:** `MemoryStore` + `SyncDriver` + inline event dispatch are the live paths. Redis and database queue drivers are **not implemented** — `database`/`redis` exist only as connection-name constants (`crates/rustasea-queue/src/driver.rs:12-20`), and `RedisStore::get`/`put` return `Err(StoreUnavailable("redis not wired"))` (`crates/rustasea-cache/src/redis.rs:37`). Queue-backed listeners currently error, and `failed_jobs` is in-memory only. Tracked in `GAP-005` (P1).
 
 ### M5 — DX, CLI & Testing
 
@@ -172,7 +174,7 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 | **Success Criteria** | Define an `Agent` with a `Tool`, stream its response over WebSocket, and assert the stream includes structured output; `Storage` read falls through to fallback disk and `path()` never escapes root; `JsonApiResource` renders correct `Content-Type: application/vnd.api+json` with sparse fieldsets. |
 | **Laravel 13 features** | #1 AI SDK, #2 AI Agents, #3 JSON:API Resources, #6 semantic/vector search (full), #9 read-through filesystem, #17 mail/notification defaults, #18 SSE `eventStream`. |
 
-> **Status:** M6 surfaces landed as in-process stubs ahead of schedule (see Sprint 07). AI providers are deterministic in-process stubs; real SDK adapters (`async-openai` + per-provider crates) land in M6-full. Vector search is `MemoryVectorStore` stub; real `pgvector` via `sqlx` lands with DB. `Storage` read-through is in-process; `object_store` wiring is pending. Tracked for M6-full.
+> **Status:** Broadcast WS/SSE, `object_store`-backed storage, and JSON:API are implemented. `object_store` is **wired** via `ObjectDisk` (`crates/rustasea-storage/src/manager.rs:15-239`) — not pending. AI providers remain deterministic in-process stubs (`crates/rustasea-ai/src/adapters.rs:50`); real SDK adapters (`async-openai` + per-provider crates) land in M6-full. Vector search is `MemoryVectorStore` only (`crates/rustasea-search/src/lib.rs:15`); real `pgvector` lands with DB execution. Tracked in `GAP-014` (P3).
 
 ---
 
@@ -196,8 +198,8 @@ Milestones are **dependency-ordered**: each builds only on predecessors. No circ
 | Scheduling | `tokio-cron-scheduler` / `cron` | Cron parsing + `tokio` interval for schedule runner; `schedule:run` loop. |
 | Templating | `askama` or `minijinja` | `askama` for compile-time checked templates (preferred); `minijinja` if runtime templates needed. |
 | WebSocket / SSE | `tokio-tungstenite` + `axum::extract::ws` | Real-time broadcasting; `axum` native WS extractor + `tokio-tungstenite` for standalone. |
-| HTTP client | `reqwest` | Async HTTP client with middleware; wraps Laravel HTTP client semantics. |
-| Filesystem | `object_store` + `tokio::fs` (stub) | `object_store` for S3/GCS/Azure abstraction; `tokio::fs` for local; read-through is an in-process stub until `object_store` wiring lands in M6-full. |
+| HTTP client | `reqwest` | Async HTTP client with middleware; Laravel-style `throw`/`try_throw` callbacks and typed `HttpError` implemented (`crates/rustasea-http/src/lib.rs:286-342`). |
+| Filesystem | `object_store` + `tokio::fs` | `object_store` for S3/GCS/Azure abstraction, wrapped by `ObjectDisk` (`crates/rustasea-storage/src/manager.rs:162`); local disk via `tokio::fs`. Read-through across primary + fallback disks is implemented. |
 | Vector / AI | `pgvector` stub (`MemoryVectorStore`) + `async-openai` stubs | In-process stubs; real `pgvector` via `sqlx` and real SDK adapters (`async-openai` + per-provider crates) land in M6-full. |
 | Testing | `testcontainers` + `sqlx::test` + `cargo test` | Isolated DB/cache per test run; `sqlx::test` for fixture management. |
 | Lint / Format | `rustfmt` + `clippy` | Enforced in CI; generated code is `rustfmt`-clean. |
@@ -236,7 +238,9 @@ rustasea/                          # workspace root
 ├── tests/
 │   └── feature/                   # integration tests (TestCase harness)
 ├── docs/
-│   └── laravel-13-research.md
+│   ├── laravel-13-research.md
+│   ├── laravel-parity.md
+│   └── milestones.md
 ├── crates/
 │   ├── rustasea/                  # umbrella re-export crate (like `laravel/framework`)
 │   ├── rustasea-foundation/       # M0 — Application, Container, ServiceProvider
