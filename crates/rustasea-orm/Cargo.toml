@@ -14,8 +14,10 @@ default = ["sqlite"]
 postgres = ["sqlx/postgres"]
 mysql = ["sqlx/mysql"]
 sqlite = ["sqlx/sqlite"]
-# pgvector support (whereVectorSimilarTo, vector column type).
-vector = []
+# pgvector support (whereVectorSimilarTo, vector column type). Enables the
+# `pgvector` crate's `sqlx` integration so a `Vector` binds/decodes natively on
+# Postgres; SQLite/MySQL keep the portable text representation.
+vector = ["dep:pgvector", "pgvector/sqlx"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -28,6 +30,8 @@ async-trait = { workspace = true }
 # Runtime API only — the compile-time `query!` macros are intentionally not
 # enabled (CI has no `DATABASE_URL`). Driver features are added via `[features]`.
 sqlx = { workspace = true }
+# Native pgvector type + sqlx `Encode`/`Decode` for `Postgres` (feature `vector`).
+pgvector = { version = "0.4", optional = true, default-features = false }
 
 [dev-dependencies]
 rustasea-macros = { path = "../rustasea-macros" }

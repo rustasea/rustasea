@@ -6,7 +6,6 @@
 //! dialect-aware current timestamps. Only the `sqlx` runtime API is used — never
 //! the compile-time `query!` macros.
 
-use crate::builder::dialect;
 use crate::db::DbPool;
 use crate::error::{OrmError, Result};
 use crate::m2::UpsertBuilder;
@@ -34,7 +33,7 @@ pub trait ModelOps: Model + Sized {
             data.assign_id();
         }
         let id = data.primary_key();
-        let (sql, bindings) = build_insert::<Self>(&data)?;
+        let (sql, bindings) = build_insert::<Self>(&data, pool.dialect())?;
         pool.execute_bind(&sql, &bindings).await?;
         Ok(Self::refresh(pool, id).await?.unwrap_or(data))
     }
@@ -53,7 +52,7 @@ pub trait ModelOps: Model + Sized {
             data.assign_id();
         }
         let id = data.primary_key();
-        let (sql, bindings) = build_upsert::<Self>(&data)?;
+        let (sql, bindings) = build_upsert::<Self>(&data, pool.dialect())?;
         pool.execute_bind(&sql, &bindings).await?;
         Ok(Self::refresh(pool, id).await?.unwrap_or(data))
     }
@@ -67,7 +66,7 @@ pub trait ModelOps: Model + Sized {
         Self: Serialize + DeserializeOwned,
     {
         let id = data.primary_key();
-        let (sql, bindings) = build_update::<Self>(&data)?;
+        let (sql, bindings) = build_update::<Self>(&data, pool.dialect())?;
         let affected = pool.execute_bind(&sql, &bindings).await?;
         if affected == 0 {
             return Err(OrmError::NotFound);
@@ -92,11 +91,17 @@ pub trait ModelOps: Model + Sized {
     }
 
     /// Soft-delete the row by setting `deleted_at` to now.
+    ///
+    /// The timestamp expression follows the runtime pool dialect, not the
+    /// compile-time feature set: SQLite binds a fixed-width RFC3339 string
+    /// (`$2`) while Postgres/MySQL use the native `NOW()` function. This keeps
+    /// soft deletes working when `postgres` is enabled but an SQLite pool is in
+    /// use.
     async fn soft_delete(pool: &DbPool, id: Uuid) -> Result<bool> {
         let mut bindings = vec![Value::Uuid(id)];
-        let expr = match dialect() {
+        let expr = match pool.dialect() {
             "sqlite" => {
-                bindings.push(timestamp_value(Utc::now()));
+                bindings.push(timestamp_value(Utc::now(), "sqlite"));
                 "$2"
             }
             _ => "NOW()",
@@ -146,6 +151,7 @@ impl<T: Model> ModelOps for T {}
 /// current timestamp. Shared by [`build_insert`] and [`build_upsert`].
 fn insert_columns_and_bindings<T: Model + Serialize>(
     data: &T,
+    dialect: &str,
 ) -> Result<(Vec<String>, Vec<Value>)> {
     let columns = user_columns(data)?;
     let timestamps = T::insert_columns();
@@ -159,7 +165,7 @@ fn insert_columns_and_bindings<T: Model + Serialize>(
         bindings.push(value.clone());
     }
     if !timestamps.is_empty() {
-        let now = timestamp_value(Utc::now());
+        let now = timestamp_value(Utc::now(), dialect);
         for ts in &timestamps {
             names.push((*ts).to_string());
             bindings.push(now.clone());
@@ -169,9 +175,9 @@ fn insert_columns_and_bindings<T: Model + Serialize>(
 }
 
 /// Build the INSERT statement and bindings for a model instance.
-fn build_insert<T: Model + Serialize>(data: &T) -> Result<(String, Vec<Value>)> {
+fn build_insert<T: Model + Serialize>(data: &T, dialect: &str) -> Result<(String, Vec<Value>)> {
     let table = T::table_name();
-    let (names, bindings) = insert_columns_and_bindings(data)?;
+    let (names, bindings) = insert_columns_and_bindings(data, dialect)?;
     let placeholders: Vec<String> = (1..=bindings.len()).map(|i| format!("${i}")).collect();
     let sql = format!(
         "INSERT INTO {table} ({}) VALUES ({})",
@@ -188,9 +194,9 @@ fn build_insert<T: Model + Serialize>(data: &T) -> Result<(String, Vec<Value>)> 
 /// `INSERT … ON DUPLICATE KEY UPDATE …`. `created_at` is preserved on conflict
 /// (excluded from the update set) while `updated_at` is refreshed. Resolving
 /// insert-vs-update in one statement removes the previous check-then-act race.
-fn build_upsert<T: Model + Serialize>(data: &T) -> Result<(String, Vec<Value>)> {
+fn build_upsert<T: Model + Serialize>(data: &T, dialect: &str) -> Result<(String, Vec<Value>)> {
     let table = T::table_name();
-    let (names, bindings) = insert_columns_and_bindings(data)?;
+    let (names, bindings) = insert_columns_and_bindings(data, dialect)?;
 
     let mut builder = UpsertBuilder::table(table.clone()).unique_by(&["id"])?;
     for name in &names {
@@ -198,7 +204,7 @@ fn build_upsert<T: Model + Serialize>(data: &T) -> Result<(String, Vec<Value>)> 
     }
     builder = builder.exclude(&["created_at"]);
 
-    let sql = match dialect() {
+    let sql = match dialect {
         "mysql" => mysql_upsert_sql(&table, &names),
         _ => T::upsert_sql(&builder)?,
     };
@@ -226,8 +232,9 @@ fn mysql_upsert_sql(table: &str, columns: &[String]) -> String {
 
 /// Build the UPDATE statement and bindings for a model instance.
 ///
-/// The primary key is `$1`; `updated_at` is appended as a bound timestamp.
-fn build_update<T: Model + Serialize>(data: &T) -> Result<(String, Vec<Value>)> {
+/// The primary key is `$1`; `updated_at` is appended as a bound timestamp shaped
+/// for `dialect`.
+fn build_update<T: Model + Serialize>(data: &T, dialect: &str) -> Result<(String, Vec<Value>)> {
     let table = T::table_name();
     let columns = user_columns(data)?;
 
@@ -238,7 +245,7 @@ fn build_update<T: Model + Serialize>(data: &T) -> Result<(String, Vec<Value>)> 
         assignments.push(format!("{column} = ${}", bindings.len()));
     }
     if let Some(updated) = T::updated_column() {
-        bindings.push(timestamp_value(Utc::now()));
+        bindings.push(timestamp_value(Utc::now(), dialect));
         assignments.push(format!("{updated} = ${}", bindings.len()));
     }
 
@@ -305,13 +312,15 @@ fn json_to_value(column: &str, value: &serde_json::Value) -> Result<Value> {
     })
 }
 
-/// The current timestamp as a bind value for the active dialect.
+/// The current timestamp as a bind value for `dialect`.
 ///
 /// SQLite compares TEXT datetimes lexicographically, so the stored form is a
 /// fixed-width RFC3339 string; Postgres/MySQL receive a native `DateTime<Utc>`
-/// bound against their `timestamp`/`datetime` columns.
-fn timestamp_value(now: DateTime<Utc>) -> Value {
-    match dialect() {
+/// bound against their `timestamp`/`datetime` columns. The dialect is supplied
+/// by the runtime pool so the shape tracks the live driver, not the compiled
+/// feature set.
+fn timestamp_value(now: DateTime<Utc>, dialect: &str) -> Value {
+    match dialect {
         "sqlite" => Value::Text(now.to_rfc3339_opts(SecondsFormat::Micros, true)),
         _ => Value::Timestamp(now),
     }

@@ -201,9 +201,37 @@ impl QueryBuilder {
         Ok(self)
     }
 
-    /// Bind the embedding and push its distance ordering onto the builder.
+    /// Similarity clause that also projects the distance for scored reads.
+    ///
+    /// Emits `SELECT <id> AS id, (<col> <op> $n) AS distance … ORDER BY <col> <op>
+    /// $n ASC LIMIT k`, so callers (e.g. `PgVectorStore`) can read both the row
+    /// id and its distance from the result set. `id_column` must be a trusted
+    /// identifier — validate caller-supplied names before use.
     #[cfg(feature = "vector")]
-    fn push_distance_order(&mut self, column: &str, sim: &VectorSimilarity) {
+    pub fn where_vector_similar_to_scored(
+        mut self,
+        column: &str,
+        embedding: &[f32],
+        limit: u32,
+        metric: crate::vector::VectorMetric,
+        id_column: &str,
+    ) -> Result<Self> {
+        let sim = VectorSimilarity::new(embedding.to_vec())?.with_metric(metric);
+        let idx = self.push_distance_order(column, &sim);
+        self.limit = Some(limit as u64);
+        self.columns = vec![
+            format!("{id_column} AS id"),
+            format!("({column} {} ${idx}) AS distance", sim.metric.operator()),
+        ];
+        Ok(self)
+    }
+
+    /// Bind the embedding and push its distance ordering onto the builder.
+    ///
+    /// Returns the positional index of the bound embedding so callers can reuse
+    /// it in a projection (see [`QueryBuilder::where_vector_similar_to_scored`]).
+    #[cfg(feature = "vector")]
+    fn push_distance_order(&mut self, column: &str, sim: &VectorSimilarity) -> usize {
         self.bindings.push(Value::Vector(sim.embedding.clone()));
         let idx = self.bindings.len();
         let op = sim.metric.operator();
@@ -217,6 +245,7 @@ impl QueryBuilder {
             column: format!("{column} {op} ${idx}"),
             direction: OrderDirection::Asc,
         });
+        idx
     }
 }
 

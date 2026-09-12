@@ -67,6 +67,20 @@ fn where_vector_similar_to_orders_cosine() {
     assert!(!where_clause.contains("embedding <=> $1"), "{sql}");
 }
 
+/// Verifies the scored clause projects `id` + `distance` and orders by distance.
+#[test]
+fn where_vector_similar_to_scored_projects_distance() {
+    let sql = QueryBuilder::table("products")
+        .where_vector_similar_to_scored("embedding", &[0.1, 0.2], 5, VectorMetric::Cosine, "id")
+        .unwrap()
+        .to_sql()
+        .unwrap();
+    assert!(sql.contains("id AS id"), "{sql}");
+    assert!(sql.contains("(embedding <=> $1) AS distance"), "{sql}");
+    assert!(sql.contains("ORDER BY embedding <=> $1 ASC"), "{sql}");
+    assert!(sql.contains("LIMIT 5"), "{sql}");
+}
+
 /// Verifies `order_by_distance` supports L2 and inner product operators.
 #[test]
 fn order_by_distance_supports_l2_and_ip() {
@@ -177,15 +191,17 @@ async fn where_vector_similar_to_returns_ordered_top_k() {
     .await
     .unwrap();
     for (id, embedding) in [
-        (1, "[1.0,0.0,0.0]"),
-        (2, "[0.0,1.0,0.0]"),
-        (3, "[0.0,0.0,1.0]"),
+        (1, vec![1.0_f32, 0.0, 0.0]),
+        (2, vec![0.0, 1.0, 0.0]),
+        (3, vec![0.0, 0.0, 1.0]),
     ] {
+        // Native binding: `Value::Vector` encodes as the `vector` type — no
+        // text literal and no `$2::vector` cast.
         pool.execute_bind(
-            "INSERT INTO vec_items (id, embedding) VALUES ($1, $2::vector)",
+            "INSERT INTO vec_items (id, embedding) VALUES ($1, $2)",
             &[
                 rustasea_orm::Value::Int(id),
-                rustasea_orm::Value::Text(embedding.to_string()),
+                rustasea_orm::Value::Vector(embedding),
             ],
         )
         .await
@@ -194,6 +210,7 @@ async fn where_vector_similar_to_returns_ordered_top_k() {
 
     let rows = QueryBuilder::table("vec_items")
         .where_vector_similar_to("embedding", &[1.0, 0.0, 0.0], 2)
+        .unwrap()
         .get(&pool)
         .await
         .unwrap();

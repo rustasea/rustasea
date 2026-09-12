@@ -15,8 +15,8 @@ use sqlx::{Column, ColumnIndex, Database, Decode, Encode, Row, Type, TypeInfo};
 ///
 /// `Null` binds as a typed `NULL`; JSON, UUID and timestamps bind natively (the
 /// `json`/`uuid`/`chrono` sqlx features are enabled). A vector value binds as its
-/// pgvector text literal (`[a,b,c]`) — callers cast it (`$n::vector`) on the
-/// Postgres side.
+/// pgvector text literal (`[a,b,c]`) on the generic path — Postgres callers
+/// should use [`bind_all_pg`] for native `vector` binding (no manual cast).
 pub fn bind_all<'q, DB>(
     mut query: Query<'q, DB, <DB as Database>::Arguments<'q>>,
     values: &[Value],
@@ -40,7 +40,8 @@ where
 
 /// Bind a single [`Value`] onto a `sqlx` query.
 ///
-/// A vector value has no native `sqlx` encoding, so it is bound as text.
+/// A vector value has no native encoding on the generic path, so it is bound as
+/// text; use [`bind_all_pg`] for native Postgres `vector` binding.
 pub fn bind_one<'q, DB>(
     query: Query<'q, DB, <DB as Database>::Arguments<'q>>,
     value: Value,
@@ -68,6 +69,26 @@ where
         #[cfg(feature = "vector")]
         Value::Vector(v) => query.bind(crate::vector::to_vector_literal(&v)),
     }
+}
+
+/// Bind [`Value`]s onto a Postgres query, encoding vectors natively.
+///
+/// Unlike [`bind_all`], a [`Value::Vector`] is encoded with the `pgvector` crate
+/// so the driver sends the `vector` type directly — no text literal and no
+/// caller-supplied `$n::vector` cast. All other values fall through to
+/// [`bind_one`].
+#[cfg(all(feature = "vector", feature = "postgres"))]
+pub fn bind_all_pg<'q>(
+    mut query: sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments>,
+    values: &[Value],
+) -> sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments> {
+    for value in values {
+        query = match value {
+            Value::Vector(vector) => query.bind(pgvector::Vector::from(vector.clone())),
+            other => bind_one::<sqlx::Postgres>(query, other.clone()),
+        };
+    }
+    query
 }
 
 /// Decode one column of a row into a concrete type by index or name.
@@ -187,9 +208,39 @@ where
     serde_json::Value::Null
 }
 
-/// Whether a [`Value`] can be bound natively without a dialect cast.
+/// Convert a Postgres row into a JSON object, decoding `vector` columns as arrays.
 ///
-/// Vector values are bound as text and therefore require a `$n::vector` cast.
+/// The generic [`row_to_json`] cannot name `pgvector::Vector` (its `sqlx` impls
+/// exist only for `Postgres`), so Postgres rows use this concrete variant which
+/// decodes a `vector` column to a JSON array of numbers. Every other column
+/// falls back to [`decode_column_json`].
+#[cfg(feature = "postgres")]
+pub fn row_to_json_postgres(row: &sqlx::postgres::PgRow) -> Result<serde_json::Value> {
+    let mut object = serde_json::Map::new();
+    for (index, column) in row.columns().iter().enumerate() {
+        #[cfg(feature = "vector")]
+        if column.type_info().name().eq_ignore_ascii_case("vector") {
+            if let Ok(vector) = row.try_get::<pgvector::Vector, _>(index) {
+                let values: Vec<serde_json::Value> = vector
+                    .to_vec()
+                    .into_iter()
+                    .map(serde_json::Value::from)
+                    .collect();
+                object.insert(column.name().to_string(), serde_json::Value::Array(values));
+                continue;
+            }
+        }
+        let value = decode_column_json::<sqlx::Postgres>(row, index, column.type_info().name());
+        object.insert(column.name().to_string(), value);
+    }
+    Ok(serde_json::Value::Object(object))
+}
+
+/// Whether a [`Value`] can be bound natively on the generic path.
+///
+/// Vector values are bound as text there and require a `$n::vector` cast; the
+/// Postgres executor instead routes through [`bind_all_pg`], which binds vectors
+/// natively.
 pub fn is_natively_bindable(value: &Value) -> bool {
     match value {
         #[cfg(feature = "vector")]

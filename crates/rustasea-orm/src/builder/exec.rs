@@ -92,7 +92,7 @@ impl<'a> Executor<'a> {
     fn reborrow(&mut self) -> Executor<'_> {
         match self {
             Executor::Pool(pool) => Executor::Pool(pool),
-            Executor::Transaction(tx) => Executor::Transaction(&mut **tx),
+            Executor::Transaction(tx) => Executor::Transaction(tx),
         }
     }
 }

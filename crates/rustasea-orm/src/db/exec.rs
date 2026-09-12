@@ -11,6 +11,8 @@ use crate::error::OrmError;
 use crate::error::Result;
 use crate::tx::DbTransaction;
 use crate::types::Value;
+#[cfg(feature = "postgres")]
+use crate::value::row_to_json_postgres;
 #[cfg(any(feature = "sqlite", feature = "postgres", feature = "mysql"))]
 use crate::value::{bind_all, row_to_json};
 
@@ -252,6 +254,25 @@ async fn execute_sqlite_script_tx(
     Ok(())
 }
 
+/// Bind values onto a Postgres query, encoding vectors natively when available.
+///
+/// With the `vector` feature the `pgvector` crate encodes a [`Value::Vector`]
+/// as the `vector` type; without it the generic text path is used.
+#[cfg(feature = "postgres")]
+fn bind_postgres<'q>(
+    query: sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments>,
+    bindings: &[Value],
+) -> sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments> {
+    #[cfg(feature = "vector")]
+    {
+        crate::value::bind_all_pg(query, bindings)
+    }
+    #[cfg(not(feature = "vector"))]
+    {
+        bind_all::<sqlx::Postgres>(query, bindings)
+    }
+}
+
 /// Fetch rows from an open Postgres transaction as JSON objects.
 #[cfg(feature = "postgres")]
 async fn fetch_json_postgres_tx(
@@ -259,9 +280,9 @@ async fn fetch_json_postgres_tx(
     sql: &str,
     bindings: &[Value],
 ) -> Result<Vec<serde_json::Value>> {
-    let query = bind_all::<sqlx::Postgres>(sqlx::query(sql), bindings);
+    let query = bind_postgres(sqlx::query(sql), bindings);
     let rows = query.fetch_all(&mut **tx).await?;
-    rows.iter().map(row_to_json::<sqlx::Postgres>).collect()
+    rows.iter().map(row_to_json_postgres).collect()
 }
 
 /// Execute a statement against a Postgres transaction, returning affected rows.
@@ -271,7 +292,7 @@ async fn execute_postgres_tx(
     sql: &str,
     bindings: &[Value],
 ) -> Result<u64> {
-    let query = bind_all::<sqlx::Postgres>(sqlx::query(sql), bindings);
+    let query = bind_postgres(sqlx::query(sql), bindings);
     Ok(query.execute(&mut **tx).await?.rows_affected())
 }
 
@@ -346,15 +367,15 @@ async fn fetch_json_postgres(
     sql: &str,
     bindings: &[Value],
 ) -> Result<Vec<serde_json::Value>> {
-    let query = bind_all::<sqlx::Postgres>(sqlx::query(sql), bindings);
+    let query = bind_postgres(sqlx::query(sql), bindings);
     let rows = query.fetch_all(pool).await?;
-    rows.iter().map(row_to_json::<sqlx::Postgres>).collect()
+    rows.iter().map(row_to_json_postgres).collect()
 }
 
 /// Execute a statement against a Postgres pool, returning affected rows.
 #[cfg(feature = "postgres")]
 async fn execute_postgres(pool: &sqlx::PgPool, sql: &str, bindings: &[Value]) -> Result<u64> {
-    let query = bind_all::<sqlx::Postgres>(sqlx::query(sql), bindings);
+    let query = bind_postgres(sqlx::query(sql), bindings);
     Ok(query.execute(pool).await?.rows_affected())
 }
 
