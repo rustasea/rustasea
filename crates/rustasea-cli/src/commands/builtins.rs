@@ -145,6 +145,20 @@ make_command!(
     "make:controller {name} [--resource] [--force]"
 );
 make_command!(
+    MakeMiddleware,
+    Middleware,
+    "make:middleware",
+    "Make a new HTTP middleware",
+    "make:middleware {name} [--force]"
+);
+make_command!(
+    MakeRequest,
+    Request,
+    "make:request",
+    "Make a new form request",
+    "make:request {name} [--force]"
+);
+make_command!(
     MakeModel,
     Model,
     "make:model",

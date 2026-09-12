@@ -19,6 +19,10 @@ pub mod kinds;
 pub enum Kind {
     /// `make:controller` — HTTP controller.
     Controller,
+    /// `make:middleware` — axum HTTP middleware.
+    Middleware,
+    /// `make:request` — validated form request.
+    Request,
     /// `make:model` — ORM model (+ optional migration via flag).
     Model,
     /// `make:provider` — service provider.
@@ -50,6 +54,8 @@ impl Kind {
     pub fn parse(suffix: &str) -> Option<Self> {
         Some(match suffix {
             "controller" => Kind::Controller,
+            "middleware" => Kind::Middleware,
+            "request" => Kind::Request,
             "model" => Kind::Model,
             "provider" => Kind::Provider,
             "command" => Kind::Command,
@@ -70,6 +76,8 @@ impl Kind {
     pub fn command(self) -> &'static str {
         match self {
             Kind::Controller => "make:controller",
+            Kind::Middleware => "make:middleware",
+            Kind::Request => "make:request",
             Kind::Model => "make:model",
             Kind::Provider => "make:provider",
             Kind::Command => "make:command",
@@ -106,6 +114,8 @@ pub struct MakeOptions {
 pub fn generate(kind: Kind, root: &Path, opts: &MakeOptions) -> CliResult<Vec<Generated>> {
     let kind_label = match kind {
         Kind::Controller => "controller",
+        Kind::Middleware => "middleware",
+        Kind::Request => "request",
         Kind::Model => "model",
         Kind::Provider => "provider",
         Kind::Command => "command",
@@ -137,6 +147,12 @@ pub fn generate(kind: Kind, root: &Path, opts: &MakeOptions) -> CliResult<Vec<Ge
     match kind {
         Kind::Controller => {
             written.push(kinds::controller::scaffold(root, opts)?);
+        }
+        Kind::Middleware => {
+            written.push(kinds::middleware::scaffold(root, opts)?);
+        }
+        Kind::Request => {
+            written.push(kinds::request::scaffold(root, opts)?);
         }
         Kind::Model => {
             written.push(kinds::model::scaffold(root, opts)?);
@@ -185,6 +201,8 @@ pub fn generate(kind: Kind, root: &Path, opts: &MakeOptions) -> CliResult<Vec<Ge
 pub fn kind_help(kind: Kind) -> &'static str {
     match kind {
         Kind::Controller => "Make a new controller class",
+        Kind::Middleware => "Make a new HTTP middleware",
+        Kind::Request => "Make a new form request",
         Kind::Model => "Make a new ORM model",
         Kind::Provider => "Make a new service provider",
         Kind::Command => "Make a new console command",
@@ -204,6 +222,8 @@ pub fn kind_help(kind: Kind) -> &'static str {
 pub fn kind_usage(kind: Kind) -> &'static str {
     match kind {
         Kind::Controller => "make:controller {name} [--resource]",
+        Kind::Middleware => "make:middleware {name} [--force]",
+        Kind::Request => "make:request {name} [--force]",
         Kind::Model => "make:model {name} [-m] [--force]",
         Kind::Migration => "make:migration {name} [--force]",
         Kind::Provider

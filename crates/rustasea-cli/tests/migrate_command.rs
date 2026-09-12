@@ -7,6 +7,9 @@
 use rustasea_cli::Artisan;
 use rustasea_orm::{register_migration, register_seeder, Migration, Result as OrmResult, Seeder};
 
+/// Serializes tests that mutate process-global environment variables.
+static ENV_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 /// Creates the `users` table.
 struct CreateUsers;
 
@@ -52,6 +55,11 @@ async fn migrate_command_executes_against_pool() {
             .unwrap_or_default()
     ));
     let url = format!("sqlite://{}?mode=rwc", db_path.display());
+    // Pin this test to its own SQLite file. `database_url()` consults the
+    // environment before any workspace `config/database.toml`, so the run is
+    // deterministic regardless of the test working directory.
+    let _env = ENV_LOCK.lock().await;
+    std::env::remove_var("DATABASE__URL");
     std::env::set_var("DATABASE_URL", &url);
 
     register_migration(CreateUsers);
@@ -100,4 +108,5 @@ async fn migrate_command_executes_against_pool() {
     );
 
     let _ = std::fs::remove_file(&db_path);
+    std::env::remove_var("DATABASE_URL");
 }

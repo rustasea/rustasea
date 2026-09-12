@@ -15,6 +15,8 @@ use crate::registry::CommandRegistry;
 pub fn register_all_into(reg: &mut CommandRegistry) {
     reg.register(builtins::List);
     reg.register(builtins::MakeController);
+    reg.register(builtins::MakeMiddleware);
+    reg.register(builtins::MakeRequest);
     reg.register(builtins::MakeModel);
     reg.register(builtins::MakeProvider);
     reg.register(builtins::MakeCommand);
@@ -38,6 +40,7 @@ pub fn register_all_into(reg: &mut CommandRegistry) {
     reg.register(ops::ScheduleRun);
     reg.register(ops::Migrate);
     reg.register(ops::MigrateFresh);
+    reg.register(ops::MigrateRollback);
 }
 
 /// Register every built-in command into the global process registry.
