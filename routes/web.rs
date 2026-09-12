@@ -4,16 +4,23 @@
 //! currently a registration DSL whose `into_axum_router` wires stub handlers;
 //! until controller binding ships, the app keeps a single explicit handler
 //! map here that mirrors the DSL route table registered in `src/main.rs`.
+//!
+//! The welcome page is rendered through `rustasea::view::MinijinjaEngine`
+//! (the `view-runtime-templates` feature) rather than a raw `include_str!`, so
+//! `resources/views/` can be edited without recompiling the binary.
 
 use std::sync::Arc;
 
 use axum::extract::State;
-use axum::response::{Html, Response};
-
+use axum::response::{IntoResponse, Response};
 use rustasea::http::AppState;
+use rustasea::view::{MinijinjaEngine, ViewEngine};
+use serde_json::json;
 
-/// Welcome page markup, rendered from `resources/views/welcome.html`.
-const WELCOME_HTML: &str = include_str!("../resources/views/welcome.html");
+/// Runtime template engine rooted at `resources/views/`.
+fn engine() -> MinijinjaEngine {
+    MinijinjaEngine::from_default_root()
+}
 
 /// Build the axum router serving the app routes.
 pub fn router(state: Arc<AppState>) -> axum::Router {
@@ -24,9 +31,12 @@ pub fn router(state: Arc<AppState>) -> axum::Router {
         .with_state(state)
 }
 
-/// GET / and /welcome — serve the Laravel-style welcome page.
-async fn index(State(_state): State<Arc<AppState>>) -> Html<&'static str> {
-    Html(WELCOME_HTML)
+/// GET / and /welcome — render the Laravel-style welcome page with data.
+async fn index(State(_state): State<Arc<AppState>>) -> Response {
+    match engine().render_value("welcome.html", &json!({ "app": "rustasea" })) {
+        Ok(view) => view.into_response(),
+        Err(error) => error.into_response(),
+    }
 }
 
 /// Health check response body.

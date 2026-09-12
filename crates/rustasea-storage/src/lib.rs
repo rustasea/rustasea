@@ -6,12 +6,17 @@
 
 pub mod disk;
 pub mod error;
+pub mod facade;
 pub mod manager;
 pub mod path;
 pub mod storage;
 
 pub use crate::disk::{DiskKind, LocalDisk, ReadThrough, ReadThroughDisk};
 pub use crate::error::{PathError, Result, StorageError};
+pub use crate::facade::{
+    AzureDiskConfig, DiskDefinition, GcsDiskConfig, LocalDiskConfig, S3DiskConfig,
+    StorageFacadeConfig,
+};
 pub use crate::manager::{ManagedDisk, ObjectDisk, StorageConfig, StorageManager};
 pub use crate::path::{confine_path, PathOutcome};
 pub use crate::storage::Storage;

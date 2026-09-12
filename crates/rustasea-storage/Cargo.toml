@@ -12,3 +12,11 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
+toml = "0.8"
+
+[features]
+default = []
+# Cloud disk drivers; each forwards to the matching `object_store` backend.
+aws = ["object_store/aws"]
+gcp = ["object_store/gcp"]
+azure = ["object_store/azure"]

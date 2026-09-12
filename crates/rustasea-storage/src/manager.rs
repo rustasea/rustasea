@@ -43,6 +43,7 @@ pub struct StorageConfig {
     /// Fallback disk name (served on primary miss).
     pub fallback: String,
     /// Whether fallback hits are promoted to the primary.
+    #[serde(default)]
     pub copy_back: bool,
 }
 
@@ -75,6 +76,14 @@ impl StorageManager {
             disks: HashMap::new(),
             config,
         }
+    }
+
+    /// Create a manager from pre-built disks and a read-through configuration.
+    pub(crate) fn from_parts(
+        disks: HashMap<String, Arc<dyn ManagedDisk>>,
+        config: StorageConfig,
+    ) -> Self {
+        Self { disks, config }
     }
 
     /// Register a named disk (builder style).

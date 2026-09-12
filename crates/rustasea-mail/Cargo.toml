@@ -1,0 +1,26 @@
+[package]
+name = "rustasea-mail"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea mail — Mailable/Mailer contracts, transports, and queued notifications"
+
+[features]
+default = []
+# SMTP transport backed by `lettre` (TLS via rustls); opt-in to keep the core
+# build free of the transport stack.
+smtp = ["dep:lettre"]
+
+[dependencies]
+async-trait = { workspace = true }
+chrono = { workspace = true }
+rustasea-queue = { path = "../rustasea-queue" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+uuid = { workspace = true }
+lettre = { version = "0.11.23", default-features = false, features = ["builder", "smtp-transport", "tokio1-rustls-tls"], optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }

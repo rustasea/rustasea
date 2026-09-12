@@ -34,6 +34,10 @@ pub enum StorageError {
     /// The configured store is unreachable or rejected the operation.
     #[error("store unavailable: {0}")]
     StoreUnavailable(String),
+
+    /// The storage configuration is malformed or references a missing disk.
+    #[error("invalid storage config: {0}")]
+    Config(String),
 }
 
 /// Error produced by [`crate::confine_path`] on a traversal attempt.

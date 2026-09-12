@@ -1,0 +1,49 @@
+# RustaSea storage configuration.
+#
+# Parsed by `rustasea-storage`'s config facade (`StorageManager::from_toml_file`).
+# `default` selects the disk used when no `read_through` pair is configured;
+# `read_through` mirrors the FS-M6-02 `{ primary, fallback, copy_back }`
+# contract (read-through with optional copy-back to the primary).
+#
+# Cloud drivers are opt-in: enable the matching crate feature
+# (`rustasea-storage/{aws,gcp,azure}`) before referencing `s3`, `gcs`, or
+# `azure` disks.
+
+[storage]
+default = "local"
+
+# Read-through routing (uncomment once the cloud disk below is enabled):
+# [storage.read_through]
+# primary = "s3"
+# fallback = "local"
+# copy_back = true
+
+[storage.disks.local]
+driver = "local"
+root = "storage/app"
+
+[storage.disks.archive]
+driver = "local"
+root = "storage/archive"
+
+# --- Cloud disk examples (enable the matching feature to use) ---------------
+#
+# [storage.disks.s3]
+# driver = "s3"
+# bucket = "rustasea"
+# region = "us-east-1"
+# # Prefer the environment / a secret manager over inline credentials.
+# # access_key_id = "..."
+# # secret_access_key = "..."
+# # endpoint = "http://localhost:9000"   # S3-compatible (MinIO, R2)
+#
+# [storage.disks.gcs]
+# driver = "gcs"
+# bucket = "rustasea"
+# # service_account_path = "/etc/rustasea/gcs-service-account.json"
+#
+# [storage.disks.azure]
+# driver = "azure"
+# account = "rustasea"
+# container = "app"
+# # access_key = "..."
