@@ -82,49 +82,16 @@ pub trait TestCase: Send {
     }
 }
 
-/// Track container names spawned by this test binary for shared teardown.
-pub(crate) fn register_container(name: String) {
-    let registry = CONTAINERS.get_or_init(|| std::sync::Mutex::new(Vec::new()));
-    registry
-        .lock()
-        .unwrap_or_else(|p| p.into_inner())
-        .push(name);
-}
-
-/// Process-wide container registry (`rustasea-test-*` names).
-static CONTAINERS: OnceLock<std::sync::Mutex<Vec<String>>> = OnceLock::new();
-
 /// Kill every container this binary spawned (teardown hook).
 ///
-/// Best-effort: each container is stopped/removed individually and failures
-/// are logged to stderr rather than aborting the remaining cleanup. Call from
-/// a `#[tokio::test]` finalizer or the binary's `Drop`.
+/// Delegates to the real testcontainers-backed registry when the `containers`
+/// feature is enabled; without it no containers can exist, so this is a no-op.
+/// Best-effort: each container is removed individually and failures are logged
+/// to stderr rather than aborting the remaining cleanup. Call from a
+/// `#[tokio::test]` finalizer or the binary's `Drop`.
 pub async fn teardown_all() {
-    let names: Vec<String> = CONTAINERS
-        .get()
-        .map(|c| c.lock().unwrap_or_else(|p| p.into_inner()).clone())
-        .unwrap_or_default();
-    for name in names {
-        if let Err(err) = teardown_container(&name).await {
-            eprintln!("rustasea-testing: failed to remove container {name}: {err}");
-        }
-    }
-}
-
-/// Remove one named container via the docker CLI (best-effort).
-async fn teardown_container(name: &str) -> crate::Result<()> {
-    let status = tokio::process::Command::new("docker")
-        .args(["rm", "-f", name])
-        .status()
-        .await
-        .map_err(crate::TestError::Io)?;
-    if status.success() {
-        Ok(())
-    } else {
-        Err(crate::TestError::Setup(format!(
-            "docker rm -f {name} exited with {status}"
-        )))
-    }
+    #[cfg(feature = "containers")]
+    crate::containers::teardown_all().await;
 }
 
 #[cfg(test)]

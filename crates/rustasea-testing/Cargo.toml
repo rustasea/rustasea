@@ -7,7 +7,9 @@ description = "RustaSea testing harness — TestCase, testcontainers isolation, 
 
 [features]
 default = ["containers"]
-containers = ["dep:dotenvy"]
+containers = ["dep:dotenvy", "dep:testcontainers"]
+# Isolated Postgres fixtures built on the real testcontainers helpers.
+postgres = ["containers", "rustasea-orm/postgres"]
 
 [dependencies]
 tokio = { workspace = true }
@@ -22,3 +24,4 @@ rustasea-config = { path = "../rustasea-config" }
 rustasea-orm = { path = "../rustasea-orm" }
 rustasea-cache = { path = "../rustasea-cache" }
 dotenvy = { workspace = true, optional = true }
+testcontainers = { version = "0.23", optional = true }
