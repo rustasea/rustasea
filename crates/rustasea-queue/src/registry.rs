@@ -316,6 +316,7 @@ impl Queue {
             let reserved = drv.reserved_size(&queue).await?;
             let oldest_pending = drv.creation_time_of_oldest_pending_job(&queue).await?;
             snapshot.upsert(QueueMetrics {
+                connection,
                 queue,
                 pending,
                 delayed,
@@ -434,7 +435,9 @@ mod tests {
         }
 
         let snapshot = Queue::metrics().await.expect("metrics");
-        let row = snapshot.row("metrics-queue-a").expect("row present");
+        let row = snapshot
+            .row("metrics-a", "metrics-queue-a")
+            .expect("row present");
         assert_eq!(row.pending, 2);
         assert_eq!(row.delayed, 0);
         assert_eq!(row.reserved, 0);
@@ -446,7 +449,9 @@ mod tests {
     async fn metrics_empty_queue_reports_zeros() {
         register_sync_route("test::metrics::JobB", "metrics-b", "metrics-queue-b");
         let snapshot = Queue::metrics().await.expect("metrics");
-        let row = snapshot.row("metrics-queue-b").expect("row present");
+        let row = snapshot
+            .row("metrics-b", "metrics-queue-b")
+            .expect("row present");
         assert_eq!((row.pending, row.delayed, row.reserved), (0, 0, 0));
         assert_eq!(row.oldest_pending, None);
     }
@@ -463,5 +468,21 @@ mod tests {
             .filter(|q| q.queue == "metrics-queue-c")
             .count();
         assert_eq!(rows, 1, "one row per configured queue");
+    }
+
+    /// The same queue name on two connections yields two distinct aggregate rows.
+    #[tokio::test]
+    async fn metrics_keeps_shared_queue_name_across_connections() {
+        let redis = register_sync_route("test::metrics::JobE", "metrics-r", "m-shared");
+        let db = register_sync_route("test::metrics::JobF", "metrics-d", "m-shared");
+        for _ in 0..3 {
+            let p = JobPayload::new("m-shared", "metrics-d", None, serde_json::json!({}));
+            db.push(p).await.expect("push db");
+        }
+        let p = JobPayload::new("m-shared", "metrics-r", None, serde_json::json!({}));
+        redis.push(p).await.expect("push redis");
+        let snap = Queue::metrics().await.expect("metrics");
+        assert_eq!(snap.row("metrics-r", "m-shared").expect("redis").pending, 1);
+        assert_eq!(snap.row("metrics-d", "m-shared").expect("db").pending, 3);
     }
 }

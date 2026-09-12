@@ -272,7 +272,7 @@ mod tests {
     /// `to_value` serializes a payload through the validation facade.
     #[test]
     fn to_value_serializes_payload() {
-        let value = to_value(&json!({ "name": "Ada" })).expect("payload serializes");
+        let value = to_value(json!({ "name": "Ada" })).expect("payload serializes");
         assert_eq!(value["name"].as_str(), Some("Ada"));
     }
 
