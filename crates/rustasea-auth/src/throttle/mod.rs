@@ -37,6 +37,11 @@ pub struct Limit {
     pub key_by: KeyBy,
 }
 
+// The camelCase builder aliases below are intentional Laravel-parity public
+// API (asserted by `camel_case_aliases_match_snake_case_builders`); renaming
+// them would break the documented `perMinute().byIp()` form. The snake_case
+// builders remain canonical, so the lint is allowed only for this impl block.
+#[allow(non_snake_case)]
 impl Limit {
     /// Start a per-minute limit with `n` attempts.
     pub fn per_minute(n: u32) -> Self {
