@@ -3,10 +3,21 @@ name = "xtask"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "RustaSea cargo-xtask — CI gates: fmt, clippy, cycles (M5)."
+description = "RustaSea cargo-xtask — CI gates: fmt, clippy, cycles, migrate (M5)."
 
 [[bin]]
 name = "xtask"
 path = "src/main.rs"
 
 [dependencies]
+# `check-cycles` parses `cargo metadata` JSON directly (no extra external crate
+# beyond the workspace-locked `serde_json`).
+serde_json = { workspace = true }
+# `migrate` reuses the ORM migrator/pool bootstrap and the layered config source
+# the CLI `migrate` command uses (crates/rustasea-cli/src/commands/ops.rs:312-429).
+rustasea-orm = { path = "../crates/rustasea-orm" }
+rustasea-config = { path = "../crates/rustasea-config" }
+# Registers the framework's queue migrations (jobs/failed_jobs) into the
+# process-wide registry before the migrator runs.
+rustasea-queue = { path = "../crates/rustasea-queue" }
+tokio = { workspace = true }
