@@ -11,5 +11,9 @@ pub mod strict;
 
 pub use error_bag::{ErrorBag, ValidationError};
 pub use form_request::FormRequest;
-pub use rules::{Rules, Validatable};
+pub use rules::{to_value, Rules, Validatable};
 pub use strict::{contains_strict, doesnt_contain, in_array_strict, matches_strict, StrictValue};
+
+/// Re-exported JSON crate so downstream apps can build payload values without
+/// declaring `serde_json` themselves.
+pub use serde_json;

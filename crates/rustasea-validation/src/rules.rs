@@ -218,6 +218,17 @@ fn humanize(field: &str) -> String {
     field.replace(['_', '.'], " ").to_string()
 }
 
+/// Serialize a payload into a JSON value for rule evaluation.
+///
+/// Generated form requests call this so they never need a direct
+/// `serde_json` dependency of their own.
+pub fn to_value<T>(value: T) -> std::result::Result<Value, serde_json::Error>
+where
+    T: serde::Serialize,
+{
+    serde_json::to_value(value)
+}
+
 /// Payload contract: types that can be validated.
 ///
 /// Mirrors Laravel's `FormRequest` + `validator` derive: parse JSON into `T`
@@ -256,6 +267,13 @@ mod tests {
         assert!(rules.validate(&json!({ "name": "Ada" })).is_ok());
         assert!(rules.validate(&json!({ "name": "ab" })).is_err());
         assert!(rules.validate(&json!({})).is_err());
+    }
+
+    /// `to_value` serializes a payload through the validation facade.
+    #[test]
+    fn to_value_serializes_payload() {
+        let value = to_value(&json!({ "name": "Ada" })).expect("payload serializes");
+        assert_eq!(value["name"].as_str(), Some("Ada"));
     }
 
     /// Strict `in` distinguishes int from string.

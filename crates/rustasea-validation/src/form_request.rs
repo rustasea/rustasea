@@ -95,7 +95,7 @@ where
             let bag = ErrorBag::from_message(format!("The payload is not valid JSON: {err}"));
             Response::from(bag)
         })?;
-        payload.validate().map_err(|bag| Response::from(bag))?;
+        payload.validate().map_err(Response::from)?;
         Ok(FormRequest::new(payload, vec!["validated".into()]))
     }
 }
