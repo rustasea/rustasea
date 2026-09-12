@@ -9,6 +9,11 @@ description = "RustaSea AI SDK — provider-agnostic AiProvider trait, Agent/Too
 async-trait = { workspace = true }
 futures-core = "0.3"
 futures-util = { version = "0.3", default-features = false }
+# Shared async HTTP client for the real provider adapters (`providers` module).
+# Declared directly (not via a per-provider SDK) to keep the dependency graph
+# lean (NFR-Sca-02); `rustls-tls` reuses the TLS stack already in the lockfile.
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+rustasea-queue = { path = "../rustasea-queue", optional = true }
 rustasea-search = { path = "../rustasea-search", optional = true }
 rustasea-storage = { path = "../rustasea-storage", optional = true }
 serde = { workspace = true }
@@ -21,6 +26,10 @@ default = []
 search = ["dep:rustasea-search"]
 storage = ["dep:rustasea-storage"]
 mcp = []
+# Real background queueing for agent runs through `rustasea-queue` (typed `Job`,
+# drivers, and `run_worker`). Opt-in so the default build links no ORM/sqlx
+# stack (NFR-Sca-02).
+queue = ["dep:rustasea-queue"]
 
 [dev-dependencies]
 rustasea-search = { path = "../rustasea-search" }

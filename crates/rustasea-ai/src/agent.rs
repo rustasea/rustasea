@@ -112,7 +112,7 @@ impl ToolRegistry {
     }
 }
 /// Streamed run outcome carrying ordered token chunks.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AgentRun {
     /// Token chunks in emission order (`event: token` framing over WS).
     pub chunks: Vec<AiChunk>,
@@ -236,7 +236,10 @@ impl Agent {
         ))
     }
 
-    /// Queue a prompt for background execution (queueing stub).
+    /// Queue a prompt for background execution.
+    ///
+    /// Enqueues a real agent-run job on the workspace queue when the `queue`
+    /// feature is enabled; otherwise returns a typed queue-unavailable error.
     pub async fn queue(&self, prompt: &str) -> Result<String> {
         crate::streaming::queue_run(self.provider, prompt).await
     }
@@ -394,7 +397,7 @@ mod tests {
             "unexpected error: {message}"
         );
         // Direct registry lookup exposes the typed AgentError.
-        assert!(matches!(registry.get("nope"), None));
+        assert!(registry.get("nope").is_none());
     }
 
     #[tokio::test]

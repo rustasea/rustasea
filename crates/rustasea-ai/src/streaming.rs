@@ -1,9 +1,8 @@
-//! Streaming, broadcasting, and queueing stubs for agent output.
+//! Streaming, broadcasting, and queueing for agent output.
 //!
-//! Real transport wiring (WebSocket fan-out, deadpool-redis queues) is M6
-//! integration; these stubs keep the streaming contract compilable and
-//! testable: ordered `event: token` chunks over a bounded broadcast channel,
-//! a queueing stub, and a deferred tool loader.
+//! Ordered `event: token` chunks flow over a bounded broadcast channel; agent
+//! runs are enqueued onto the real workspace queue (feature `queue`) and a
+//! deferred loader contract resolves heavyweight integrations on first use.
 
 use tokio::sync::broadcast;
 
@@ -83,22 +82,24 @@ impl SubAgent {
     }
 }
 
-/// Queue an agent run for background execution (queueing stub).
+/// Queue an agent run for background execution.
 ///
-/// Returns the assigned job identifier; actual dispatch hooks into the M4
-/// queue driver in M6 integration.
-pub async fn queue_run(_agent: &str, _prompt: &str) -> Result<String> {
-    Ok(format!("queued-{}", uuid_v4_short()))
+/// With the `queue` feature this enqueues a real [`crate::queue::AgentRunJob`]
+/// through the workspace queue and returns its run id (collect the outcome with
+/// [`crate::queue::result`]). Without the feature it returns a typed
+/// [`crate::error::AiError::QueueUnavailable`] — never a fake id.
+#[cfg(feature = "queue")]
+pub async fn queue_run(agent: &str, prompt: &str) -> Result<String> {
+    crate::queue::enqueue(agent, prompt).await
 }
 
-/// Short random id used by the queueing stub.
-fn uuid_v4_short() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.subsec_nanos())
-        .unwrap_or(0);
-    format!("{nanos:x}{}", std::process::id())
+/// Queue an agent run for background execution (feature `queue` disabled).
+#[cfg(not(feature = "queue"))]
+pub async fn queue_run(agent: &str, prompt: &str) -> Result<String> {
+    let _ = (agent, prompt);
+    Err(crate::error::AiError::queue_unavailable(
+        "enable the `queue` feature on rustasea-ai to enqueue agent runs",
+    ))
 }
 
 /// Broadcast channel factory for ordered token chunks.
@@ -176,9 +177,25 @@ mod tests {
         assert_eq!(first.chunk.text, "a");
     }
 
+    #[cfg(not(feature = "queue"))]
     #[tokio::test]
-    async fn queue_stub_returns_id() {
-        let id = queue_run("agent", "hello").await.unwrap();
-        assert!(id.starts_with("queued-"));
+    async fn queue_run_without_feature_is_typed_error() {
+        let error = queue_run("agent", "hello").await.unwrap_err();
+        assert!(matches!(
+            error,
+            crate::error::AiError::QueueUnavailable { .. }
+        ));
+    }
+
+    #[cfg(feature = "queue")]
+    #[tokio::test]
+    async fn queue_run_without_driver_is_typed_error() {
+        // No driver is installed on the global `ai` connection here, so a real
+        // enqueue attempt fails with a typed queue error (never a fake id).
+        let error = queue_run("agent", "hello").await.unwrap_err();
+        assert!(matches!(
+            error,
+            crate::error::AiError::QueueUnavailable { .. }
+        ));
     }
 }

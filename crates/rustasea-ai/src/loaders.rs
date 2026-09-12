@@ -3,14 +3,24 @@
 //! These loaders lazily resolve heavyweight M6 integrations. Constructing one
 //! never performs I/O; the first use binds or degrades. With the `search`
 //! feature [`SimilaritySearch`] wraps a `VectorSearch` engine and with the
-//! `storage` feature [`FileStorage`] wraps a `Storage` engine — otherwise
-//! each degrades to a typed capability denial (NFR-Sca-02). Each loader also
-//! implements [`crate::streaming::DeferredLoader`] so agents can inject
-//! context on demand before a `Tool::call`.
+//! `storage` feature [`FileStorage`] wraps a `Storage` engine — otherwise each
+//! degrades to a typed capability denial (NFR-Sca-02). [`ToolSearch`] ranks
+//! candidate tools with a dependency-free BM25-lite scorer over names and
+//! descriptions. Each loader implements [`crate::streaming::DeferredLoader`] so
+//! agents can inject context on demand before a `Tool::call`.
 
 use std::sync::Arc;
 
 use crate::error::{AiError, Result};
+
+/// Map a backend failure into the AI error space.
+#[cfg(any(feature = "search", feature = "storage"))]
+fn backend_error(backend: &str, message: impl std::fmt::Display) -> AiError {
+    AiError::Backend {
+        backend: backend.to_string(),
+        message: message.to_string(),
+    }
+}
 
 /// Backing engine type for [`SimilaritySearch`].
 #[cfg(feature = "search")]
@@ -36,6 +46,15 @@ impl SimilaritySearch {
             name: name.into(),
             #[cfg(feature = "search")]
             inner: None,
+        }
+    }
+
+    /// Create a loader backed by an in-memory vector store of `dim` dimensions.
+    #[cfg(feature = "search")]
+    pub fn in_memory(name: impl Into<String>, dim: usize) -> Self {
+        Self {
+            name: name.into(),
+            inner: Some(Arc::new(rustasea_search::MemoryVectorStore::new(dim))),
         }
     }
 
@@ -79,6 +98,27 @@ impl SimilaritySearch {
     pub fn handle(&self) -> Result<crate::loaders::UnavailableEngine> {
         let _ = &self.name;
         Err(AiError::unsupported("similarity-search", "vector store"))
+    }
+
+    /// Run a nearest-neighbour query against the bound engine.
+    ///
+    /// Delegates to [`rustasea_search::VectorSearch::where_vector_similar_to`]
+    /// and maps a backend failure into [`AiError::Backend`]. Errors when no
+    /// engine is bound or the `search` feature is disabled. Available only with
+    /// the `search` feature (degraded callers use [`SimilaritySearch::handle`]).
+    #[cfg(feature = "search")]
+    pub async fn search(
+        &self,
+        table: &str,
+        column: &str,
+        query: &[f32],
+        limit: usize,
+        metric: rustasea_search::Similarity,
+    ) -> Result<Vec<rustasea_search::VectorMatch>> {
+        self.handle()?
+            .where_vector_similar_to(table, column, query, limit, metric)
+            .await
+            .map_err(|error| backend_error(&self.name, error))
     }
 }
 
@@ -140,6 +180,15 @@ impl FileStorage {
         }
     }
 
+    /// Create a loader backed by a local filesystem disk rooted at `dir`.
+    #[cfg(feature = "storage")]
+    pub fn local(name: impl Into<String>, dir: impl Into<std::path::PathBuf>) -> Self {
+        Self {
+            name: name.into(),
+            inner: Some(Arc::new(rustasea_storage::LocalDisk::new(dir))),
+        }
+    }
+
     /// Bind a storage engine for later use.
     #[cfg(feature = "storage")]
     pub fn bind(&mut self, engine: Arc<dyn rustasea_storage::Storage>) -> &mut Self {
@@ -177,6 +226,42 @@ impl FileStorage {
     pub fn handle(&self) -> Result<crate::loaders::UnavailableEngine> {
         let _ = &self.name;
         Err(AiError::unsupported("file-storage", "storage"))
+    }
+
+    /// Read an object from the bound engine, mapping backend failures.
+    #[cfg(feature = "storage")]
+    pub async fn get(&self, key: &str) -> Result<Vec<u8>> {
+        self.handle()?
+            .get(key)
+            .await
+            .map_err(|error| backend_error(&self.name, error))
+    }
+
+    /// Write an object through the bound engine, mapping backend failures.
+    #[cfg(feature = "storage")]
+    pub async fn put(&self, key: &str, bytes: &[u8]) -> Result<()> {
+        self.handle()?
+            .put(key, bytes)
+            .await
+            .map_err(|error| backend_error(&self.name, error))
+    }
+
+    /// Probe object existence through the bound engine.
+    #[cfg(feature = "storage")]
+    pub async fn exists(&self, key: &str) -> Result<bool> {
+        self.handle()?
+            .exists(key)
+            .await
+            .map_err(|error| backend_error(&self.name, error))
+    }
+
+    /// Delete an object through the bound engine.
+    #[cfg(feature = "storage")]
+    pub async fn delete(&self, key: &str) -> Result<()> {
+        self.handle()?
+            .delete(key)
+            .await
+            .map_err(|error| backend_error(&self.name, error))
     }
 }
 
@@ -219,17 +304,28 @@ impl crate::streaming::DeferredLoader for FileStorage {
 ///
 /// Never constructed — only used as the error-side type so loader signatures
 /// stay stable across feature combinations (NFR-Sca-02).
+#[derive(Debug)]
 pub struct UnavailableEngine {
     _private: (),
 }
 
-/// Deferred tool-search loader: finds registered agent tools by name.
+/// One ranked tool match produced by [`ToolSearch::rank`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToolMatch {
+    /// Tool name.
+    pub name: String,
+    /// BM25-lite relevance score (higher is more relevant; `> 0`).
+    pub score: f32,
+}
+
+/// Deferred tool-search loader: ranks registered agent tools by relevance.
 ///
-/// Tool search over the agent tool registry is delegated lazily; this loader
-/// holds the query contract without pulling a search engine.
+/// Ranking is a dependency-free BM25-lite scorer over each tool's name and
+/// description (see [`crate::tool_rank`]); no search engine is pulled.
 pub struct ToolSearch {
     name: String,
     query: Option<String>,
+    candidates: Vec<(String, String)>,
 }
 
 impl ToolSearch {
@@ -238,12 +334,27 @@ impl ToolSearch {
         Self {
             name: name.into(),
             query: None,
+            candidates: Vec::new(),
         }
     }
 
     /// Record the search query for later execution.
     pub fn with_query(&mut self, query: impl Into<String>) -> &mut Self {
         self.query = Some(query.into());
+        self
+    }
+
+    /// Register the candidate tools `(name, description)` to rank against.
+    pub fn with_candidates<I, N, D>(&mut self, candidates: I) -> &mut Self
+    where
+        I: IntoIterator<Item = (N, D)>,
+        N: Into<String>,
+        D: Into<String>,
+    {
+        self.candidates = candidates
+            .into_iter()
+            .map(|(name, description)| (name.into(), description.into()))
+            .collect();
         self
     }
 
@@ -257,34 +368,65 @@ impl ToolSearch {
         self.query.as_deref()
     }
 
-    /// Resolve matching tool names from a candidate list (stub scoring).
-    ///
-    /// Matches tools whose name contains any query term (case-insensitive).
-    pub fn search(&self, tools: &[&'static str]) -> Vec<&'static str> {
-        let Some(query) = &self.query else {
+    /// Rank `tools` against the query, returning positive-score matches in
+    /// descending relevance order (stable for ties).
+    pub fn rank(&self, tools: &[(String, String)]) -> Vec<ToolMatch> {
+        let Some(query) = self.query.as_deref() else {
             return Vec::new();
         };
-        let terms: Vec<String> = query.split_whitespace().map(|t| t.to_lowercase()).collect();
+        let borrowed: Vec<(&str, &str)> = tools
+            .iter()
+            .map(|(name, description)| (name.as_str(), description.as_str()))
+            .collect();
+        let mut scored: Vec<ToolMatch> = tools
+            .iter()
+            .zip(crate::tool_rank::score(query, &borrowed))
+            .filter(|(_, score)| *score > 0.0)
+            .map(|((name, _), score)| ToolMatch {
+                name: name.clone(),
+                score,
+            })
+            .collect();
+        scored.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        scored
+    }
+
+    /// Rank the candidates registered with [`ToolSearch::with_candidates`].
+    pub fn search_candidates(&self) -> Vec<ToolMatch> {
+        self.rank(&self.candidates)
+    }
+
+    /// Rank a list of tool names (no descriptions) against the query.
+    ///
+    /// Convenience wrapper preserving the historical name-based API; returns
+    /// matching names in descending relevance order.
+    pub fn search(&self, tools: &[&'static str]) -> Vec<&'static str> {
+        let candidates: Vec<(String, String)> = tools
+            .iter()
+            .map(|name| ((*name).to_string(), String::new()))
+            .collect();
+        let ranked = self.rank(&candidates);
         tools
             .iter()
             .copied()
-            .filter(|tool| {
-                let lower = tool.to_lowercase();
-                terms.iter().any(|t| lower.contains(t.as_str()))
-            })
+            .filter(|name| ranked.iter().any(|hit| hit.name == *name))
             .collect()
     }
 }
 
-/// Deferred-loader contract for tool search: the loaded target is the list of
-/// registered tools the agent can invoke.
+/// Deferred-loader contract for tool search: the loaded target is the ranked
+/// list of registered tools the agent can invoke.
 impl crate::streaming::DeferredLoader for ToolSearch {
-    /// Tool-name snapshot produced by the loader.
-    type Target = Vec<&'static str>;
+    /// Ranked tool-name snapshot produced by the loader.
+    type Target = Vec<ToolMatch>;
 
-    /// Load (search) matching tool names; empty query yields an empty set.
+    /// Load (rank) the registered candidates; an empty query yields an empty set.
     fn load(&self) -> Result<Arc<Self::Target>> {
-        Ok(Arc::new(self.search(&[])))
+        Ok(Arc::new(self.search_candidates()))
     }
 
     /// Tool search is available as soon as the query is recorded.
@@ -305,7 +447,21 @@ mod tests {
     }
 
     #[test]
-    fn tool_search_scores_by_substring() {
+    fn tool_search_ranks_relevant_tools_first() {
+        let mut loader = ToolSearch::new("find-tools");
+        loader.with_query("search documentation").with_candidates([
+            ("send_email", "Send an email to a recipient"),
+            ("search_docs", "Search the documentation for a phrase"),
+            ("web_search", "Search the public web"),
+        ]);
+        let matches = loader.search_candidates();
+        assert_eq!(matches.len(), 2);
+        assert_eq!(matches[0].name, "search_docs");
+        assert!(matches.iter().all(|hit| hit.score > 0.0));
+    }
+
+    #[test]
+    fn tool_search_name_only_convenience_still_matches() {
         let mut loader = ToolSearch::new("find-tools");
         loader.with_query("search");
         let matches = loader.search(&["search_docs", "send_email", "web_search"]);

@@ -15,8 +15,12 @@ pub mod loaders;
 pub mod mcp;
 pub mod middleware;
 pub mod provider;
+pub mod providers;
+#[cfg(feature = "queue")]
+pub mod queue;
 pub mod scaffold;
 pub mod streaming;
+pub(crate) mod tool_rank;
 pub mod types;
 
 pub use adapters::{
@@ -26,9 +30,15 @@ pub use adapters::{
 pub use agent::{Agent, AgentError, AgentMiddleware, AgentRun, Tool, ToolCall, ToolRegistry};
 pub use ai::Ai;
 pub use error::{AiError, Result};
-pub use loaders::{FileStorage, SimilaritySearch, ToolSearch};
+pub use loaders::{FileStorage, SimilaritySearch, ToolMatch, ToolSearch};
 pub use middleware::{LoggingMiddleware, TimingMiddleware};
 pub use provider::{AiProvider, Capability, StreamingProvider, TextRequest};
+pub use providers::{
+    provider_from_env, AnthropicProvider, AuthStyle, HttpProviderConfig, OpenAiProvider,
+    ProviderStyle,
+};
+#[cfg(feature = "queue")]
+pub use queue::{AgentRunJob, AI_CONNECTION, AI_QUEUE};
 pub use scaffold::{generate_scaffold, ScaffoldFile, ScaffoldKind};
 pub use streaming::{
     queue_run, token_channel, DeferredLoader, StreamEvent, StreamReceiver, StreamSender, SubAgent,
