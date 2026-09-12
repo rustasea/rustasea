@@ -21,9 +21,9 @@ pub use rustasea_validation as validation;
 /// Queue re-exports for typed job dispatch ergonomics (M4).
 pub use queue::{
     async_trait as queue_async_trait, default_resolver, register_job, register_job_handler,
-    run_worker, run_worker_with, ConcreteJob, DatabaseDriver, DispatchHandle, ErasedJob,
-    FailedJob, Job, JobError, JobId, JobOutcome, JobPayload, Queue, QueueDriver, QueueError,
-    QueueRegistry, ShouldRetry, ShouldRetryUntil,
+    run_worker, run_worker_with, ConcreteJob, DatabaseDriver, DispatchHandle, ErasedJob, FailedJob,
+    Job, JobError, JobId, JobOutcome, JobPayload, Queue, QueueDriver, QueueError, QueueRegistry,
+    ShouldRetry, ShouldRetryUntil,
 };
 pub use queue::{queue_migrator, register_queue_migrations};
 
@@ -99,6 +99,88 @@ pub use search::{
 pub use jsonapi::{
     content_type as jsonapi_content_type, Document as JsonApiDocument, JsonApiError,
     JsonApiResource, Link as JsonApiLink, Links as JsonApiLinks, ResourceBuilder, SparseFields,
+};
+
+/// M6 view layer re-export — only with the `view` feature (pay-for-what-you-use).
+#[cfg(feature = "view")]
+pub use rustasea_view as view;
+
+/// View re-exports for handler ergonomics (`View<T>`, `ViewEngine`, errors).
+#[cfg(feature = "view")]
+pub use rustasea_view::{AskamaEngine, View, ViewEngine, ViewError, ViewResponse};
+
+/// Runtime (minijinja) engine re-export — only with `view-runtime-templates`.
+#[cfg(feature = "view-runtime-templates")]
+pub use rustasea_view::MinijinjaEngine;
+
+/// Inertia server protocol re-export — only with the `inertia` feature (ADR-0002 §3).
+#[cfg(feature = "inertia")]
+pub use rustasea_inertia as inertia;
+
+/// Inertia server re-exports for page/response handler ergonomics.
+#[cfg(feature = "inertia")]
+pub use rustasea_inertia::{
+    Inertia, InertiaError, InertiaRequest, InertiaResponse, Page, PartialReload, RootView,
+};
+
+/// Inertia WASM client protocol re-export — only with `inertia-client`.
+#[cfg(feature = "inertia-client")]
+pub use rustasea_inertia_client as inertia_client;
+
+/// Inertia client re-exports for registry/navigation ergonomics.
+#[cfg(feature = "inertia-client")]
+pub use rustasea_inertia_client::{
+    ClientError, ComponentRegistry, InertiaClient, NavigationOutcome, Value as InertiaValue,
+};
+
+/// Inertia WASM presentation adapters re-export — with either variant feature.
+#[cfg(any(feature = "wasm-dioxus", feature = "wasm-leptos"))]
+pub use rustasea_inertia_adapters as inertia_adapters;
+
+/// Shared adapter surface for mounting pages and performing browser visits.
+#[cfg(any(feature = "wasm-dioxus", feature = "wasm-leptos"))]
+pub use rustasea_inertia_adapters::{
+    fetch_page, hard_navigate, install_registry, mount_installed, mount_page, AdapterError,
+    RouterState,
+};
+
+/// Dioxus (React variant) adapter re-exports — only with `wasm-dioxus`.
+#[cfg(feature = "wasm-dioxus")]
+pub use rustasea_inertia_adapters::{
+    use_dioxus_router, DioxusLink, DioxusRouterContext, DioxusRouterProvider,
+};
+
+/// Leptos (Vue variant) adapter re-exports — only with `wasm-leptos`.
+#[cfg(feature = "wasm-leptos")]
+pub use rustasea_inertia_adapters::{
+    use_leptos_router, LeptosLink, LeptosRouterContext, LeptosRouterProvider,
+};
+
+/// Livewire analogue re-export — only with the `livewire` feature (ADR-0002 §5).
+#[cfg(feature = "livewire")]
+pub use rustasea_livewire as livewire;
+
+/// Livewire re-exports for component/action/HTMX/realtime ergonomics.
+#[cfg(feature = "livewire")]
+pub use rustasea_livewire::{
+    is_htmx, sse_from_receiver, ws_route, ActionAuthorizer, ActionHandler, ActionRequest,
+    ActionResult, Actor, AllowAll, Component, ComponentState, DenyAll, Livewire, LivewireError,
+    StateError, StatePatch, HX_REQUEST_HEADER,
+};
+
+/// Livewire axum router factory, aliased to avoid a generic root `routes` name.
+#[cfg(feature = "livewire")]
+pub use rustasea_livewire::routes as livewire_routes;
+
+/// Starter-kit scaffolder re-export — only with the `scaffold` feature (ADR-0002 §6).
+#[cfg(feature = "scaffold")]
+pub use rustasea_scaffold as scaffold;
+
+/// Scaffolder re-exports for `cargo rustasea new` ergonomics.
+#[cfg(feature = "scaffold")]
+pub use rustasea_scaffold::{
+    resolve_target, AppName, Generated, RenderedFile, Scaffold, ScaffoldError, ScaffoldResult,
+    StarterKitVariant,
 };
 
 /// AI re-exports only with the `ai` feature (NFR-Sca-02).

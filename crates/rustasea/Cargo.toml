@@ -26,15 +26,61 @@ rustasea-storage = { path = "../rustasea-storage" }
 rustasea-search = { path = "../rustasea-search" }
 rustasea-jsonapi = { path = "../rustasea-jsonapi" }
 rustasea-ai = { path = "../rustasea-ai", optional = true }
+# M6 server-side view layer (askama default); opt-in to preserve
+# pay-for-what-you-use (blueprint §3).
+rustasea-view = { path = "../rustasea-view", optional = true }
+# M6/M7 Inertia protocol + starter-kit surface (ADR-0002). Every crate stays
+# optional so the core never links a template engine, WASM framework, or the
+# scaffolder unless a feature selects it.
+rustasea-inertia = { path = "../rustasea-inertia", optional = true }
+rustasea-inertia-client = { path = "../rustasea-inertia-client", optional = true }
+rustasea-inertia-adapters = { path = "../rustasea-inertia-adapters", optional = true }
+rustasea-livewire = { path = "../rustasea-livewire", optional = true }
+rustasea-scaffold = { path = "../rustasea-scaffold", optional = true }
 
 [features]
 default = []
+# Server-side views (askama compile-time templates).
+view = ["dep:rustasea-view"]
+# Forward the runtime engine feature for dev hot-reload / user-authored views.
+view-runtime-templates = ["view", "rustasea-view/runtime-templates"]
+# Inertia server protocol (axum glue enabled by the crate's default `server`).
+inertia = ["dep:rustasea-inertia"]
+# Framework-agnostic Inertia WASM client protocol surface.
+inertia-client = ["dep:rustasea-inertia-client"]
+# Inertia WASM presentation adapter — React variant mapped to Dioxus (ADR-0002 §4).
+wasm-dioxus = [
+    "inertia-client",
+    "dep:rustasea-inertia-adapters",
+    "rustasea-inertia-adapters/react",
+]
+# Inertia WASM presentation adapter — Vue variant mapped to Leptos (ADR-0002 §4).
+wasm-leptos = [
+    "inertia-client",
+    "dep:rustasea-inertia-adapters",
+    "rustasea-inertia-adapters/vue",
+]
+# Livewire analogue: askama components, HTMX swaps, broadcast realtime (ADR-0002 §5).
+livewire = ["view", "dep:rustasea-livewire"]
+# Starter-kit scaffolder behind `cargo rustasea new` (ADR-0002 §6).
+scaffold = ["dep:rustasea-scaffold"]
 # M6 AI SDK is additive; `ai-search`/`ai-storage`/`ai-mcp` forward the
 # deferred-loader features of rustasea-ai itself.
 ai = ["dep:rustasea-ai"]
 ai-search = ["dep:rustasea-ai", "rustasea-ai/search"]
 ai-storage = ["dep:rustasea-ai", "rustasea-ai/storage"]
 ai-mcp = ["dep:rustasea-ai", "rustasea-ai/mcp"]
+# Composite: every server-side presentation layer plus the scaffolder. The WASM
+# variants stay opt-in because an app selects exactly one (ADR-0002 §4), and
+# `ai` is excluded so `full` never pulls provider SDKs (NFR-Sca-02).
+full = [
+    "view",
+    "view-runtime-templates",
+    "inertia",
+    "inertia-client",
+    "livewire",
+    "scaffold",
+]
 
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }

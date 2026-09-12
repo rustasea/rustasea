@@ -1,0 +1,17 @@
+[package]
+name = "cargo-rustasea"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Cargo subcommand for RustaSea — `cargo rustasea new <app> --variant <variant>`"
+
+# Cargo convention: a binary named `cargo-rustasea` makes the crate invocable as
+# `cargo rustasea <command>` (mirroring `cargo artisan`). The package name is
+# kept identical so `cargo run -p cargo-rustasea` also works.
+[[bin]]
+name = "cargo-rustasea"
+path = "src/main.rs"
+
+[dependencies]
+rustasea-scaffold = { path = "../rustasea-scaffold" }
+clap = { workspace = true }

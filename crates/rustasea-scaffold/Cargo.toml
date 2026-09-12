@@ -1,0 +1,12 @@
+[package]
+name = "rustasea-scaffold"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea starter-kit scaffolder — emits the shared core plus the blade/react/vue/livewire presentation tree"
+
+[dependencies]
+# Typed, source-attributed errors for every scaffold failure mode.
+thiserror = { workspace = true }
+# `Generated` is serializable so the `cargo-rustasea` binary can offer --json.
+serde = { workspace = true }

@@ -1,0 +1,40 @@
+[package]
+name = "rustasea-inertia-adapters"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea Inertia WASM presentation adapters — Dioxus (react) and Leptos (vue) variants"
+
+[dependencies]
+# Protocol-only client: Page<T> parsing, the generated ComponentRegistry, and
+# the Inertia navigation decision logic shared by both WASM variants.
+rustasea-inertia-client = { path = "../rustasea-inertia-client" }
+# Protocol types/constants shared with the client; the axum glue stays off so
+# this crate remains WASM-safe.
+rustasea-inertia = { path = "../rustasea-inertia", default-features = false }
+http = "1"
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+# Browser transport (Inertia visit + hard navigation), shared by both variants.
+# Only the `http` transport is needed — websocket/eventsource are not.
+gloo-net = { version = "0.7", default-features = false, features = ["http"], optional = true }
+web-sys = { version = "0.3", features = ["Window", "Location"], optional = true }
+
+# Variant frameworks: `react` maps to Dioxus, `vue` maps to Leptos (ADR-0002 §4).
+dioxus = { version = "0.7", default-features = false, features = ["web", "lib"], optional = true }
+leptos = { version = "0.8", default-features = false, features = ["csr"], optional = true }
+
+[features]
+# No framework is linked unless a variant is selected: a Blade/Livewire app
+# never pulls WASM code (ADR-0002 zero-cost ergonomics).
+default = []
+# `react` variant → Dioxus.
+react = ["dep:dioxus", "dep:gloo-net", "dep:web-sys"]
+# `vue` variant → Leptos.
+vue = ["dep:leptos", "dep:gloo-net", "dep:web-sys"]
+
+# wasm-pack build profile used by the generated `resources/js` entrypoint
+# (the library itself is consumed by the app's binary target).
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-mutable-globals"]

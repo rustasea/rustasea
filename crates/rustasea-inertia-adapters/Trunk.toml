@@ -1,0 +1,21 @@
+# Reference Trunk configuration for a generated `react` (Dioxus) or `vue`
+# (Leptos) starter-kit app.
+#
+# The generated app's WASM binary lives in `resources/js/` and links this crate
+# with the matching variant feature enabled:
+#
+#   react: rustasea-inertia-adapters = { path = "...", features = ["react"] }
+#   vue:   rustasea-inertia-adapters = { path = "...", features = ["vue"] }
+#
+# Build:  trunk build
+# Serve:  trunk serve
+
+[build]
+target = "index.html"
+dist = "dist"
+release = false
+
+[serve]
+address = "127.0.0.1"
+port = 8080
+open = false

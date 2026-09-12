@@ -1,0 +1,21 @@
+[package]
+name = "rustasea-livewire"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea Livewire analogue — askama components, HTMX partial swaps, and rustasea-broadcast realtime updates"
+
+[dependencies]
+axum = { workspace = true }
+futures-util = { workspace = true }
+rustasea-broadcast = { path = "../rustasea-broadcast" }
+rustasea-view = { path = "../rustasea-view" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+
+[dev-dependencies]
+askama = "0.16"
+tower = { workspace = true, features = ["util"] }

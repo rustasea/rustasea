@@ -1,0 +1,26 @@
+[package]
+name = "rustasea-view"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea view layer — ViewEngine with askama (default) and minijinja (runtime-templates)"
+
+[dependencies]
+axum = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+# Default compile-time template engine (MSRV 1.88, matching the workspace).
+askama = "0.16"
+# Opt-in runtime template engine; `loader` is required for `path_loader` and is
+# NOT part of minijinja's default feature set.
+minijinja = { version = "2", optional = true, features = ["loader"] }
+
+[features]
+default = []
+# Runtime template loading (dev hot-reload / user-authored templates).
+runtime-templates = ["dep:minijinja"]
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt"] }
+tower = { workspace = true, features = ["util"] }

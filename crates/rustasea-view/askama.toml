@@ -1,0 +1,5 @@
+# askama template discovery for this crate's own build/tests.
+# Applications set the same root so `#[template(path = "...")]` resolves under
+# `resources/views/` (ADR-0002 §6, blueprint §6).
+[general]
+dirs = ["resources/views"]

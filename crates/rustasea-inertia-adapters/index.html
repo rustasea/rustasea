@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RustaSea</title>
+    <!--
+      Reference Trunk entrypoint for a generated `react`/`vue` app.
+
+      `data-bin` names the WASM entrypoint binary generated under `resources/js/`;
+      a generated app points it at its own binary target.
+
+      The server renders this shell and replaces `{{ page_json }}` with the
+      serialized `Page<T>`, so the WASM client hydrates from `data-page` without
+      an extra round trip.
+    -->
+    <link
+      data-trunk
+      rel="rust"
+      data-bin="rustasea-inertia-app"
+      data-wasm-opt="z"
+    />
+  </head>
+  <body>
+    <div id="app" data-page="{{ page_json }}"></div>
+  </body>
+</html>

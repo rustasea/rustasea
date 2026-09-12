@@ -1,0 +1,26 @@
+[package]
+name = "rustasea-inertia"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RustaSea Inertia server — Page<T> envelope, X-Inertia header contract, partial reloads, shared props"
+
+[dependencies]
+# The `http` types (HeaderMap/Method/Uri) are WASM-safe and shared with the
+# client crate, so the protocol surface stays dependency-light.
+http = "1"
+serde = { workspace = true }
+serde_json = { workspace = true }
+# Axum glue (IntoResponse, extractor, middleware) is optional so the client can
+# reuse the protocol types with `default-features = false`.
+axum = { workspace = true, optional = true }
+thiserror = { workspace = true, optional = true }
+
+[features]
+default = ["server"]
+# Server-side rendering: axum responses, the extractor, and the middleware.
+server = ["dep:axum", "dep:thiserror"]
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt"] }
+tower = { workspace = true, features = ["util"] }
