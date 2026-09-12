@@ -37,9 +37,10 @@ async-trait = "0.1"
 # Database (M2) — runtime API only (no compile-time `query!` macros: CI has no
 # DATABASE_URL). Driver features are forwarded by `rustasea-orm`.
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "json", "uuid", "chrono"] }
-# Redis queue driver (M4) — `deadpool-redis` 0.21 pairs with `redis` 0.31 and
-# supports rustc 1.86; both are opt-in behind the queue crate's `redis` feature.
-deadpool-redis = { version = "0.21", default-features = false, features = ["rt_tokio_1"] }
+# Redis drivers (M4) — `deadpool-redis` 0.21 pairs with `redis` 0.31 and
+# supports rustc 1.86; both are opt-in behind each crate's `redis` feature.
+# `script` enables Lua (`redis/script`) for atomic cache lock release.
+deadpool-redis = { version = "0.21", default-features = false, features = ["rt_tokio_1", "script"] }
 redis = { version = "0.31", default-features = false, features = ["aio", "tokio-comp"] }
 # DX / CLI / testing (M5)
 clap = { version = "4", features = ["derive", "env", "wrap_help"] }

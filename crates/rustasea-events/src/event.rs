@@ -1,12 +1,15 @@
 /// Event trait and the contractual framework events.
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 /// A typed domain event.
 ///
 /// Events are plain serializable, cloneable data (`Serialize +
 /// DeserializeOwned + Clone + Send + Sync + 'static`) — no domain `Any`
-/// (C-03). `Clone` lets one dispatch fan out an owned copy per listener.
-pub trait Event: Serialize + Clone + Send + Sync + 'static {
+/// (C-03). `Clone` lets one dispatch fan out an owned copy per listener;
+/// `DeserializeOwned` lets a queue-backed listener job round-trip the event
+/// through a worker.
+pub trait Event: Serialize + DeserializeOwned + Clone + Send + Sync + 'static {
     /// Stable event name reported to listeners/spies.
     fn event_name(&self) -> &'static str {
         std::any::type_name::<Self>()

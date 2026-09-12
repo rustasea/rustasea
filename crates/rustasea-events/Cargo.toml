@@ -11,3 +11,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 async-trait = { workspace = true }
+rustasea-queue = { path = "../rustasea-queue" }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "time", "sync"] }

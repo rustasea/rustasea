@@ -4015,6 +4015,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "ryu",
+ "sha1_smol",
  "socket2 0.5.10",
  "tokio",
  "tokio-util",
@@ -4293,6 +4294,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "deadpool-redis",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -4339,6 +4341,7 @@ name = "rustasea-events"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "rustasea-queue",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -4872,6 +4875,12 @@ dependencies = [
  "cpufeatures 0.2.17",
  "digest",
 ]
+
+[[package]]
+name = "sha1_smol"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbfa15b3dddfee50a0fff136974b3e1bde555604ba463834a7eb7deb6417705d"
 
 [[package]]
 name = "sha2"

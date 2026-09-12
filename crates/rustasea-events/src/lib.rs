@@ -10,10 +10,12 @@
 pub mod dispatcher;
 pub mod error;
 pub mod event;
+pub mod job;
 pub mod listener;
 
 pub use async_trait::async_trait;
 pub use dispatcher::{Dispatcher, EventSink};
 pub use error::{EventError, Result};
 pub use event::{Event, JobAttempted, QueueBusy, SchedulePaused, ScheduleResumed};
+pub use job::{register_listener_job, ListenerJob};
 pub use listener::{Listener, QueueConfig};

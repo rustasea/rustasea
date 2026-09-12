@@ -5,9 +5,9 @@
 //! `increment`/`decrement`/`pull`/`has`), the TTL-extending `touch()` with a
 //! default `Ok(false)` so custom drivers keep compiling, the Laravel-style
 //! context-scoped `with_context` (key prefixing per tenant/scope), a
-//! moka-like in-memory store, a redis wiring stub (no real Redis required
-//! this sprint), store isolation (`redis` vs `memory`), and an atomic `Lock`
-//! with `get`/`block`/`release`.
+//! moka-like in-memory store, a real `deadpool-redis` store behind the opt-in
+//! `redis` feature (inert and typed-error by default), store isolation
+//! (`redis` vs `memory`), and an atomic `Lock` with `get`/`block`/`release`.
 
 pub mod error;
 pub mod lock;

@@ -1,20 +1,60 @@
 //! RustaSea foundation — Application, Container, ServiceProvider, shutdown.
 
 use std::any::Any;
-use std::collections::HashMap;
+use std::cmp::Reverse;
+use std::collections::{BinaryHeap, HashMap};
 use std::sync::{Arc, RwLock};
 
 /// Service provider lifecycle.
 ///
-/// Implementors participate in the Application boot DAG:
-///
-/// `register` is called first for all providers, then `boot`.
+/// Implementors participate in the Application boot DAG: `register` is called
+/// first for all providers, then `boot`. Both passes follow the same
+/// dependency order resolved from [`ServiceProvider::dependencies`].
 pub trait ServiceProvider: Send + Sync {
+    /// Stable name used to resolve dependency edges.
+    ///
+    /// Defaults to the fully-qualified Rust type name; override it to expose a
+    /// short name that [`ServiceProvider::dependencies`] can reference.
+    fn name(&self) -> &'static str {
+        std::any::type_name::<Self>()
+    }
+
+    /// Names of providers that must boot before this one.
+    ///
+    /// Each entry resolves against [`ServiceProvider::name`] (full or short
+    /// form). Empty by default, so providers without dependencies keep their
+    /// registration order.
+    fn dependencies(&self) -> &'static [&'static str] {
+        &[]
+    }
+
     /// Register bindings into the container.
     fn register(&self, _app: &mut Application) {}
 
     /// Boot after all providers have registered.
     fn boot(&self, _app: &Application) {}
+}
+
+impl ServiceProvider for Box<dyn ServiceProvider> {
+    /// Delegate the provider name to the boxed value.
+    fn name(&self) -> &'static str {
+        self.as_ref().name()
+    }
+
+    /// Delegate dependency declarations to the boxed value.
+    fn dependencies(&self) -> &'static [&'static str] {
+        self.as_ref().dependencies()
+    }
+
+    /// Delegate registration to the boxed value.
+    fn register(&self, app: &mut Application) {
+        self.as_ref().register(app);
+    }
+
+    /// Delegate boot to the boxed value.
+    fn boot(&self, app: &Application) {
+        self.as_ref().boot(app);
+    }
 }
 
 /// Binding kind for diagnostic purposes.
@@ -140,6 +180,47 @@ impl Container {
     }
 }
 
+/// Errors raised while resolving and running the provider boot DAG.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BootError {
+    /// A dependency cycle was detected among the listed providers.
+    DependencyCycle {
+        /// Names of the providers participating in the cycle.
+        providers: Vec<String>,
+    },
+    /// A provider declared a dependency that is not registered.
+    UnknownDependency {
+        /// Name of the provider that declared the dependency.
+        provider: String,
+        /// The unresolved dependency name.
+        dependency: String,
+    },
+}
+
+impl std::fmt::Display for BootError {
+    /// Render the error with the offending provider names.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DependencyCycle { providers } => {
+                write!(
+                    f,
+                    "provider dependency cycle detected: {}",
+                    providers.join(" -> ")
+                )
+            }
+            Self::UnknownDependency {
+                provider,
+                dependency,
+            } => write!(
+                f,
+                "provider `{provider}` depends on unknown provider `{dependency}`"
+            ),
+        }
+    }
+}
+
+impl std::error::Error for BootError {}
+
 /// Application bootstrap and provider DAG.
 pub struct Application {
     /// Shared service container.
@@ -184,20 +265,156 @@ impl Application {
         self
     }
 
-    /// Run register then boot for all providers.
-    pub fn boot(&mut self) {
+    /// Run register then boot for all providers in dependency order.
+    ///
+    /// Providers are topologically sorted by [`ServiceProvider::dependencies`];
+    /// independent providers keep their registration order as the tie-breaker.
+    /// Returns [`BootError`] when the graph contains a cycle or an unresolved
+    /// dependency. On error nothing is registered or booted and the
+    /// application stays unbooted.
+    pub fn boot(&mut self) -> Result<(), BootError> {
         if self.booted {
-            return;
+            return Ok(());
         }
+        let order = self.topological_order()?;
         let providers = std::mem::take(&mut self.providers);
-        for p in &providers {
-            p.register(self);
+        for &index in &order {
+            providers[index].register(self);
         }
-        for p in &providers {
-            p.boot(self);
+        for &index in &order {
+            providers[index].boot(self);
         }
         self.providers = providers;
         self.booted = true;
+        Ok(())
+    }
+
+    /// Resolve the stable topological order of registered providers.
+    ///
+    /// Kahn's algorithm with a min-heap keyed by registration index, so ready
+    /// providers are emitted in registration order (the tie-breaker).
+    fn topological_order(&self) -> Result<Vec<usize>, BootError> {
+        let count = self.providers.len();
+        let index_of = self.provider_index();
+        let mut edges: Vec<Vec<usize>> = vec![Vec::new(); count];
+        let mut indegree = vec![0usize; count];
+
+        for (node, provider) in self.providers.iter().enumerate() {
+            for dependency in provider.dependencies() {
+                let Some(&dependency_index) = index_of.get(*dependency) else {
+                    return Err(BootError::UnknownDependency {
+                        provider: provider.name().to_string(),
+                        dependency: (*dependency).to_string(),
+                    });
+                };
+                if dependency_index == node {
+                    return Err(BootError::DependencyCycle {
+                        providers: vec![provider.name().to_string()],
+                    });
+                }
+                edges[dependency_index].push(node);
+                indegree[node] += 1;
+            }
+        }
+
+        let mut ready: BinaryHeap<Reverse<usize>> = (0..count)
+            .filter(|&node| indegree[node] == 0)
+            .map(Reverse)
+            .collect();
+        let mut order = Vec::with_capacity(count);
+        while let Some(Reverse(node)) = ready.pop() {
+            order.push(node);
+            for &next in &edges[node] {
+                indegree[next] -= 1;
+                if indegree[next] == 0 {
+                    ready.push(Reverse(next));
+                }
+            }
+        }
+
+        if order.len() == count {
+            return Ok(order);
+        }
+        Err(BootError::DependencyCycle {
+            providers: self.cycle_names(&edges, &indegree),
+        })
+    }
+
+    /// Build a lookup from provider name (full and short) to registration index.
+    fn provider_index(&self) -> HashMap<String, usize> {
+        let mut index_of = HashMap::new();
+        for (index, provider) in self.providers.iter().enumerate() {
+            let name = provider.name();
+            index_of.entry(name.to_string()).or_insert(index);
+            if let Some(short) = name.rsplit("::").next() {
+                index_of.entry(short.to_string()).or_insert(index);
+            }
+        }
+        index_of
+    }
+
+    /// Extract one concrete cycle from the residual graph for diagnostics.
+    ///
+    /// Every residual node is tried as a DFS root — not just the first — so a
+    /// downstream consumer that merely depends on a cycle is never reported as
+    /// a cycle member. Dumping all residual nodes is a last resort only.
+    fn cycle_names(&self, edges: &[Vec<usize>], indegree: &[usize]) -> Vec<String> {
+        let residual: Vec<bool> = indegree.iter().map(|&degree| degree > 0).collect();
+        let mut path = Vec::new();
+        let mut on_path = vec![false; self.providers.len()];
+        let mut done = vec![false; self.providers.len()];
+        for candidate in 0..self.providers.len() {
+            if !residual[candidate] {
+                continue;
+            }
+            if let Some(cycle) = self.find_cycle(
+                candidate,
+                edges,
+                &residual,
+                &mut path,
+                &mut on_path,
+                &mut done,
+            ) {
+                return cycle
+                    .iter()
+                    .map(|&node| self.providers[node].name().to_string())
+                    .collect();
+            }
+        }
+        (0..self.providers.len())
+            .filter(|&node| residual[node])
+            .map(|node| self.providers[node].name().to_string())
+            .collect()
+    }
+
+    /// Depth-first search for a cycle within the residual node set.
+    fn find_cycle(
+        &self,
+        node: usize,
+        edges: &[Vec<usize>],
+        residual: &[bool],
+        path: &mut Vec<usize>,
+        on_path: &mut [bool],
+        done: &mut [bool],
+    ) -> Option<Vec<usize>> {
+        path.push(node);
+        on_path[node] = true;
+        for &next in &edges[node] {
+            if !residual[next] || done[next] {
+                continue;
+            }
+            if on_path[next] {
+                let begin = path.iter().position(|&visited| visited == next)?;
+                return Some(path[begin..].to_vec());
+            }
+            if let Some(cycle) = self.find_cycle(next, edges, residual, path, on_path, done) {
+                return Some(cycle);
+            }
+        }
+        path.pop();
+        on_path[node] = false;
+        done[node] = true;
+        None
     }
 
     /// Whether the application has been booted.

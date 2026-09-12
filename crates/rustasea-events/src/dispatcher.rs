@@ -4,9 +4,11 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use async_trait::async_trait;
+use rustasea_queue::{ConcreteJob, DispatchHandle};
 
 use crate::error::{EventError, Result};
 use crate::event::Event;
+use crate::job::ListenerJob;
 use crate::listener::Listener;
 
 /// Global listener registry shared by `Dispatcher` facades.
@@ -27,7 +29,16 @@ fn listeners() -> &'static Mutex<ListenerMap> {
 /// Object-safe listener dispatch entry.
 #[async_trait]
 trait ErasedListener: Send + Sync {
-    /// Handle `event`, downcast by the concrete implementation.
+    /// Stable key identifying the concrete listener type.
+    ///
+    /// A queue-backed job stores this key so the worker can resolve the exact
+    /// listener instance registered at boot.
+    fn listener_key(&self) -> &'static str;
+
+    /// Handle `event` inline, bypassing the queue configuration.
+    async fn invoke_inline(&self, event: &(dyn Any + Sync)) -> Result<()>;
+
+    /// Handle `event`, honouring the listener's queue config.
     async fn invoke_erased(&self, event: &(dyn Any + Sync)) -> Result<()>;
 }
 
@@ -52,26 +63,73 @@ impl<E: Event, L: Listener<E>> TypedListener<E, L> {
 
 #[async_trait]
 impl<E: Event, L: Listener<E>> ErasedListener for TypedListener<E, L> {
+    /// Stable key derived from the concrete listener type.
+    fn listener_key(&self) -> &'static str {
+        std::any::type_name::<L>()
+    }
+
+    /// Handle the event inline, ignoring the queue configuration.
+    async fn invoke_inline(&self, event: &(dyn Any + Sync)) -> Result<()> {
+        let typed = downcast_event::<E>(event)?;
+        self.inner.handle(typed.clone()).await
+    }
+
     /// Handle the event, honouring the listener's queue config.
+    ///
+    /// Inline listeners (`Queue { enable: false }`) run now; queue-backed
+    /// listeners are serialized into a [`ListenerJob`] and pushed through the
+    /// queue facade/driver, returning a typed [`EventError::Queue`] on failure.
     async fn invoke_erased(&self, event: &(dyn Any + Sync)) -> Result<()> {
-        let any_ref: &dyn Any = event;
-        let typed = any_ref.downcast_ref::<E>().ok_or_else(|| {
-            EventError::Listener("listener received an event of the wrong type".into())
-        })?;
         let config = self.inner.queue_config();
         if !config.enable {
-            return self.inner.handle(typed.clone()).await;
+            return self.invoke_inline(event).await;
         }
-        // Queue-backed listener (QUEUE=true): the typed listener-job wrapper
-        // (`impl Job` bridging the events layer into the queue) lands with the
-        // real queue driver. Until then there is nothing that can enqueue this
-        // event, so acking silently would drop it — fail loud instead so a
-        // QUEUE=true listener can never be lost without an error.
-        Err(EventError::Queue(format!(
-            "listener for {} is QUEUE=true but no queue enqueue path is wired yet",
-            typed.event_name(),
-        )))
+        let typed = downcast_event::<E>(event)?;
+        let job = ListenerJob::new(self.listener_key(), typed.clone());
+        let mut handle = DispatchHandle::new(Arc::new(ConcreteJob::new(job)));
+        if let Some(connection) = config.connection {
+            handle = handle.on_connection(connection);
+        }
+        if let Some(queue) = config.queue {
+            handle = handle.on_queue(queue);
+        }
+        if let Some(delay) = config.delay {
+            handle = handle.delay(delay);
+        }
+        handle.dispatch().await?;
+        Ok(())
     }
+}
+
+/// Downcast an erased event to `E`, erroring on a type mismatch.
+fn downcast_event<E: Event>(event: &(dyn Any + Sync)) -> Result<&E> {
+    let any_ref: &dyn Any = event;
+    any_ref
+        .downcast_ref::<E>()
+        .ok_or_else(|| EventError::Listener("listener received an event of the wrong type".into()))
+}
+
+/// Invoke the registered listener identified by `key` for `event` inline.
+///
+/// Used by a queued [`ListenerJob`] at worker execution time: the job carries
+/// the listener's stable type key, resolved here against the process-wide
+/// registry so the worker runs the exact listener registered at boot rather
+/// than re-dispatching the event (which could re-enqueue it).
+pub(crate) async fn invoke_listener_by_key<E: Event>(key: &str, event: E) -> Result<()> {
+    let snapshot = {
+        let map = listeners().lock().unwrap_or_else(|p| p.into_inner());
+        map.get(&TypeId::of::<E>()).cloned().unwrap_or_default()
+    };
+    let listener = snapshot
+        .iter()
+        .find(|entry| entry.listener_key() == key)
+        .ok_or_else(|| {
+            EventError::Listener(format!(
+                "no queued listener `{key}` registered for event {}",
+                event.event_name()
+            ))
+        })?;
+    listener.invoke_inline(&event).await
 }
 
 impl<E: Event, L: Listener<E>> std::fmt::Debug for TypedListener<E, L> {
@@ -91,7 +149,13 @@ pub struct Dispatcher;
 
 impl Dispatcher {
     /// Register a listener for `E` (boot-time).
+    ///
+    /// A queue-enabled listener also registers its [`ListenerJob`] kind with
+    /// the worker handler registry, so `queue:work` can resolve and execute it.
     pub fn listen<E: Event, L: Listener<E>>(listener: L) {
+        if listener.queue_config().enable {
+            crate::job::register_listener_job::<E>();
+        }
         let mut map = listeners().lock().unwrap_or_else(|p| p.into_inner());
         map.entry(TypeId::of::<E>())
             .or_default()

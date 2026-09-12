@@ -1,34 +1,28 @@
 //! Application bootstrap — `Application::configure` for the runnable app.
 //!
 //! Mirrors Laravel's `bootstrap/app.php` (README "Proposed Directory
-//! Structure"): configures the foundation container, registers service
-//! providers, and boots the register→boot DAG before the HTTP kernel takes
-//! over. `main.rs` calls [`configure`]; providers/routes/schedule/events
-//! registries land in `bootstrap/providers.rs` + `bootstrap/commands.rs`.
+//! Structure"): configures the foundation container, registers the providers
+//! from [`crate::bootstrap::providers`], registers the console command
+//! surface, and boots the register→boot DAG before the HTTP kernel takes
+//! over. `src/main.rs` calls [`configure`].
 
+use rustasea::foundation::BootError;
 use rustasea::Application;
 
-/// Placeholder provider scoped to the app scaffold.
-///
-/// Filled in as framework services (config, ORM, auth, queue, …) ship; today
-/// it only demonstrates provider participation in the boot DAG.
-struct AppServiceProvider;
-
-impl rustasea::ServiceProvider for AppServiceProvider {
-    fn register(&self, _app: &mut Application) {}
-
-    fn boot(&self, _app: &Application) {}
-}
+use crate::bootstrap::{commands, providers};
 
 /// Build and boot the application.
 ///
-/// Registers the framework's core migrations (queue `jobs`/`failed_jobs`) into
-/// the process-wide migrator so `cargo artisan migrate` creates them, then runs
-/// the provider boot DAG.
-pub fn configure() -> Application {
-    rustasea::register_queue_migrations();
+/// Returns [`BootError`] when the provider graph contains a cycle or an
+/// unresolved dependency, so a misconfigured boot never starts the server.
+/// Registering the default command surface also registers the framework's
+/// queue migrations.
+pub fn configure() -> Result<Application, BootError> {
     let mut app = Application::configure(|_| {});
-    app.provider(AppServiceProvider);
-    app.boot();
-    app
+    for provider in providers::providers() {
+        app.provider(provider);
+    }
+    commands::register_default();
+    app.boot()?;
+    Ok(app)
 }

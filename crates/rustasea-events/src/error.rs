@@ -19,3 +19,10 @@ pub enum EventError {
     #[error("no listener registered for event {0}")]
     Unhandled(&'static str),
 }
+
+impl From<rustasea_queue::QueueError> for EventError {
+    /// Map a queue dispatch failure onto the events `Queue` variant.
+    fn from(error: rustasea_queue::QueueError) -> Self {
+        EventError::Queue(error.to_string())
+    }
+}

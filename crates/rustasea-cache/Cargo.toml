@@ -3,7 +3,13 @@ name = "rustasea-cache"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Store/Repository cache traits with memory (moka-like) and redis (stub) stores, TTL touch and distributed Lock."
+description = "Store/Repository cache traits with memory (moka-like) and redis (feature-gated) stores, TTL touch and distributed Lock."
+
+[features]
+# The real Redis store is opt-in so the workspace builds and tests with no Redis
+# server present (mirrors `rustasea-queue`'s `redis` feature).
+default = []
+redis = ["dep:deadpool-redis"]
 
 [dependencies]
 tokio = { workspace = true, features = ["time", "sync"] }
@@ -13,3 +19,4 @@ chrono = { workspace = true, features = ["serde"] }
 thiserror = { workspace = true }
 async-trait = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
+deadpool-redis = { workspace = true, optional = true }

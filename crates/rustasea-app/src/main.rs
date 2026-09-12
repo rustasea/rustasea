@@ -24,7 +24,7 @@ const DEFAULT_BIND: &str = "0.0.0.0:8000";
 async fn main() -> anyhow::Result<()> {
     // Build + boot the foundation application (providers, bindings) from
     // `bootstrap/app.rs` — the README-mandated `Application::configure` home.
-    let app = bootstrap::app::configure();
+    let app = bootstrap::app::configure()?;
 
     // Declare the web route table with the framework DSL (`Router::new()`,
     // `.get(...)`). Until controller binding lands on rustasea::Router its
