@@ -81,8 +81,13 @@ full = [
     "livewire",
     "scaffold",
 ]
+# Real Docker-backed feature tests (testcontainers + Postgres). Off by default
+# so the default `cargo test` never requires Docker.
+integration = ["rustasea-testing/postgres", "rustasea-orm/postgres"]
 
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros"] }
+axum = { workspace = true }
+tower = { workspace = true, features = ["util"] }
