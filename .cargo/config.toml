@@ -1,0 +1,6 @@
+[build]
+rustc-wrapper = "/home/vheins/.cargo/bin/sccache"
+
+[env]
+SCCACHE_CACHE_SIZE = "2G"
+CARGO_INCREMENTAL = "0"

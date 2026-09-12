@@ -10,6 +10,9 @@ license = "MIT"
 authors = ["RustaSea Team"]
 
 # Single source of truth for shared dependencies; crates opt in with `workspace = true`.
+[profile.dev]
+incremental = false
+
 [workspace.dependencies]
 # Async + HTTP (M0/M1)
 tokio = { version = "1", features = ["fs", "io-util", "io-std", "macros", "net", "process", "rt", "rt-multi-thread", "signal", "sync", "time"] }
