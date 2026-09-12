@@ -16,6 +16,21 @@ impl QueryBuilder {
     pub fn lock(mut self, lock: Lock) -> Result<Self> {
         lock.to_sql(dialect())?; // validate early for sqlite
         self.lock = Some(lock);
+        self.lock_dialect = None; // fall back to the compile-time dialect
+        Ok(self)
+    }
+
+    /// Apply a pessimistic lock validated against a runtime `dialect`.
+    ///
+    /// Unlike [`QueryBuilder::lock`], which validates against the compile-time
+    /// [`dialect`], this records the runtime dialect so [`QueryBuilder::to_sql`]
+    /// emits (or rejects) the clause for the dialect of the live pool — e.g. an
+    /// SQLite pool rejects `FOR UPDATE` even when the `postgres` feature is
+    /// compiled in. The dialect is stored on the builder and reused at emission.
+    pub fn lock_with_dialect(mut self, lock: Lock, dialect: &str) -> Result<Self> {
+        lock.to_sql(dialect)?;
+        self.lock = Some(lock);
+        self.lock_dialect = Some(dialect.to_string());
         Ok(self)
     }
 
@@ -24,9 +39,19 @@ impl QueryBuilder {
         self.lock(Lock::ForUpdate)
     }
 
+    /// Convenience: `FOR UPDATE` validated against a runtime `dialect`.
+    pub fn for_update_with_dialect(self, dialect: &str) -> Result<Self> {
+        self.lock_with_dialect(Lock::ForUpdate, dialect)
+    }
+
     /// Convenience: `FOR SHARE`.
     pub fn shared_lock(self) -> Result<Self> {
         self.lock(Lock::Shared)
+    }
+
+    /// Convenience: `FOR SHARE` validated against a runtime `dialect`.
+    pub fn shared_lock_with_dialect(self, dialect: &str) -> Result<Self> {
+        self.lock_with_dialect(Lock::Shared, dialect)
     }
 
     /// Apply a named scope via a registry (composable scopes, S03-T03).
@@ -425,6 +450,27 @@ mod tests {
             let qb = QueryBuilder::table("users").shared_lock().unwrap();
             assert!(qb.to_sql().unwrap().ends_with("FOR SHARE"));
         }
+    }
+
+    /// Verifies the runtime-dialect lock tracks the supplied dialect, not the
+    /// compile-time one: SQLite rejects and Postgres emits, in any build.
+    #[test]
+    fn lock_with_dialect_uses_runtime_dialect() {
+        let sqlite = QueryBuilder::table("users").for_update_with_dialect("sqlite");
+        assert!(
+            matches!(sqlite, Err(OrmError::UnsupportedDriver(_))),
+            "sqlite must reject FOR UPDATE at runtime"
+        );
+
+        let postgres = QueryBuilder::table("users")
+            .for_update_with_dialect("postgres")
+            .unwrap();
+        assert!(postgres.to_sql().unwrap().ends_with("FOR UPDATE"));
+
+        let mysql = QueryBuilder::table("users")
+            .lock_with_dialect(Lock::Shared, "mysql")
+            .unwrap();
+        assert!(mysql.to_sql().unwrap().ends_with("LOCK IN SHARE MODE"));
     }
 
     /// Verifies vector similarity ordering (requires vector feature).

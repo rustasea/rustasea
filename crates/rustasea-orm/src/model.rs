@@ -304,12 +304,17 @@ pub trait Model: Send + Sync {
     }
 
     /// Build a SELECT that refreshes the row for update.
-    fn refresh_for_update(id: Uuid) -> Result<QueryBuilder>
+    ///
+    /// `dialect` is the runtime pool dialect; the lock clause is validated and
+    /// emitted for that dialect, so an SQLite pool rejects `FOR UPDATE` with
+    /// [`OrmError::UnsupportedDriver`] even when `postgres` is compiled in.
+    fn refresh_for_update(id: Uuid, dialect: &str) -> Result<QueryBuilder>
     where
         Self: Sized,
     {
         let base = QueryBuilder::table(Self::table_name());
-        base.where_eq("id", Value::Uuid(id)).for_update()
+        base.where_eq("id", Value::Uuid(id))
+            .for_update_with_dialect(dialect)
     }
 
     /// COUNT projection honoring the current filters.
@@ -337,11 +342,15 @@ pub trait Model: Send + Sync {
     }
 
     /// Resolve the row for update and surface typed errors on missing rows.
-    fn first_for_update(id: Uuid) -> Result<QueryBuilder>
+    ///
+    /// `dialect` is the runtime pool dialect threaded into
+    /// [`Model::refresh_for_update`] so the lock decision tracks the live
+    /// driver rather than the compiled feature set.
+    fn first_for_update(id: Uuid, dialect: &str) -> Result<QueryBuilder>
     where
         Self: Sized,
     {
-        let qb = Self::refresh_for_update(id)?;
+        let qb = Self::refresh_for_update(id, dialect)?;
         if qb.has_limit() {
             return Err(OrmError::InvalidState(
                 "first_for_update cannot carry a LIMIT".into(),

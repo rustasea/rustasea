@@ -234,6 +234,49 @@ fn generated_router_receives_shared_state() {
 }
 
 #[test]
+fn generated_boot_handles_the_boot_result() {
+    for variant in StarterKitVariant::ALL {
+        let files = Scaffold::new("my-app", variant).render().expect("render");
+
+        // `main.rs` must propagate the boot Result, never discard it — the
+        // `#[must_use]` contract would otherwise fail `-D warnings`.
+        let main = files
+            .iter()
+            .find(|file| file.path == "main.rs")
+            .expect("main.rs present");
+        assert!(
+            main.contents.contains("bootstrap::app::configure()?"),
+            "main must propagate the configure/boot Result ({variant})"
+        );
+        assert!(
+            !main.contents.contains("app.boot();"),
+            "main must not contain a bare boot statement ({variant})"
+        );
+
+        // `bootstrap/app.rs` runs the DAG via `configure`; the boot Result is
+        // propagated with `?` and `configure` returns `Result`.
+        let bootstrap = files
+            .iter()
+            .find(|file| file.path == "bootstrap/app.rs")
+            .expect("bootstrap/app.rs present");
+        assert!(
+            bootstrap
+                .contents
+                .contains("pub fn configure() -> Result<Application, BootError>"),
+            "configure must return the boot Result ({variant})"
+        );
+        assert!(
+            bootstrap.contents.contains("app.boot()?;"),
+            "bootstrap must propagate the boot Result ({variant})"
+        );
+        assert!(
+            !bootstrap.contents.contains("app.boot();"),
+            "bootstrap must not contain a bare boot statement ({variant})"
+        );
+    }
+}
+
+#[test]
 fn placeholder_substitution_uses_all_three_name_forms() {
     let files = Scaffold::new("MyCool-App", StarterKitVariant::Blade)
         .render()

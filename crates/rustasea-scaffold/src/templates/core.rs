@@ -102,8 +102,10 @@ use rustasea::http::AppState;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Configure the container and run the provider boot DAG.
-    let app = bootstrap::app::configure();
+    // Configure the container and run the provider boot DAG. `configure`
+    // returns `Result` so a misconfigured boot aborts before the server starts
+    // instead of silently ignoring the failure.
+    let app = bootstrap::app::configure()?;
 
     // Create the shared HTTP state once; every route table receives this same
     // instance so handlers resolve one application state, not a disconnected one.
@@ -134,17 +136,22 @@ const BOOTSTRAP_APP: &str = r##"//! Application bootstrap — `Application::conf
 //! Registers the generated service providers and runs the register → boot DAG
 //! before the HTTP kernel starts serving.
 
+use rustasea::foundation::BootError;
 use rustasea::Application;
 
-use crate::app::providers::{AppServiceProvider, AuthServiceProvider};
+use crate::bootstrap::providers;
 
 /// Build and boot the application container.
-pub fn configure() -> Application {
+///
+/// Returns [`BootError`] when the provider graph contains a cycle or an
+/// unresolved dependency, so a misconfigured boot never starts the server.
+pub fn configure() -> Result<Application, BootError> {
     let mut app = Application::configure(|_| {});
-    app.provider(AppServiceProvider);
-    app.provider(AuthServiceProvider);
-    app.boot();
-    app
+    for provider in providers::providers() {
+        app.provider(provider);
+    }
+    app.boot()?;
+    Ok(app)
 }
 "##;
 
@@ -153,9 +160,16 @@ const BOOTSTRAP_PROVIDERS: &str = r##"//! Provider registry — service provider
 //! This registry is populated by the starter kit (previously empty) and is the
 //! registration site for providers generated with `cargo rustasea make:provider`.
 
-/// Names of the providers wired into the boot DAG.
-pub fn providers() -> Vec<&'static str> {
-    vec!["AppServiceProvider", "AuthServiceProvider"]
+use rustasea::ServiceProvider;
+
+use crate::app::providers::{AppServiceProvider, AuthServiceProvider};
+
+/// Providers wired into the boot DAG, in registration order.
+///
+/// Order is the tie-breaker for providers without `dependencies()`; the
+/// foundation `Application::boot` topologically sorts them regardless.
+pub fn providers() -> Vec<Box<dyn ServiceProvider>> {
+    vec![Box::new(AppServiceProvider), Box::new(AuthServiceProvider)]
 }
 "##;
 

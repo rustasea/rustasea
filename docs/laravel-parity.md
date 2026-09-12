@@ -1,6 +1,6 @@
 # RustaSea × Laravel 13.x — API-Surface Parity Map
 
-> **Last updated:** 2026-09-11
+> **Last updated:** 2026-09-12
 > **Scope:** Maps the Laravel 13.x **API surface** (namespaces, contracts/interfaces, traits, notable classes) to RustaSea crates/modules, with an adoption status per row.
 > **Companion docs:** [`docs/laravel-13-research.md`](laravel-13-research.md) (feature-level research) · [`docs/milestones.md`](milestones.md) (M0–M6 implementation status).
 
@@ -62,7 +62,7 @@ It is the API-surface parity layer. It is intentionally **not** a 1:1 inventory 
 | `Illuminate\Http` | `rustasea-http` (`AppState`, `JsonResponse`, `HttpError`) | **Partial** | Request/response + CORS real; idle timeout declared, not enforced. |
 | `Illuminate\Http\Client` | `rustasea-http` (`HttpClient`) | **Adopted** | reqwest wrapper with `throw` / `try_throw` semantics. |
 | `Illuminate\Http\Resources\JsonApi` | `rustasea-jsonapi` (`JsonApiResource`, `Document`, `ResourceBuilder`) | **Adopted** | Sparse fieldsets, links, JSON:API content type real. |
-| `Illuminate\Cache` | `rustasea-cache` (`Store`, `CacheManager`, `Repository`, `Lock`) | **Partial** | Memory store real; Redis store returns `StoreUnavailable`. |
+| `Illuminate\Cache` | `rustasea-cache` (`Store`, `CacheManager`, `Repository`, `Lock`) | **Partial** | Memory store real; Redis store real behind the opt-in `redis` feature (`GAP-004`; `crates/rustasea-cache/src/redis.rs:155`; `crates/rustasea-cache/Cargo.toml:12`) — typed `StoreUnavailable` only when the feature is off or Redis is unreachable; driver matrix incomplete. |
 | `Illuminate\Queue` | `rustasea-queue` (`Queue`, `QueueDriver`, `Job`, `QueueRegistry`) | **Adopted** | Sync + real database/Redis drivers + worker loop (`crates/rustasea-queue/src/driver/{database,redis,worker}.rs`). |
 | `Illuminate\Bus` | `rustasea-queue` (`BatchHandle`, `BatchId`) | **Partial** | Batch handles exist; no durable batch repository. |
 | `Illuminate\Auth` | `rustasea-auth` (`AuthManager`, `Guard`, `JwtGuard`, `SessionGuard`) | **Partial** | JWT/CSRF/throttle real; session guard placeholder. |
@@ -81,7 +81,7 @@ It is the API-surface parity layer. It is intentionally **not** a 1:1 inventory 
 | `Illuminate\Mail` | — | **Planned** | No mailable / mailer transport. |
 | `Illuminate\Notifications` | `rustasea-queue` (`NotificationGuard`) | **Partial** | Missing-model skip guard only; no channel dispatcher. |
 | `Illuminate\Log` | `tracing` (workspace dependency) | **N-A** | Structured logging is handled by `tracing`, not a Laravel-style `Log` facade. |
-| `Illuminate\Redis` | `rustasea-cache` (`RedisStore`) | **Partial** | Type exists; operations return `StoreUnavailable`. |
+| `Illuminate\Redis` | `rustasea-cache` (`RedisStore`) | **Partial** | Real `deadpool-redis` store behind the opt-in `redis` feature (`GAP-004`; `crates/rustasea-cache/src/redis.rs:155`), built via `from_url`/`from_pool` (`:91`, `:105`); atomic `SET NX` insert-if-absent + Lua compare-and-delete. No general-purpose command/pub-sub surface. |
 | `Illuminate\Process` | — | **N-A** | Process spawning handled by `tokio::process` directly. |
 | `Illuminate\Concurrency` | `tokio` (workspace dependency) | **N-A** | Concurrency is native `tokio`; no `Concurrency` facade. |
 | `Illuminate\Foundation` | `rustasea-foundation` + `bootstrap/` | **Partial** | App boot + graceful shutdown real; provider/command registries empty. |
@@ -151,7 +151,7 @@ It is the API-surface parity layer. It is intentionally **not** a 1:1 inventory 
 |---|---|---|---|
 | `Illuminate\Contracts\Cache\Store` | `rustasea-cache::Store` | **Adopted** | `get`/`put`/`forget` store contract implemented by memory store. |
 | `Illuminate\Contracts\Cache\Repository` | `rustasea-cache::{Repository, RepositoryLike}` | **Adopted** | Repository wrapper + trait implemented. |
-| `Illuminate\Contracts\Cache\Lock` | `rustasea-cache::{Lock, LockGuard}` | **Partial** | In-memory lock/guard real; distributed locks absent. |
+| `Illuminate\Contracts\Cache\Lock` | `rustasea-cache::{Lock, LockGuard}` | **Partial** | Atomic lock/guard over any `Store` (`put_if_absent` + compare-and-delete release, `crates/rustasea-cache/src/lock.rs:47`, `:124`); distributed when backed by the feature-gated `RedisStore` (`SET NX` + Lua). No owner/force-release surface. |
 | `Illuminate\Contracts\Cache\Factory` | `rustasea-cache::CacheManager` | **Partial** | Manager selects stores; driver matrix incomplete. |
 | `Illuminate\Contracts\Queue\Queue` | `rustasea-queue::Queue` | **Adopted** | Push/dispatch surface real; sync + database + Redis drivers wired. |
 | `Illuminate\Contracts\Queue\Job` | `rustasea-queue::{Job, ErasedJob}` | **Adopted** | Job + erased-job traits real; worker loop real (`crates/rustasea-queue/src/driver/worker.rs:78`). |
@@ -244,7 +244,7 @@ The dominant pattern: **RustaSea already has the shape of most Laravel surfaces 
 | 2 | **M1** Routing & HTTP | Wire `route:list` to the live router; enforce idle timeout; add URL generation + implicit binding | `Contracts\Routing\Registrar`, `UrlGenerator`, `UrlRoutable`, `Contracts\Http\Kernel` |
 | 3 | **M2** ORM & Database | Attribute casts; ORM introspection wiring (`route:list` / `show:model`) | `CastsAttributes`, `Castable` |
 | 4 | **M3** Auth, Middleware & Validation | Runtime `#[authorize]`/Gate; store-backed session guard; password broker/reset | `Contracts\Auth\Access\Gate`, `Authorizable`, `StatefulGuard`, `PasswordBroker` |
-| 5 | **M4** Queue, Cache, Scheduling & Events | Redis cache store; queue-backed listeners; distributed locks; `queue:failed` / `queue:retry` CLI | `Contracts\Queue\Factory`, `ShouldBeUnique`, `Contracts\Cache\Lock`, `Contracts\Events\Dispatcher` |
+| 5 | **M4** Queue, Cache, Scheduling & Events | Cache/queue factory depth; `ShouldBeUnique`; lock owner/force-release surface | `Contracts\Queue\Factory`, `ShouldBeUnique`, `Contracts\Cache\Lock` |
 | 6 | **M5** DX, CLI & Testing | `make:middleware`/`make:request`, `artisan new`, real cycle detection; DB refresh test traits | `Contracts\Console\Kernel`, `Foundation\Testing\RefreshDatabase`, `WithFaker` |
 | 7 | **M6** Advanced | Real AI adapters; pgvector index; template engine; encryption/translation/mail surfaces | `rustasea-ai` adapters; `Illuminate\Encryption`, `Translation`, `View`, `Mail` analogues |
 

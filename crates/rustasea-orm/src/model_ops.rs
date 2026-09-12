@@ -128,13 +128,18 @@ pub trait ModelOps: Model + Sized {
 
     /// Load the row `FOR UPDATE`, returning [`OrmError::NotFound`] when absent.
     ///
-    /// The pessimistic lock is driver-gated: SQLite has no row locks and
-    /// surfaces [`OrmError::UnsupportedDriver`].
+    /// The pessimistic lock follows the runtime pool dialect, not the
+    /// compile-time feature set: SQLite has no row locks and surfaces
+    /// [`OrmError::UnsupportedDriver`] before any round-trip, even when the
+    /// `postgres`/`mysql` features are compiled in. Postgres/MySQL pools still
+    /// emit `FOR UPDATE`.
     async fn first_for_update(pool: &DbPool, id: Uuid) -> Result<Self>
     where
         Self: DeserializeOwned,
     {
-        let row = <Self as Model>::first_for_update(id)?.first(pool).await?;
+        let row = <Self as Model>::first_for_update(id, pool.dialect())?
+            .first(pool)
+            .await?;
         match row {
             Some(value) => crate::builder::json_to_model(value),
             None => Err(OrmError::NotFound),

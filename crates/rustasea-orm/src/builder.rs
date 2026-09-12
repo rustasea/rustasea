@@ -67,6 +67,8 @@ pub struct QueryBuilder {
     limit: Option<u64>,
     offset: Option<u64>,
     lock: Option<Lock>,
+    /// Runtime lock dialect (`lock_with_dialect`); `None` = compile-time [`dialect`].
+    lock_dialect: Option<String>,
     scope_active: Vec<String>,
     bindings: Vec<Value>,
     /// Soft-delete guard state: `None` = not applied, `true` = include trashed,
@@ -345,7 +347,8 @@ impl QueryBuilder {
         }
         if let Some(lock) = self.lock {
             sql.push(' ');
-            sql.push_str(&lock.to_sql(dialect())?);
+            let lock_dialect = self.lock_dialect.as_deref().unwrap_or(dialect());
+            sql.push_str(&lock.to_sql(lock_dialect)?);
         }
         Ok(sql)
     }

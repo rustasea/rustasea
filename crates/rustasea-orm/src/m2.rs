@@ -207,11 +207,15 @@ impl ModelScopes {
     }
 
     /// Refresh a row for update: `SELECT * FROM t WHERE id = ? FOR UPDATE`.
-    pub fn refresh_sql(table: &str, id: uuid::Uuid) -> Result<String> {
+    ///
+    /// `dialect` is the runtime pool dialect; a dialect without row locks
+    /// (SQLite) surfaces [`OrmError::UnsupportedDriver`] instead of emitting a
+    /// `FOR UPDATE` clause the driver would reject at execution time.
+    pub fn refresh_sql(table: &str, id: uuid::Uuid, dialect: &str) -> Result<String> {
         QueryBuilder::table(table)
             .where_eq("id", Value::Uuid(id))
-            .for_update()
-            .map(|qb| qb.to_sql().unwrap_or_default())
+            .for_update_with_dialect(dialect)?
+            .to_sql()
     }
 
     /// Update timestamps clause: `SET updated_at = now()`.

@@ -175,3 +175,23 @@ async fn exists_reports_presence() {
     assert!(QueryBuilder::table("users").exists(&pool).await.unwrap());
     assert_eq!(QueryBuilder::table("users").count(&pool).await.unwrap(), 1);
 }
+
+/// Verifies `first_for_update` is gated on the **runtime** pool dialect.
+///
+/// An SQLite pool must surface the typed [`OrmError::UnsupportedDriver`] before
+/// any round-trip — even when the `postgres` (or `mysql`) feature is compiled
+/// in — rather than emitting `FOR UPDATE` for SQLite to reject at execution
+/// time. This is the regression for the compile-time lock leak.
+#[tokio::test]
+async fn first_for_update_rejects_sqlite_pool_at_runtime() {
+    let pool = pool_with_users().await;
+    let id = Uuid::now_v7();
+
+    let error = <User as ModelOps>::first_for_update(&pool, id)
+        .await
+        .expect_err("sqlite has no row locks");
+    assert!(
+        matches!(error, OrmError::UnsupportedDriver(_)),
+        "expected UnsupportedDriver, got {error:?}"
+    );
+}
