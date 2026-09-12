@@ -27,6 +27,10 @@ pub enum VectorSearchError {
     /// The vector store engine is unavailable (extension/driver missing).
     #[error("vector store unavailable: {0}")]
     StoreUnavailable(String),
+
+    /// The store configuration is invalid (bad identifier, zero dimension).
+    #[error("invalid vector store configuration: {0}")]
+    InvalidConfiguration(String),
 }
 
 /// A searchable row carrying a vector plus a stable id.

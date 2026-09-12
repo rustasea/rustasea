@@ -5,10 +5,25 @@ edition.workspace = true
 license.workspace = true
 description = "RustaSea search — vector search trait, whereVectorSimilarTo, toEmbeddings, dropVectorIndex"
 
+[features]
+# Real pgvector-backed store. Off by default so the default build stays
+# dependency-light (no ORM/sqlx/pgvector).
+pgvector = [
+    "dep:rustasea-orm",
+    "dep:serde_json",
+    "rustasea-orm/postgres",
+    "rustasea-orm/vector",
+]
+
 [dependencies]
 async-trait = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+serde_json = { workspace = true, optional = true }
+rustasea-orm = { path = "../rustasea-orm", optional = true, default-features = false }
 
 [dev-dependencies]
 tokio = { workspace = true }
+# SQLite is enabled only for the test build so `PgVectorStore` construction and
+# its pre-flight (no round-trip) validation can be exercised without a server.
+rustasea-orm = { path = "../rustasea-orm", features = ["sqlite"] }

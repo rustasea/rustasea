@@ -47,13 +47,44 @@ impl VectorIndex {
     }
 }
 
+/// Validate a bare SQL identifier before interpolating it into DDL.
+///
+/// Accepts `[A-Za-z_][A-Za-z0-9_]*` only, so a caller-supplied table, column,
+/// or index name can never break out of its identifier position.
+pub fn validate_identifier(name: &str) -> Result<()> {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(first) if first.is_ascii_alphabetic() || first == '_' => {}
+        _ => {
+            return Err(IndexError::Operation(format!(
+                "invalid SQL identifier `{name}`"
+            )))
+        }
+    }
+    if !chars.all(|c| c.is_ascii_alphanumeric() || c == '_') {
+        return Err(IndexError::Operation(format!(
+            "invalid SQL identifier `{name}`"
+        )));
+    }
+    Ok(())
+}
+
 /// Index lifecycle operations over a vector store.
 ///
 /// `drop` removes the index (FS-M6-02 contract); creating indexes is the
 /// engine's concern (M6-full) so only the drop half ships as a stub surface.
+#[async_trait::async_trait]
 pub trait VectorIndexOps: Send + Sync + 'static {
-    /// Drop the index, erroring when it does not exist.
+    /// Drop the index, erroring when it does not exist (synchronous backends).
     fn drop(&self, index: &VectorIndex) -> Result<()>;
+
+    /// Drop the index against a live database.
+    ///
+    /// Database-backed stores override this; the default delegates to the
+    /// synchronous [`VectorIndexOps::drop`] so in-memory markers keep working.
+    async fn drop_index(&self, index: &VectorIndex) -> Result<()> {
+        self.drop(index)
+    }
 }
 
 #[cfg(test)]
