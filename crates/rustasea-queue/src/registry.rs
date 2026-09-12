@@ -11,7 +11,7 @@ use crate::error::{QueueError, Result};
 use crate::job::{
     run_erased, DispatchHandle, ErasedJob, FailedJob, Job, JobId, JobOutcome, JobPayload,
 };
-use crate::metrics::Queues;
+use crate::metrics::{QueueMetrics, Queues};
 
 /// Lock-free post-boot state shared by every `Queue` facade.
 static REGISTRY: OnceLock<RwLock<RegistryInner>> = OnceLock::new();
@@ -300,10 +300,53 @@ impl Queue {
             .await
     }
 
-    /// Aggregate metric view across all registered queues.
-    pub async fn metrics() -> Queues {
-        Queues::default()
+    /// Aggregate metric snapshot across every configured connection/queue.
+    ///
+    /// Builds one [`QueueMetrics`] row per routed `(connection, queue)` pair by
+    /// querying its driver, so a dashboard sees real depths without ad-hoc Redis
+    /// or SQL commands. A driver/store failure is surfaced as a typed
+    /// `StoreUnavailable` (or `UnknownConnection`) rather than silently reported
+    /// as zero, so a down store never looks like a healthy empty queue.
+    pub async fn metrics() -> Result<Queues> {
+        let mut snapshot = Queues::default();
+        for (connection, queue) in metric_targets() {
+            let drv = driver(&connection)?;
+            let pending = drv.pending_size(&queue).await?;
+            let delayed = drv.delayed_size(&queue).await?;
+            let reserved = drv.reserved_size(&queue).await?;
+            let oldest_pending = drv.creation_time_of_oldest_pending_job(&queue).await?;
+            snapshot.upsert(QueueMetrics {
+                queue,
+                pending,
+                delayed,
+                reserved,
+                oldest_pending,
+            });
+        }
+        Ok(snapshot)
     }
+}
+
+/// Unique `(connection, queue)` pairs registered through `Queue::route`.
+///
+/// Many job types may route to the same queue; deduplicating yields one metric
+/// row per configured queue. The routes are snapshotted under the lock and
+/// returned owned so `Queue::metrics` never holds the registry lock across an
+/// `await`.
+fn metric_targets() -> Vec<(String, String)> {
+    let reg = registry();
+    let Ok(guard) = reg.read() else {
+        return Vec::new();
+    };
+    let mut seen = std::collections::HashSet::new();
+    let mut targets = Vec::new();
+    for route in guard.routes.values() {
+        let key = (route.connection.to_string(), route.queue.to_string());
+        if seen.insert(key.clone()) {
+            targets.push(key);
+        }
+    }
+    targets
 }
 
 /// Resolve a driver by connection name.
@@ -351,5 +394,74 @@ impl QueueRegistry {
     /// The default connection name used when none is provided.
     pub fn default_connection() -> &'static str {
         SYNC_CONNECTION
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::driver::SyncDriver;
+    use crate::job::JobPayload;
+
+    /// Register a sync-backed route under a unique connection/queue.
+    ///
+    /// The driver is registered before the route so a concurrent `metrics()`
+    /// snapshot never observes a route without its driver.
+    fn register_sync_route(
+        type_key: &'static str,
+        connection: &'static str,
+        queue: &'static str,
+    ) -> Arc<SyncDriver> {
+        let drv = Arc::new(SyncDriver::new());
+        Queue::register_driver(connection, drv.clone());
+        insert_route(type_key, Route { connection, queue }).expect("unique route");
+        drv
+    }
+
+    /// Enqueued jobs are reflected in the aggregate snapshot.
+    #[tokio::test]
+    async fn metrics_aggregates_configured_queue_depths() {
+        let drv = register_sync_route("test::metrics::JobA", "metrics-a", "metrics-queue-a");
+        for _ in 0..2 {
+            drv.push(JobPayload::new(
+                "metrics-queue-a",
+                "metrics-a",
+                None,
+                serde_json::json!({}),
+            ))
+            .await
+            .expect("push");
+        }
+
+        let snapshot = Queue::metrics().await.expect("metrics");
+        let row = snapshot.row("metrics-queue-a").expect("row present");
+        assert_eq!(row.pending, 2);
+        assert_eq!(row.delayed, 0);
+        assert_eq!(row.reserved, 0);
+        assert_eq!(row.oldest_pending, None);
+    }
+
+    /// An empty configured queue reports zeros, not a missing row.
+    #[tokio::test]
+    async fn metrics_empty_queue_reports_zeros() {
+        register_sync_route("test::metrics::JobB", "metrics-b", "metrics-queue-b");
+        let snapshot = Queue::metrics().await.expect("metrics");
+        let row = snapshot.row("metrics-queue-b").expect("row present");
+        assert_eq!((row.pending, row.delayed, row.reserved), (0, 0, 0));
+        assert_eq!(row.oldest_pending, None);
+    }
+
+    /// Two routes to the same queue collapse into a single metric row.
+    #[tokio::test]
+    async fn metrics_deduplicates_shared_queue() {
+        register_sync_route("test::metrics::JobC", "metrics-c", "metrics-queue-c");
+        register_sync_route("test::metrics::JobD", "metrics-c", "metrics-queue-c");
+        let snapshot = Queue::metrics().await.expect("metrics");
+        let rows = snapshot
+            .queues
+            .iter()
+            .filter(|q| q.queue == "metrics-queue-c")
+            .count();
+        assert_eq!(rows, 1, "one row per configured queue");
     }
 }

@@ -4,6 +4,9 @@
 //! list (`LPUSH`/`BRPOP`, FIFO); delayed jobs live on a sorted set scored by
 //! availability epoch and are promoted to the list when due; reserved jobs live
 //! on a second sorted set so `ack`/`release`/`dead_letter` can address them.
+//! A third sorted set (`<queue>:pending_times`, member = job id, score = unix
+//! millis) mirrors the pending list so `creation_time_of_oldest_pending_job`
+//! can report the earliest enqueue instant without scanning the list.
 //! When no URL is configured the driver is *disabled*: `push` reports
 //! `StoreUnavailable` and `pop` yields `None`, so callers skip it gracefully.
 
@@ -15,7 +18,7 @@ use deadpool_redis::{Config, Pool, Runtime};
 
 use crate::driver::QueueDriver;
 use crate::error::{QueueError, Result};
-use crate::job::{FailedJob, JobPayload};
+use crate::job::{FailedJob, JobId, JobPayload};
 
 /// Default key prefix for queue keys.
 pub const DEFAULT_PREFIX: &str = "rustasea:queue:";
@@ -93,6 +96,11 @@ impl RedisDriver {
         format!("{}{}:reserved", self.prefix, queue)
     }
 
+    /// The pending-time sorted-set key for `queue` (member = job id, score = unix millis).
+    fn pending_times_key(&self, queue: &str) -> String {
+        format!("{}{}:pending_times", self.prefix, queue)
+    }
+
     /// The shared dead-letter list key.
     fn failed_key(&self) -> String {
         format!("{}failed", self.prefix)
@@ -103,6 +111,7 @@ impl RedisDriver {
         let now = chrono::Utc::now().timestamp() as f64;
         let delayed = self.delayed_key(queue);
         let list = self.list_key(queue);
+        let times = self.pending_times_key(queue);
         let due: Vec<String> = conn
             .zrangebyscore(&delayed, f64::NEG_INFINITY, now)
             .await
@@ -111,6 +120,16 @@ impl RedisDriver {
             let removed: i64 = conn.zrem(&delayed, &member).await.map_err(redis_error)?;
             if removed > 0 {
                 let _: i64 = conn.lpush(&list, &member).await.map_err(redis_error)?;
+                // Mirror the promotion into the pending-time index so the
+                // oldest pending instant survives the delayed -> list move.
+                if let Ok(payload) = serde_json::from_str::<JobPayload>(&member) {
+                    if let Some(id) = payload.id.as_deref() {
+                        let _: i64 = conn
+                            .zadd(&times, id, now_millis())
+                            .await
+                            .map_err(redis_error)?;
+                    }
+                }
             }
         }
         Ok(())
@@ -120,9 +139,18 @@ impl RedisDriver {
 #[async_trait]
 impl QueueDriver for RedisDriver {
     /// Push `payload` to the delayed set (future) or the pending list (now).
+    ///
+    /// Every payload gets a stable job id (reused when already set, e.g. on a
+    /// retry) so the pending-time index can address the exact member on
+    /// `pop`/`ack`/`release`/`dead_letter`.
     async fn push(&self, payload: JobPayload) -> Result<()> {
         let pool = self.pool()?;
         let mut conn = pool.get().await.map_err(pool_error)?;
+        let mut payload = payload;
+        let id = payload
+            .id
+            .get_or_insert_with(|| JobId::new().to_string())
+            .clone();
         let body = serde_json::to_string(&payload)
             .map_err(|e| QueueError::Serialization(e.to_string()))?;
         match payload.available_at {
@@ -136,6 +164,10 @@ impl QueueDriver for RedisDriver {
             _ => {
                 let _: i64 = conn
                     .lpush(self.list_key(&payload.queue), &body)
+                    .await
+                    .map_err(redis_error)?;
+                let _: i64 = conn
+                    .zadd(self.pending_times_key(&payload.queue), &id, now_millis())
                     .await
                     .map_err(redis_error)?;
             }
@@ -159,6 +191,15 @@ impl QueueDriver for RedisDriver {
         };
         let payload: JobPayload =
             serde_json::from_str(&body).map_err(|e| QueueError::Serialization(e.to_string()))?;
+
+        // The job has left the pending list; drop its pending-time score before
+        // it becomes reserved. Idempotent with the `ack`/`release` cleanup.
+        if let Some(id) = payload.id.as_deref() {
+            let _: i64 = conn
+                .zrem(self.pending_times_key(queue), id)
+                .await
+                .map_err(redis_error)?;
+        }
 
         let expiry = (chrono::Utc::now()
             + chrono::Duration::from_std(RESERVATION_TTL).unwrap_or_default())
@@ -206,12 +247,47 @@ impl QueueDriver for RedisDriver {
         Ok(count)
     }
 
-    /// Report no oldest pending instant (Redis lists carry no per-member time).
+    /// UTC instant of the oldest pending job, `None` when the queue is empty.
+    ///
+    /// Reads the earliest pending-time score (unix millis) from the
+    /// `pending_times` mirror and, because `pending_size` also counts due
+    /// delayed members, takes the earlier of that and the earliest due delayed
+    /// availability (epoch seconds). Matching `pending_size`'s definition keeps
+    /// the database and redis drivers reporting the same queue state.
     async fn creation_time_of_oldest_pending_job(
         &self,
-        _queue: &str,
+        queue: &str,
     ) -> Result<Option<chrono::DateTime<chrono::Utc>>> {
-        Ok(None)
+        let pool = self.pool()?;
+        let mut conn = pool.get().await.map_err(pool_error)?;
+
+        let listed: Vec<(String, f64)> = conn
+            .zrange_withscores(self.pending_times_key(queue), 0, 0)
+            .await
+            .map_err(redis_error)?;
+        let listed_at = listed
+            .first()
+            .and_then(|(_, millis)| millis_to_datetime(*millis));
+
+        let now = chrono::Utc::now().timestamp() as f64;
+        let due: Vec<(String, f64)> = conn
+            .zrangebyscore_limit_withscores(self.delayed_key(queue), f64::NEG_INFINITY, now, 0, 1)
+            .await
+            .map_err(redis_error)?;
+        let due_at = due.first().and_then(|(_, seconds)| {
+            if seconds.is_finite() {
+                chrono::DateTime::from_timestamp(*seconds as i64, 0)
+            } else {
+                None
+            }
+        });
+
+        Ok(match (listed_at, due_at) {
+            (Some(listed), Some(due)) => Some(listed.min(due)),
+            (Some(listed), None) => Some(listed),
+            (None, Some(due)) => Some(due),
+            (None, None) => None,
+        })
     }
 
     /// Remove the reservation on success.
@@ -224,6 +300,14 @@ impl QueueDriver for RedisDriver {
             .zrem(self.reserved_key(&payload.queue), &body)
             .await
             .map_err(redis_error)?;
+        // Defensive: `pop` already cleared the pending-time score, but an
+        // explicit ack must never leave a stale oldest-pending instant behind.
+        if let Some(id) = payload.id.as_deref() {
+            let _: i64 = conn
+                .zrem(self.pending_times_key(&payload.queue), id)
+                .await
+                .map_err(redis_error)?;
+        }
         Ok(())
     }
 
@@ -251,8 +335,33 @@ impl QueueDriver for RedisDriver {
             .lpush(self.failed_key(), body)
             .await
             .map_err(redis_error)?;
+        // Defensive cleanup: the popped job already left the pending-time
+        // index, but drop any lingering score when the dead letter carries the
+        // original envelope id (see `worker::dead_letter_payload`).
+        if let Some(id) = failed.payload.get("id").and_then(|value| value.as_str()) {
+            let _: i64 = conn
+                .zrem(self.pending_times_key(&failed.queue), id)
+                .await
+                .map_err(redis_error)?;
+        }
         Ok(())
     }
+}
+
+/// Current UTC instant as unix milliseconds (the pending-time ZSET score).
+fn now_millis() -> f64 {
+    chrono::Utc::now().timestamp_millis() as f64
+}
+
+/// Convert a pending-time score (unix millis) into a UTC instant.
+///
+/// Returns `None` for a non-finite or out-of-range score so a corrupt ZSET
+/// member never panics.
+fn millis_to_datetime(millis: f64) -> Option<chrono::DateTime<chrono::Utc>> {
+    if !millis.is_finite() {
+        return None;
+    }
+    chrono::DateTime::from_timestamp_millis(millis as i64)
 }
 
 /// Map a Redis command error onto the queue's store error.
@@ -264,3 +373,6 @@ fn redis_error(error: deadpool_redis::redis::RedisError) -> QueueError {
 fn pool_error(error: deadpool_redis::PoolError) -> QueueError {
     QueueError::StoreUnavailable(error.to_string())
 }
+
+#[cfg(test)]
+mod tests;

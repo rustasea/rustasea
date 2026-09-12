@@ -18,7 +18,7 @@ fn live_users() -> &'static std::sync::Mutex<Vec<String>> {
 }
 
 /// Serialized sentinel shared with the test (skipped via `#[serde(skip)]`).
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct SentFlag(std::sync::Arc<std::sync::atomic::AtomicBool>);
 
 impl SentFlag {
@@ -89,9 +89,10 @@ impl Job for WelcomeNotification {
 
 #[tokio::test]
 async fn tc_m6_11_skipped_when_missing_no_retry() {
+    let sent = SentFlag::new();
     let notification = WelcomeNotification {
         user_id: "9".to_string(),
-        sent: SentFlag::new(),
+        sent: sent.clone(),
     };
     Queue::route_sync::<WelcomeNotification>("notifications").unwrap();
 
@@ -99,6 +100,7 @@ async fn tc_m6_11_skipped_when_missing_no_retry() {
     let outcome = Queue::dispatch_sync(notification).await.unwrap();
 
     assert_eq!(outcome, JobOutcome::Skipped, "skipped, not retried");
+    assert!(!sent.was_sent(), "skipped notification is never dispatched");
     let diagnostics = skipped_notifications();
     assert!(
         diagnostics
@@ -110,19 +112,23 @@ async fn tc_m6_11_skipped_when_missing_no_retry() {
 
 #[tokio::test]
 async fn tc_m6_12_notification_delivered_when_user_exists() {
-    // Clear prior diagnostics and restore the live set.
-    let mut live = live_users().lock().unwrap_or_else(|p| p.into_inner());
-    live.clear();
-    live.push("7".to_string());
-    drop(live);
+    // Clear prior diagnostics and restore the live set. Scope the guard so it
+    // is never held across the dispatch await (`clippy::await_holding_lock`).
+    {
+        let mut live = live_users().lock().unwrap_or_else(|p| p.into_inner());
+        live.clear();
+        live.push("7".to_string());
+    }
 
+    let sent = SentFlag::new();
     let notification = WelcomeNotification {
         user_id: "7".to_string(),
-        sent: SentFlag::new(),
+        sent: sent.clone(),
     };
 
     let outcome = Queue::dispatch_sync(notification).await.unwrap();
     assert_eq!(outcome, JobOutcome::Succeeded, "delivered normally");
+    assert!(sent.was_sent(), "mail body dispatched for a live user");
     let check = skipped_notifications();
     assert!(
         !check.iter().any(|d| d.model_id == "user:7"),

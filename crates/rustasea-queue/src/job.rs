@@ -80,9 +80,9 @@ pub struct JobPayload {
     pub attempts: u32,
     /// Opaque reservation token set by a driver on `pop`.
     ///
-    /// Drivers that reserve rows (the database driver) stamp the backing row
-    /// id here so a later `ack`/`release` can address the exact reservation;
-    /// drivers without reservations (sync, redis) leave it `None`.
+    /// Reservation drivers (database) stamp the backing row id so a later
+    /// `ack`/`release` addresses it; the redis driver assigns a stable tracking
+    /// id on `push` for its pending-time index; sync leaves it `None`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     /// Stable job type name used to resolve a handler in a worker.

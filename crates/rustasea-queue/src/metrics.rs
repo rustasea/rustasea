@@ -44,6 +44,11 @@ impl Queues {
         self.queues.iter().map(|q| q.reserved).sum()
     }
 
+    /// Earliest oldest-pending instant across all queues (`None` when none).
+    pub fn oldest_pending(&self) -> Option<chrono::DateTime<chrono::Utc>> {
+        self.queues.iter().filter_map(|q| q.oldest_pending).min()
+    }
+
     /// Register or update the metric row for `queue`.
     pub fn upsert(&mut self, row: QueueMetrics) {
         if let Some(existing) = self.queues.iter_mut().find(|q| q.queue == row.queue) {
@@ -65,5 +70,43 @@ impl JobQueueMetrics {
     /// Record a row into the holder.
     pub fn record(&mut self, row: QueueMetrics) {
         self.queues.upsert(row);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{TimeZone, Utc};
+
+    /// Build a metric row for `queue` with the given oldest instant.
+    fn row(queue: &str, pending: usize, oldest: Option<chrono::DateTime<Utc>>) -> QueueMetrics {
+        QueueMetrics {
+            queue: queue.to_string(),
+            pending,
+            delayed: 0,
+            reserved: 0,
+            oldest_pending: oldest,
+        }
+    }
+
+    /// `oldest_pending` returns the minimum instant across all rows.
+    #[test]
+    fn oldest_pending_is_minimum_across_rows() {
+        let early = Utc.timestamp_opt(1_700_000_000, 0).single().expect("early");
+        let late = Utc.timestamp_opt(1_700_000_100, 0).single().expect("late");
+        let mut queues = Queues::default();
+        queues.upsert(row("a", 1, Some(late)));
+        queues.upsert(row("b", 1, Some(early)));
+        queues.upsert(row("c", 0, None));
+        assert_eq!(queues.oldest_pending(), Some(early));
+        assert_eq!(queues.pending(), 2);
+    }
+
+    /// A snapshot with no dated rows has no oldest instant.
+    #[test]
+    fn oldest_pending_none_when_all_empty() {
+        let mut queues = Queues::default();
+        queues.upsert(row("a", 0, None));
+        assert_eq!(queues.oldest_pending(), None);
     }
 }
