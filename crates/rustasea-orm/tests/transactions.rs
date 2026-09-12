@@ -138,6 +138,13 @@ async fn double_commit_rejected() {
 }
 
 /// Verifies `for_update` is unsupported on SQLite (inside a transaction context).
+///
+/// `QueryBuilder` resolves its dialect at compile time (`builder::dialect()`), so
+/// the `UnsupportedDriver` rejection is only emitted when SQLite is the compiled
+/// dialect. Under `postgres`/`mysql` the builder emits a locking clause even for
+/// an SQLite pool; that compile-time emission is covered by the builder unit
+/// tests, so this SQLite-only assertion is gated to the matching feature set.
+#[cfg(all(feature = "sqlite", not(feature = "postgres"), not(feature = "mysql")))]
 #[tokio::test]
 async fn for_update_unsupported_on_sqlite() {
     let pool = pool_with_users().await;
