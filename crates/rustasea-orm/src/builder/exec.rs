@@ -102,7 +102,10 @@ impl QueryBuilder {
     ///
     /// Works against a [`DbPool`] (`.get(&pool)`) or an open [`Transaction`]
     /// (`.get(&mut tx)`); the two are unified by [`Executor`].
-    pub async fn get<'a>(self, executor: impl Into<Executor<'a>>) -> Result<Vec<serde_json::Value>> {
+    pub async fn get<'a>(
+        self,
+        executor: impl Into<Executor<'a>>,
+    ) -> Result<Vec<serde_json::Value>> {
         let sql = self.to_sql()?;
         let bindings = self.bindings().to_vec();
         executor.into().fetch_json(&sql, &bindings).await

@@ -221,7 +221,10 @@ async fn fresh_drops_all_tables() {
     assert!(table_exists(&pool, "stray").await);
 
     migrator.fresh(&pool).await.expect("fresh");
-    assert!(!table_exists(&pool, "stray").await, "fresh drops every table");
+    assert!(
+        !table_exists(&pool, "stray").await,
+        "fresh drops every table"
+    );
     assert!(table_exists(&pool, "users").await);
 }
 
@@ -233,7 +236,10 @@ async fn irreversible_migration_errors_on_rollback() {
     migrator.add(CreateAuditLog);
     migrator.run(&pool).await.expect("apply irreversible");
 
-    let error = migrator.rollback(&pool).await.expect_err("must be irreversible");
+    let error = migrator
+        .rollback(&pool)
+        .await
+        .expect_err("must be irreversible");
     assert!(matches!(
         error,
         rustasea_orm::OrmError::Migration(MigrationError::Irreversible { name })

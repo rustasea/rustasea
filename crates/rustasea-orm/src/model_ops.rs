@@ -114,10 +114,7 @@ pub trait ModelOps: Model + Sized {
     where
         Self: DeserializeOwned,
     {
-        let row = Self::query_with_trashed()
-            .where_key(id)
-            .first(pool)
-            .await?;
+        let row = Self::query_with_trashed().where_key(id).first(pool).await?;
         match row {
             Some(value) => Ok(Some(crate::builder::json_to_model(value)?)),
             None => Ok(None),
@@ -147,7 +144,9 @@ impl<T: Model> ModelOps for T {}
 /// User columns come from the model's `serde` object (reserved fields skipped);
 /// the primary key is first and `created_at`/`updated_at` are appended as the
 /// current timestamp. Shared by [`build_insert`] and [`build_upsert`].
-fn insert_columns_and_bindings<T: Model + Serialize>(data: &T) -> Result<(Vec<String>, Vec<Value>)> {
+fn insert_columns_and_bindings<T: Model + Serialize>(
+    data: &T,
+) -> Result<(Vec<String>, Vec<Value>)> {
     let columns = user_columns(data)?;
     let timestamps = T::insert_columns();
 
@@ -254,9 +253,9 @@ fn build_update<T: Model + Serialize>(data: &T) -> Result<(String, Vec<Value>)> 
 fn user_columns<T: Serialize>(data: &T) -> Result<Vec<(String, Value)>> {
     let value = serde_json::to_value(data)
         .map_err(|error| OrmError::Storage(format!("model serialization failed: {error}")))?;
-    let object = value.as_object().ok_or_else(|| {
-        OrmError::InvalidValue("model must serialize to a JSON object".into())
-    })?;
+    let object = value
+        .as_object()
+        .ok_or_else(|| OrmError::InvalidValue("model must serialize to a JSON object".into()))?;
 
     let mut columns = Vec::new();
     for (column, value) in object {
@@ -329,7 +328,8 @@ mod tests {
     #[test]
     fn uuid_columns_bind_native_uuid() {
         for column in ["id", "user_id", "owner_uuid"] {
-            let value = json_to_value(column, &serde_json::Value::String(UUID_TEXT.into())).unwrap();
+            let value =
+                json_to_value(column, &serde_json::Value::String(UUID_TEXT.into())).unwrap();
             assert_eq!(value, Value::Uuid(Uuid::parse_str(UUID_TEXT).unwrap()));
         }
     }
@@ -337,7 +337,8 @@ mod tests {
     /// Verifies ordinary text columns keep a UUID-looking string as text.
     #[test]
     fn non_uuid_columns_keep_text() {
-        let value = json_to_value("nickname", &serde_json::Value::String(UUID_TEXT.into())).unwrap();
+        let value =
+            json_to_value("nickname", &serde_json::Value::String(UUID_TEXT.into())).unwrap();
         assert_eq!(value, Value::Text(UUID_TEXT.into()));
     }
 

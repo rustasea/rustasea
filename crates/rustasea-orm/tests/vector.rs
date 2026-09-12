@@ -6,11 +6,11 @@
 
 #![cfg(feature = "vector")]
 
+#[cfg(any(feature = "sqlite", feature = "postgres"))]
+use rustasea_orm::DbPool;
 use rustasea_orm::{
     vector::MAX_DIMENSION, Blueprint, OrmError, QueryBuilder, VectorMetric, VectorSimilarity,
 };
-#[cfg(any(feature = "sqlite", feature = "postgres"))]
-use rustasea_orm::DbPool;
 
 /// Verifies `Blueprint::vector` emits a `VECTOR(dim)` column.
 #[test]
@@ -37,7 +37,10 @@ fn blueprint_vector_index_ddl() {
     let sql = Blueprint::create("products")
         .vector_index("embedding", "vector_cosine_ops")
         .to_sql();
-    assert!(sql.contains("USING hnsw (embedding vector_cosine_ops)"), "{sql}");
+    assert!(
+        sql.contains("USING hnsw (embedding vector_cosine_ops)"),
+        "{sql}"
+    );
 }
 
 /// Verifies cosine is the default metric and its operator is `<=>`.
@@ -70,12 +73,18 @@ fn order_by_distance_supports_l2_and_ip() {
     let l2 = QueryBuilder::table("products")
         .order_by_distance("embedding", &[0.1, 0.2], VectorMetric::L2)
         .unwrap();
-    assert!(l2.to_sql().unwrap().contains("ORDER BY embedding <-> $1 ASC"));
+    assert!(l2
+        .to_sql()
+        .unwrap()
+        .contains("ORDER BY embedding <-> $1 ASC"));
 
     let ip = QueryBuilder::table("products")
         .order_by_distance("embedding", &[0.1, 0.2], VectorMetric::InnerProduct)
         .unwrap();
-    assert!(ip.to_sql().unwrap().contains("ORDER BY embedding <#> $1 ASC"));
+    assert!(ip
+        .to_sql()
+        .unwrap()
+        .contains("ORDER BY embedding <#> $1 ASC"));
 }
 
 /// Verifies a dimension mismatch is a typed `VectorDimensionMismatch`.
@@ -154,7 +163,10 @@ async fn where_vector_similar_to_returns_ordered_top_k() {
         Ok(pool) => pool,
         Err(_) => return,
     };
-    if !rustasea_orm::vector::has_extension(&pool).await.unwrap_or(false) {
+    if !rustasea_orm::vector::has_extension(&pool)
+        .await
+        .unwrap_or(false)
+    {
         return;
     }
 

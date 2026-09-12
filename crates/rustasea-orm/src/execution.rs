@@ -236,7 +236,8 @@ impl PageMeta {
 }
 
 /// Execute a raw statement (stub — sqlx wiring lands with the driver crate).
-pub fn raw(sql: &str, bindings: Vec<Value>) -> Raw {    Raw {
+pub fn raw(sql: &str, bindings: Vec<Value>) -> Raw {
+    Raw {
         sql: sql.to_string(),
         bindings,
     }
@@ -323,9 +324,7 @@ pub fn chunk_by(
 /// ```
 pub async fn transaction<F, T>(pool: &DbPool, body: F) -> Result<T>
 where
-    F: for<'a> FnOnce(
-        &'a mut Transaction,
-    ) -> Pin<Box<dyn Future<Output = Result<T>> + Send + 'a>>,
+    F: for<'a> FnOnce(&'a mut Transaction) -> Pin<Box<dyn Future<Output = Result<T>> + Send + 'a>>,
 {
     let mut tx = Transaction::begin(pool).await?;
     match body(&mut tx).await {

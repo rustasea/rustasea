@@ -28,8 +28,7 @@ const MIGRATIONS_TABLE: &str = "migrations";
 /// migrations with [`register_migration`] (order = execution order) and seeders
 /// with [`register_seeder`]; [`registered_migrator`] returns a clone for the
 /// runner.
-static MIGRATIONS: std::sync::OnceLock<std::sync::Mutex<Migrator>> =
-    std::sync::OnceLock::new();
+static MIGRATIONS: std::sync::OnceLock<std::sync::Mutex<Migrator>> = std::sync::OnceLock::new();
 
 /// Register a migration into the process-wide registry.
 ///

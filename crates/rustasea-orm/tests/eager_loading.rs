@@ -201,7 +201,10 @@ async fn belongs_to_with_null_foreign_key_attaches_null() {
 
     assert_eq!(rows.len(), 1);
     let relations = rows[0].get("relations").expect("relations map present");
-    assert!(relations.get("author").is_some(), "author key must be present");
+    assert!(
+        relations.get("author").is_some(),
+        "author key must be present"
+    );
     assert_eq!(rows[0]["relations"]["author"], JsonValue::Null);
 }
 
@@ -302,7 +305,16 @@ async fn serde_round_trip_preserves_relations() {
     let decoded: User = serde_json::from_str(&encoded).unwrap();
     assert_eq!(decoded.id, user.id);
     assert_eq!(decoded.relations, user.relations);
-    assert_eq!(decoded.relations.get("posts").unwrap().as_array().unwrap().len(), 2);
+    assert_eq!(
+        decoded
+            .relations
+            .get("posts")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
 }
 
 /// Verifies the `Relations` depth cap prevents an infinite `User→Post→User`.

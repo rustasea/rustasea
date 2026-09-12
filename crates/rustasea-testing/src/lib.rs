@@ -19,9 +19,9 @@ pub mod test_case;
 #[cfg(feature = "containers")]
 pub use containers::{postgres_container, redis_container, ContainerError};
 pub use error::{Result, TestError};
-pub use migration::{migrate_once, MigrateHarness};
 pub use factory::{
     factory_registry, register_sequence, reset_factory_sequences, str_factory, StrFactory,
 };
+pub use migration::{migrate_once, MigrateHarness};
 pub use paginator::{bootstrap_3, paginator_view};
 pub use test_case::{TestCase, TestConfig};

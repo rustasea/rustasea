@@ -322,9 +322,7 @@ fn driver(connection: &str) -> Result<Arc<dyn QueueDriver>> {
 /// Boot-time helper: wraps `pool` in a driver and installs it through the same
 /// registry path as [`Queue::register_driver`]. Returns the registered driver
 /// so callers (e.g. a worker) can hold it directly.
-pub fn register_database_driver(
-    pool: rustasea_orm::DbPool,
-) -> Arc<DatabaseDriver> {
+pub fn register_database_driver(pool: rustasea_orm::DbPool) -> Arc<DatabaseDriver> {
     let driver = Arc::new(DatabaseDriver::new(pool));
     Queue::register_driver(DATABASE_CONNECTION, driver.clone());
     driver
@@ -335,9 +333,7 @@ pub fn register_database_driver(
 /// Boot-time helper gated on the `redis` feature; a `None`/empty `url` installs
 /// a disabled driver so a worker can skip the connection without erroring.
 #[cfg(feature = "redis")]
-pub fn register_redis_driver(
-    url: Option<&str>,
-) -> Result<Arc<crate::driver::RedisDriver>> {
+pub fn register_redis_driver(url: Option<&str>) -> Result<Arc<crate::driver::RedisDriver>> {
     let driver = Arc::new(crate::driver::RedisDriver::from_url(url)?);
     Queue::register_driver(crate::driver::REDIS_CONNECTION, driver.clone());
     Ok(driver)

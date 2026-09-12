@@ -11,8 +11,8 @@ use rustasea_queue::QueueDriver;
 use std::sync::Arc;
 
 use crate::artisan::{Command, Io};
-use crate::error::{CliError, CliResult};
 use crate::commands::ops::database_url;
+use crate::error::{CliError, CliResult};
 
 /// `queue:work` — process jobs from the database queue.
 pub struct QueueWork;

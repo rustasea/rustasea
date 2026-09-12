@@ -186,7 +186,8 @@ fn parent_keys(rows: &[JsonValue], column: &str) -> Vec<Value> {
     let mut seen: HashMap<String, Value> = HashMap::new();
     for row in rows {
         if let Some(key) = row_key(row, column) {
-            seen.entry(key.clone()).or_insert_with(|| key_to_value(&key));
+            seen.entry(key.clone())
+                .or_insert_with(|| key_to_value(&key));
         }
     }
     seen.into_values().collect()
@@ -265,7 +266,13 @@ mod tests {
         let mut grouped: HashMap<String, Vec<JsonValue>> = HashMap::new();
         grouped.insert("p1".to_string(), vec![json!({ "id": "c1" })]);
         attach_arrays(&mut rows, "id", "comments", grouped);
-        assert_eq!(rows[0]["relations"]["comments"].as_array().unwrap().len(), 1);
-        assert_eq!(rows[1]["relations"]["comments"].as_array().unwrap().len(), 0);
+        assert_eq!(
+            rows[0]["relations"]["comments"].as_array().unwrap().len(),
+            1
+        );
+        assert_eq!(
+            rows[1]["relations"]["comments"].as_array().unwrap().len(),
+            0
+        );
     }
 }

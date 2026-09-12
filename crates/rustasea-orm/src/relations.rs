@@ -224,7 +224,10 @@ mod tests {
         let encoded = serde_json::to_string(&relations).unwrap();
         let decoded: Relations = serde_json::from_str(&encoded).unwrap();
         assert_eq!(decoded.depth(), MAX_DEPTH);
-        assert_eq!(decoded, serde_json::from_str::<Relations>(&encoded).unwrap());
+        assert_eq!(
+            decoded,
+            serde_json::from_str::<Relations>(&encoded).unwrap()
+        );
     }
 
     /// Verifies deserialization rejects payloads deeper than MAX_DEPTH.
@@ -232,9 +235,7 @@ mod tests {
     fn over_deep_payload_is_rejected() {
         let encoded = format!(
             "{{\"a\":{}}}",
-            "{\"relations\":".repeat(MAX_DEPTH + 1)
-                + "{}"
-                + &"}".repeat(MAX_DEPTH + 1)
+            "{\"relations\":".repeat(MAX_DEPTH + 1) + "{}" + &"}".repeat(MAX_DEPTH + 1)
         );
         let error = serde_json::from_str::<Relations>(&encoded).unwrap_err();
         assert!(error.to_string().contains("exceeds maximum"), "{error}");

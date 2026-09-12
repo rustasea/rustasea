@@ -198,10 +198,10 @@ mod tests {
     async fn commit_persists_and_closes() {
         let pool = pool().await;
         let mut tx = Transaction::begin(&pool).await.unwrap();
-        tx.execute_bind("INSERT INTO t (id, name) VALUES ($1, $2)", &[
-            Value::Int(1),
-            Value::Text("a".into()),
-        ])
+        tx.execute_bind(
+            "INSERT INTO t (id, name) VALUES ($1, $2)",
+            &[Value::Int(1), Value::Text("a".into())],
+        )
         .await
         .unwrap();
         assert!(tx.is_open());
@@ -235,10 +235,10 @@ mod tests {
     async fn rollback_discards_writes() {
         let pool = pool().await;
         let mut tx = Transaction::begin(&pool).await.unwrap();
-        tx.execute_bind("INSERT INTO t (id, name) VALUES ($1, $2)", &[
-            Value::Int(2),
-            Value::Text("b".into()),
-        ])
+        tx.execute_bind(
+            "INSERT INTO t (id, name) VALUES ($1, $2)",
+            &[Value::Int(2), Value::Text("b".into())],
+        )
         .await
         .unwrap();
         tx.rollback().await.unwrap();

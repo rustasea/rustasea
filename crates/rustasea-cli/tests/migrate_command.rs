@@ -33,8 +33,10 @@ impl Seeder for UserSeeder {
     }
 
     fn sql(&self) -> OrmResult<String> {
-        Ok("INSERT INTO users (id, email) VALUES (1, 'ada@example.test') ON CONFLICT DO NOTHING"
-            .into())
+        Ok(
+            "INSERT INTO users (id, email) VALUES (1, 'ada@example.test') ON CONFLICT DO NOTHING"
+                .into(),
+        )
     }
 }
 

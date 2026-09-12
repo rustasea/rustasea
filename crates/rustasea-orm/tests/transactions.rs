@@ -146,7 +146,10 @@ async fn for_update_unsupported_on_sqlite() {
         Ok(_) => panic!("sqlite has no row locks"),
         Err(error) => error,
     };
-    assert!(matches!(error, OrmError::UnsupportedDriver(_)), "got {error:?}");
+    assert!(
+        matches!(error, OrmError::UnsupportedDriver(_)),
+        "got {error:?}"
+    );
     tx.rollback().await.unwrap();
     pool.close().await;
 }

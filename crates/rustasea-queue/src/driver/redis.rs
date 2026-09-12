@@ -157,8 +157,8 @@ impl QueueDriver for RedisDriver {
         let Some((_key, body)) = popped else {
             return Ok(None);
         };
-        let payload: JobPayload = serde_json::from_str(&body)
-            .map_err(|e| QueueError::Serialization(e.to_string()))?;
+        let payload: JobPayload =
+            serde_json::from_str(&body).map_err(|e| QueueError::Serialization(e.to_string()))?;
 
         let expiry = (chrono::Utc::now()
             + chrono::Duration::from_std(RESERVATION_TTL).unwrap_or_default())
@@ -179,10 +179,7 @@ impl QueueDriver for RedisDriver {
             .zcount(self.delayed_key(queue), f64::NEG_INFINITY, now)
             .await
             .map_err(redis_error)?;
-        let listed: usize = conn
-            .llen(self.list_key(queue))
-            .await
-            .map_err(redis_error)?;
+        let listed: usize = conn.llen(self.list_key(queue)).await.map_err(redis_error)?;
         Ok(delayed + listed)
     }
 
@@ -221,8 +218,8 @@ impl QueueDriver for RedisDriver {
     async fn ack(&self, payload: &JobPayload) -> Result<()> {
         let pool = self.pool()?;
         let mut conn = pool.get().await.map_err(pool_error)?;
-        let body = serde_json::to_string(payload)
-            .map_err(|e| QueueError::Serialization(e.to_string()))?;
+        let body =
+            serde_json::to_string(payload).map_err(|e| QueueError::Serialization(e.to_string()))?;
         let _: i64 = conn
             .zrem(self.reserved_key(&payload.queue), &body)
             .await
@@ -248,8 +245,8 @@ impl QueueDriver for RedisDriver {
     async fn dead_letter(&self, failed: FailedJob) -> Result<()> {
         let pool = self.pool()?;
         let mut conn = pool.get().await.map_err(pool_error)?;
-        let body = serde_json::to_string(&failed)
-            .map_err(|e| QueueError::Serialization(e.to_string()))?;
+        let body =
+            serde_json::to_string(&failed).map_err(|e| QueueError::Serialization(e.to_string()))?;
         let _: i64 = conn
             .lpush(self.failed_key(), body)
             .await

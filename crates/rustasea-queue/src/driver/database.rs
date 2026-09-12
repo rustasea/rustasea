@@ -112,7 +112,9 @@ impl DatabaseDriver {
                 string_field(row, "queue"),
                 string_field(row, "connection"),
                 None,
-                row.get("payload").cloned().unwrap_or(serde_json::Value::Null),
+                row.get("payload")
+                    .cloned()
+                    .unwrap_or(serde_json::Value::Null),
             ),
         };
         payload.id = None;
@@ -288,7 +290,11 @@ impl QueueDriver for DatabaseDriver {
                 &[Value::Text(queue.to_string()), Value::Text(now_string())],
             )
             .await?;
-        let Some(value) = rows.first().and_then(|r| r.get("c")).and_then(|v| v.as_str()) else {
+        let Some(value) = rows
+            .first()
+            .and_then(|r| r.get("c"))
+            .and_then(|v| v.as_str())
+        else {
             return Ok(None);
         };
         Ok(DateTime::parse_from_rfc3339(value)
@@ -314,9 +320,8 @@ impl QueueDriver for DatabaseDriver {
             return Ok(());
         };
         let next_attempt = payload.attempts.saturating_add(1);
-        let available_at = (Utc::now()
-            + chrono::Duration::from_std(delay).unwrap_or_default())
-        .to_rfc3339_opts(SecondsFormat::Micros, true);
+        let available_at = (Utc::now() + chrono::Duration::from_std(delay).unwrap_or_default())
+            .to_rfc3339_opts(SecondsFormat::Micros, true);
         let sql = format!(
             "UPDATE {} SET reserved_at = NULL, available_at = $1, attempts = $2 WHERE id = $3",
             self.jobs_table

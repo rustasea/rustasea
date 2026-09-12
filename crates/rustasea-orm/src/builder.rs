@@ -8,8 +8,8 @@ pub use crate::clause::{Lock, OrderDirection, Raw, SqlFragment};
 mod exec;
 mod ext;
 
-pub use exec::Executor;
 pub(crate) use exec::json_to_model;
+pub use exec::Executor;
 
 mod eager;
 
@@ -97,7 +97,6 @@ impl QueryBuilder {
         self.columns = columns.iter().map(|c| (*c).to_string()).collect();
         self
     }
-
 
     /// Add an equality WHERE clause: `where("email", value)`.
     pub fn where_eq(mut self, column: &str, value: impl Into<Value>) -> Self {
@@ -441,16 +440,18 @@ mod tests {
                 raw.contains("JSON_UNQUOTE(JSON_EXTRACT(settings, '$.theme')) = 'dark'"),
                 "{raw}"
             ),
-            "sqlite" => assert!(raw.contains("json_extract(settings, '$.theme') = 'dark'"), "{raw}"),
+            "sqlite" => assert!(
+                raw.contains("json_extract(settings, '$.theme') = 'dark'"),
+                "{raw}"
+            ),
             other => panic!("unexpected dialect {other}"),
         }
 
         // `Contains` is Postgres/MySQL-only; SQLite has no native operator.
-        let contains = QueryBuilder::table("users")
-            .where_json(
-                "settings",
-                JsonFilter::Contains(serde_json::json!({"a": 1})),
-            );
+        let contains = QueryBuilder::table("users").where_json(
+            "settings",
+            JsonFilter::Contains(serde_json::json!({"a": 1})),
+        );
         match dialect() {
             "postgres" => {
                 let contains = contains.unwrap();

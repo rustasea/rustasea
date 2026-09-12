@@ -17,7 +17,6 @@ pub const MAX_DIMENSION: u32 = 16_000;
 /// Remediation hint surfaced with [`MigrationError::ExtensionMissing`].
 pub const VECTOR_EXTENSION_HINT: &str = "CREATE EXTENSION IF NOT EXISTS vector;";
 
-
 /// A validated embedding vector plus similarity configuration.
 #[derive(Debug, Clone, PartialEq)]
 pub struct VectorSimilarity {
@@ -150,7 +149,6 @@ pub fn has_extension_sql() -> &'static str {
 pub fn vector_param(embedding: &[f32]) -> Value {
     Value::Vector(embedding.to_vec())
 }
-
 
 #[cfg(test)]
 mod tests {

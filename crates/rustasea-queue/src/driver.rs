@@ -14,16 +14,16 @@ use crate::error::{QueueError, Result};
 use crate::job::{FailedJob, JobId, JobPayload};
 
 mod database;
-mod worker;
 #[cfg(feature = "redis")]
 mod redis;
+mod worker;
 
 pub use database::DatabaseDriver;
+#[cfg(feature = "redis")]
+pub use redis::RedisDriver;
 pub use worker::{
     default_resolver, register_job, register_job_handler, run_worker, run_worker_with,
 };
-#[cfg(feature = "redis")]
-pub use redis::RedisDriver;
 
 /// Canonical name of the inline `sync` connection.
 pub const SYNC_CONNECTION: &str = "sync";

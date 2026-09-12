@@ -1,9 +1,9 @@
 //! Query-builder extensions: locks, scopes, soft deletes, pagination windows,
 //! vector similarity, and DELETE/STRAIGHT_JOIN emission.
 
-use super::{dialect, Condition, JoinClause, Lock, OrderDirection, QueryBuilder};
 #[cfg(feature = "vector")]
 use super::OrderBy;
+use super::{dialect, Condition, JoinClause, Lock, OrderDirection, QueryBuilder};
 use crate::error::{OrmError, Result, UpsertError};
 use crate::scopes::ScopeRegistry;
 use crate::types::Value;

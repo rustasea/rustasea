@@ -48,10 +48,7 @@ where
 /// The factory receives the deserialized JSON body and returns the erased job
 /// to run, or `None` when the body is invalid. Use this for dynamic types whose
 /// key is not a Rust `type_name`.
-pub fn register_job_handler(
-    type_key: &'static str,
-    factory: HandlerFactory,
-) {
+pub fn register_job_handler(type_key: &'static str, factory: HandlerFactory) {
     if let Ok(mut guard) = handlers().write() {
         guard.insert(type_key, factory);
     }
@@ -136,11 +133,7 @@ fn dead_letter_payload(payload: &JobPayload) -> serde_json::Value {
 /// Success/skip `ack`s the reservation; a retryable failure `release`s it when
 /// the attempt budget remains, otherwise it is dead-lettered and the
 /// reservation removed.
-async fn process_one<F>(
-    driver: &dyn QueueDriver,
-    payload: &JobPayload,
-    resolver: &F,
-) -> Result<()>
+async fn process_one<F>(driver: &dyn QueueDriver, payload: &JobPayload, resolver: &F) -> Result<()>
 where
     F: Fn(&JobPayload) -> Option<Arc<dyn ErasedJob>> + Send + Sync,
 {
