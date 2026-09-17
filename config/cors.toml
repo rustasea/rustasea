@@ -1,0 +1,6 @@
+# CORS policy - mirrors rustasea_http::CorsConfig.
+# Empty `allowed_origins` keeps the layer restrictive (no cross-origin requests);
+# list the exact origins to allow instead of enabling a wildcard.
+[cors]
+allowed_origins = []
+allow_credentials = false

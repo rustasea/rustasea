@@ -1,0 +1,142 @@
+# ExampleApp development stack (laravel/sail parity).
+#
+# `version` is declared so the file also parses under the legacy
+# `docker-compose` (v1) binary; the schema is otherwise v2-compatible.
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: example-app:dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      APP_KEY: ${APP_KEY:-}
+      # Full connection URL wins over the granular DB_* fields at runtime.
+      DATABASE_URL: ${DATABASE_URL:-postgres://rustasea:secret@postgres:5432/rustasea}
+      DB_CONNECTION: ${DB_CONNECTION:-postgres}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-rustasea}
+      DB_USERNAME: ${DB_USERNAME:-rustasea}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      CACHE_PREFIX: ${CACHE_PREFIX:-rustasea-cache-}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-memory}
+      MAIL_MAILER: ${MAIL_MAILER:-smtp}
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-hello@example.com}
+      # Object storage backed by MinIO (S3-compatible); enable the
+      # `rustasea-storage/aws` feature and the `s3` disk to use it.
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-rustasea}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-rustasea-secret}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_BUCKET: ${AWS_BUCKET:-rustasea}
+      AWS_ENDPOINT: ${AWS_ENDPOINT:-http://minio:9000}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    networks:
+      - rustasea
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-rustasea}
+      POSTGRES_USER: ${DB_USERNAME:-rustasea}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-rustasea} -d ${DB_DATABASE:-rustasea}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - rustasea
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - rustasea
+
+  minio:
+    image: minio/minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-rustasea}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-rustasea-secret}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - rustasea
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8025/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - rustasea
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:
+
+networks:
+  rustasea:
+    driver: bridge

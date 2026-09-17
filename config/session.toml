@@ -1,0 +1,21 @@
+# Session configuration — mirrors Laravel 13.x config/session.php.
+# Only the `memory` driver is implemented today; other names fail closed.
+[session]
+driver = "memory"
+lifetime = 120
+expire_on_close = false
+encrypt = false
+files = "storage/framework/sessions"
+connection = "default"
+table = "sessions"
+store = "default"
+lottery = [2, 100]
+# The `-session-` marker is required so session keys never collide with cache.
+cookie = "rustasea-session"
+path = "/"
+domain = ""
+secure = false
+http_only = true
+same_site = "lax"
+partitioned = false
+serialization = "json"

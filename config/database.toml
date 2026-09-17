@@ -1,0 +1,51 @@
+# Database connections — mirrors Laravel 13.x config/database.php.
+# DATABASE_URL overrides the resolved URL at runtime.
+[database]
+default = "sqlite"
+url = "sqlite://database.sqlite?mode=rwc"
+pool = { min = 1, max = 10, idle_timeout = 600 }
+
+[database.connections.sqlite]
+driver = "sqlite"
+url = "sqlite://database.sqlite?mode=rwc"
+
+[database.connections.pgsql]
+driver = "postgres"
+host = "127.0.0.1"
+port = 5432
+database = "rustasea"
+username = "rustasea"
+password = "secret"
+
+[database.connections.mysql]
+driver = "mysql"
+host = "127.0.0.1"
+port = 3306
+database = "rustasea"
+username = "rustasea"
+password = "secret"
+
+[database.connections.mongo]
+driver = "mongodb"
+uri = "mongodb://127.0.0.1:27017"
+database = "rustasea"
+
+[database.migrations]
+table = "migrations"
+update_date_on_publish = true
+
+[database.redis]
+client = "deadpool"
+
+[database.redis.options]
+cluster = "redis"
+prefix = "rustasea-database-"
+persistent = false
+
+[database.redis.default]
+url = "redis://127.0.0.1:6379/0"
+database = 0
+
+[database.redis.cache]
+url = "redis://127.0.0.1:6379/1"
+database = 1

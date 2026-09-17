@@ -1,0 +1,28 @@
+# Storage configuration — mirrors Laravel 13.x config/filesystems.php.
+[storage]
+default = "local"
+
+[storage.links]
+"public/storage" = "storage/app/public"
+
+[storage.disks.local]
+driver = "local"
+root = "storage/app"
+serve = true
+visibility = "local"
+throw = false
+report = false
+
+[storage.disks.public]
+driver = "local"
+root = "storage/app/public"
+visibility = "public"
+throw = false
+report = false
+
+[storage.disks.archive]
+driver = "local"
+root = "storage/archive"
+visibility = "local"
+throw = false
+report = false

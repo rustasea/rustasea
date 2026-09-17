@@ -1,0 +1,16 @@
+# Application configuration — mirrors Laravel 13.x config/app.php.
+# Flat `app_*` keys; APP_* environment variables override these (env wins).
+app_name = "example-app"
+app_env = "local"
+app_debug = true
+app_url = "http://localhost:8000"
+app_timezone = "UTC"
+app_locale = "en"
+app_fallback_locale = "en"
+app_faker_locale = "en_US"
+app_cipher = "AES-256-CBC"
+# Supply the encryption key via APP_KEY; empty is treated as "unset".
+app_key = ""
+app_previous_keys = []
+app_maintenance_driver = "file"
+app_maintenance_store = "database"

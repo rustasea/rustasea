@@ -1,0 +1,16 @@
+# Third-party service credentials — mirrors Laravel 13.x config/services.php.
+# Never commit real secrets; supply values through the environment instead.
+[services.postmark]
+key = ""
+
+[services.resend]
+key = ""
+
+[services.ses]
+key = ""
+secret = ""
+region = "us-east-1"
+
+[services.slack.notifications]
+bot_user_oauth_token = ""
+channel = ""

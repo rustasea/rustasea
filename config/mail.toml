@@ -1,0 +1,31 @@
+# Mail configuration — mirrors Laravel 13.x config/mail.php.
+[mail]
+default = "log"
+
+[mail.from]
+address = "hello@example.com"
+name = "ExampleApp"
+
+# The `smtp` transport requires the `smtp` feature; credentials via MAIL_*.
+[mail.mailers.smtp]
+transport = "smtp"
+scheme = "smtp"
+url = ""
+host = "127.0.0.1"
+port = 2525
+username = ""
+password = ""
+timeout = 5
+local_domain = ""
+
+[mail.mailers.log]
+transport = "log"
+channel = ""
+
+[mail.mailers.array]
+transport = "array"
+
+[mail.mailers.failover]
+transport = "failover"
+mailers = ["smtp", "log"]
+retry_after = 60

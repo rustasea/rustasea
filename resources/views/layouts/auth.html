@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ExampleApp</title>
+  {% include "partials/head.html" %}
+</head>
+<body>
+  {% include "partials/flash.html" %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

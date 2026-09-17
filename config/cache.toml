@@ -1,0 +1,16 @@
+# Cache configuration — mirrors Laravel 13.x config/cache.php.
+[cache]
+default = "memory"
+# MUST contain the hyphenated `-cache-` marker or loading fails.
+prefix = "rustasea-cache-"
+serializable_classes = []
+
+[cache.stores.memory]
+driver = "memory"
+serialize = false
+
+# Feature `redis` required; url may come from REDIS_URL.
+[cache.stores.redis]
+driver = "redis"
+connection = "default"
+lock_connection = "default"

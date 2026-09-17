@@ -1,0 +1,16 @@
+{% extends "layouts/auth.html" %}
+{% import "components/auth-header.html" as auth_header %}
+{% block content %}
+{{ auth_header::auth_header(title="Verify email", description="Check your inbox for the verification link we sent you.") }}
+
+{# STUB: `POST /email/verification-notification` is not yet in the generated
+   route table (email verification infrastructure has not landed); this form
+   is a clearly-marked stub that mirrors the kit's resend action. #}
+<form method="post" action="/email/verification-notification">
+  <button type="submit">Resend verification email</button>
+</form>
+
+<form method="post" action="/logout">
+  <button type="submit">Log out</button>
+</form>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "layouts/auth.html" %}
+{% import "components/auth-header.html" as auth_header %}
+{% block content %}
+{{ auth_header::auth_header(title="Register", description="Create an account to get started.") }}
+<form method="post" action="/register">
+  <label>Name <input type="text" name="name" required /></label>
+  <label>Email <input type="email" name="email" required /></label>
+  <label>Password <input type="password" name="password" required /></label>
+  <label>Confirm <input type="password" name="password_confirmation" required /></label>
+  <button type="submit">Create account</button>
+</form>
+{% endblock %}

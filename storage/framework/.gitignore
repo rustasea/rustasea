@@ -1,0 +1,4 @@
+# Maintenance-mode marker (rustasea-foundation MAINTENANCE_MARKER); all other
+# storage/framework content is runtime state and must stay untracked.
+*
+!.gitignore

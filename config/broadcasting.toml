@@ -1,0 +1,31 @@
+# Broadcasting configuration - mirrors Laravel 13.x config/broadcasting.php.
+# Parsed by rustasea_broadcast::BroadcastingConfig::from_loader. The in-process
+# `hub` connection is the zero-dependency default.
+#
+# Environment overrides (bridged explicitly; the loader's `__` separator never
+# reaches these nested keys):
+#   BROADCAST_CONNECTION -> broadcasting.default
+#   PUSHER_APP_ID / PUSHER_APP_KEY / PUSHER_APP_SECRET / PUSHER_APP_CLUSTER
+#   PUSHER_HOST / PUSHER_PORT / PUSHER_SCHEME
+#   BROADCAST_REDIS_URL / REDIS_URL / BROADCAST_REDIS_PREFIX
+[broadcasting]
+default = "hub"
+
+# --- Pusher HTTP API (requires the `pusher` crate feature) -------------------
+# `cluster` selects https://api-{cluster}.pusher.com/apps/{app_id}/events;
+# setting `host` instead targets a self-hosted Pusher-compatible server.
+# [broadcasting.connections.pusher]
+# app_id = "123456"
+# key = "your-pusher-key"
+# secret = "your-pusher-secret"
+# cluster = "us2"
+# host = "127.0.0.1"
+# port = 6001
+# scheme = "http"
+# timeout = 10
+
+# --- Redis Pub/Sub (requires the `redis` crate feature) ----------------------
+# Channels are `{prefix}.{wire_channel}`.
+# [broadcasting.connections.redis]
+# url = "redis://127.0.0.1:6379"
+# prefix = "broadcasting"

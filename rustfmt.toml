@@ -1,0 +1,9 @@
+# Rustfmt configuration.
+#
+# These are intentionally the rustfmt defaults, pinned explicitly so the
+# formatting contract is version-controlled and stable across toolchains.
+# `max_width = 100` matches the framework design system.
+
+edition = "2021"
+max_width = 100
+tab_spaces = 4

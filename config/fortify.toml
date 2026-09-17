@@ -1,0 +1,32 @@
+# Fortify-equivalent auth features — mirrors Laravel Fortify config/fortify.php.
+# FORTIFY_* environment variables override these (env wins).
+[fortify]
+guard = "web"
+passwords = "users"
+username = "email"
+email = "email"
+lowercase_usernames = true
+home = "/dashboard"
+prefix = ""
+middleware = ["web"]
+views = true
+
+[fortify.limiters]
+login = "login"
+
+[fortify.passkeys]
+# PASSKEYS_USER_HANDLE_SECRET overrides; falls back to app.key when blank.
+user_handle_secret = ""
+timeout = 60000
+
+[fortify.features]
+registration = true
+reset_passwords = true
+email_verification = true
+
+[fortify.features.two_factor_authentication]
+confirm = true
+confirm_password = true
+
+[fortify.features.passkeys]
+confirm_password = true

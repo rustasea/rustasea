@@ -1,0 +1,13 @@
+{% extends "layouts/app.html" %}
+{% block content %}
+<section>
+  <h1>Settings</h1>
+  <nav>
+    <a href="/settings/profile">Profile</a>
+    <a href="/settings/password">Password</a>
+    <a href="/settings/security">Security</a>
+  </nav>
+
+  {% block settings %}{% endblock %}
+</section>
+{% endblock %}

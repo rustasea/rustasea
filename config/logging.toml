@@ -1,0 +1,40 @@
+# Logging configuration — mirrors Laravel 13.x config/logging.php.
+[logging]
+default = "stack"
+
+# Sentry error tracking (ADOPT-004). Requires the `sentry` cargo feature on
+# `rustasea-logging`/`rustasea-app`. Leave `dsn` empty to disable Sentry.
+# Environment overrides: SENTRY_DSN, SENTRY_TRACES_SAMPLE_RATE, SENTRY_ENVIRONMENT.
+#
+# [logging.sentry]
+# dsn = ""
+# traces_sample_rate = 0.0
+# environment = "local"
+
+[logging.deprecations]
+channel = "null"
+trace = false
+
+[logging.channels.stack]
+driver = "stack"
+channels = ["daily", "stderr"]
+ignore_exceptions = false
+
+[logging.channels.single]
+driver = "single"
+path = "storage/logs/rustasea.log"
+level = "debug"
+replace_placeholders = false
+
+[logging.channels.daily]
+driver = "daily"
+path = "storage/logs/rustasea.log"
+level = "debug"
+max_files = 14
+
+[logging.channels.stderr]
+driver = "stderr"
+level = "debug"
+
+[logging.channels.null]
+driver = "null"

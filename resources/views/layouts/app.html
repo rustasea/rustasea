@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ExampleApp</title>
+  {% include "partials/head.html" %}
+</head>
+<body>
+  {% import "components/user-menu.html" as user_menu %}
+  <nav>
+    <a href="/">ExampleApp</a>
+    {% if let Some(current) = user %}
+      <a href="/dashboard">Dashboard</a>
+      <a href="/settings/profile">Settings</a>
+      {{ user_menu::user_menu(name=current.name) }}
+    {% else %}
+      <a href="/login">Log in</a>
+      <a href="/register">Register</a>
+    {% endif %}
+  </nav>
+
+  {% include "partials/flash.html" %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,3 @@
+# askama template root — compiled into the binary at build time.
+[general]
+dirs = ["resources/views"]

@@ -1,0 +1,32 @@
+# ExampleApp development override — hot-reload the app.
+#
+# Layer on top of the base stack:
+#
+#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Named volumes keep the build cache and cargo caches off the bind mount so
+# they survive restarts.
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    image: example-app:dev-watch
+    command: cargo watch -x run
+    environment:
+      RUST_LOG: ${RUST_LOG:-debug}
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+    volumes:
+      - .:/app
+      - cargo-target:/app/target
+      - cargo-registry:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+
+volumes:
+  cargo-target:
+  cargo-registry:
+  cargo-git:

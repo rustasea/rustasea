@@ -1,0 +1,11 @@
+{% extends "layouts/auth.html" %}
+{% import "components/auth-header.html" as auth_header %}
+{% block content %}
+{{ auth_header::auth_header(title="Log in", description="Welcome back. Enter your credentials to continue.") }}
+<form method="post" action="/login">
+  <label>Email <input type="email" name="email" required /></label>
+  <label>Password <input type="password" name="password" required /></label>
+  <button type="submit">Log in</button>
+</form>
+<p><a href="/forgot-password">Forgot your password?</a></p>
+{% endblock %}

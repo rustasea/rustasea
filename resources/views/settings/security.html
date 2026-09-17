@@ -1,0 +1,25 @@
+{% extends "settings/layout.html" %}
+{% block settings %}
+<h2>Security</h2>
+
+<section>
+  <h3>Two-Factor Authentication</h3>
+  <p>Add an extra layer of security to your account using a TOTP authenticator app.</p>
+  <form method="post" action="/user/two-factor-authentication">
+    <button type="submit">Enable two-factor authentication</button>
+  </form>
+  <form method="post" action="/user/two-factor-authentication">
+    <input type="hidden" name="_method" value="DELETE" />
+    <button type="submit">Disable two-factor authentication</button>
+  </form>
+  <p><a href="/user/two-factor-recovery-codes">View recovery codes</a></p>
+</section>
+
+<section>
+  <h3>Passkeys</h3>
+  <p>Sign in without a password using a passkey stored on your device.</p>
+  <form method="post" action="/user/passkeys">
+    <button type="submit">Register a passkey</button>
+  </form>
+</section>
+{% endblock %}

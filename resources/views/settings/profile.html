@@ -1,0 +1,12 @@
+{% extends "settings/layout.html" %}
+{% block settings %}
+<h2>Profile</h2>
+<form method="post" action="/settings/profile">
+  <input type="hidden" name="_method" value="PATCH" />
+  {% if let Some(current) = user %}
+  <label>Name <input type="text" name="name" value="{{ current.name }}" required /></label>
+  <label>Email <input type="email" name="email" value="{{ current.email }}" required /></label>
+  {% endif %}
+  <button type="submit">Save</button>
+</form>
+{% endblock %}

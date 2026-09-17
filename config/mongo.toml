@@ -1,0 +1,4 @@
+# MongoDB connection — MONGODB_URI / MONGODB_DATABASE override at runtime.
+[mongo]
+uri = "mongodb://localhost:27017"
+database = "rustasea"

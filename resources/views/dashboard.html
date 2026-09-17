@@ -1,0 +1,7 @@
+{% extends "layouts/app.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+{% if let Some(current) = user %}
+<p>Welcome back, {{ current.name }}.</p>
+{% endif %}
+{% endblock %}

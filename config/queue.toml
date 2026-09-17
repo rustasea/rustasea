@@ -1,0 +1,25 @@
+# Queue configuration — mirrors Laravel 13.x config/queue.php.
+[queue]
+default = "database"
+
+[queue.connections.sync]
+driver = "sync"
+
+[queue.connections.database]
+driver = "database"
+table = "jobs"
+queue = "default"
+retry_after = 90
+after_commit = false
+
+[queue.connections.redis]
+driver = "redis"
+queue = "default"
+retry_after = 90
+
+[queue.batching]
+table = "job_batches"
+
+[queue.failed]
+driver = "database-uuids"
+table = "failed_jobs"
