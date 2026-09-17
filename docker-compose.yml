@@ -12,11 +12,11 @@ services:
     image: example-app:dev
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8000:8000"
     environment:
       APP_ENV: ${APP_ENV:-local}
       APP_DEBUG: ${APP_DEBUG:-true}
-      APP_URL: ${APP_URL:-http://localhost:3000}
+      APP_URL: ${APP_URL:-http://localhost:8000}
       APP_KEY: ${APP_KEY:-}
       # Full connection URL wins over the granular DB_* fields at runtime.
       DATABASE_URL: ${DATABASE_URL:-postgres://rustasea:secret@postgres:5432/rustasea}

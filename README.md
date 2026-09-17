@@ -61,7 +61,7 @@ Rust 1.88 or newer is required. Install the toolchain via [rustup](https://rustu
 cargo run
 ```
 
-The server binds `0.0.0.0:3000` by default (`APP_URL` overrides it).
+The server binds `0.0.0.0:8000` by default (`APP_URL` overrides it).
 
 Console commands are run through the Artisan-style CLI:
 
@@ -92,13 +92,13 @@ docker-compose down                                           # tear down
 
 | Service | Ports | Purpose |
 |---|---|---|
-| `app` | `3000` | The application HTTP app |
+| `app` | `8000` | The application HTTP app |
 | `postgres` | `5432` | Primary SQL store + pgvector |
 | `redis` | `6379` | Cache + queue backend |
 | `minio` | `9000`, `9001` | S3-compatible storage (`9001` = console) |
 | `mailpit` | `1025`, `8025` | SMTP capture (`1025`) + web UI (`8025`) |
 
-App: <http://localhost:3000> · Mailpit UI: <http://localhost:8025> ·
+App: <http://localhost:8000> · Mailpit UI: <http://localhost:8025> ·
 MinIO console: <http://localhost:9001>.
 
 ## Agentic Development

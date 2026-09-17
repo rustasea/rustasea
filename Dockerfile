@@ -25,7 +25,7 @@ RUN cargo build --release --bin example-app
 # --- Dev: hot-reloading stage for the compose dev override -----------------
 FROM builder AS dev
 RUN cargo install cargo-watch --locked
-EXPOSE 3000
+EXPOSE 8000
 CMD ["cargo", "watch", "-x", "run"]
 
 # --- Runtime: slim image with only what the binary reads -------------------
@@ -49,9 +49,9 @@ RUN mkdir -p storage/logs storage/framework storage/app/public \
 
 USER appuser
 ENV APP_ENV=local
-EXPOSE 3000
+EXPOSE 8000
 # Liveness probe: the app has no HTTP health route yet, so check the port.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD bash -c 'exec 3<>/dev/tcp/127.0.0.1/3000' || exit 1
+    CMD bash -c 'exec 3<>/dev/tcp/127.0.0.1/8000' || exit 1
 
 CMD ["example-app"]
